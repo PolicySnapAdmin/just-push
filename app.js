@@ -552,9 +552,9 @@ function showLevelUpPopup(level, tier, opts = {}) {
   // Soft confetti — screenshot-friendly, not a full-screen takeover
   confettiBurst();
 
+  // Stays until the player taps × (no auto-timeout — keep for screenshots)
   clearTimeout(levelUpTimer);
-  // Long enough to screenshot; auto-clear so it never traps the player
-  levelUpTimer = setTimeout(() => hideLevelUpPopup(), 4500);
+  levelUpTimer = null;
 }
 
 async function copyText(text) {
