@@ -307,13 +307,13 @@
           </div>
         </div>
 
-        <p class="muted chat-offline-hint" id="chat-offline-hint" hidden>Chat needs online mode (Supabase). Check Style → Account.</p>
+        <p class="muted chat-offline-hint" id="chat-offline-hint" hidden>Chat needs online mode (Supabase). Check Settings → Account.</p>
       </section>
 
-      <!-- STYLE -->
-      <section class="panel" data-panel="style" hidden aria-label="Style">
-        <h2>Style</h2>
-        <p class="panel-sub">Pick your button and vibe.</p>
+      <!-- SETTINGS (tab id remains style for compatibility) -->
+      <section class="panel" data-panel="style" hidden aria-label="Settings">
+        <h2>Settings</h2>
+        <p class="panel-sub">Theme, account, and legal.</p>
 
         <div class="card">
           <h3>Button color</h3>
@@ -380,8 +380,8 @@
         <span>Chat</span>
       </button>
       <button type="button" class="tab" data-tab="style">
-        <span class="tab-icon">◇</span>
-        <span>Style</span>
+        <span class="tab-icon" aria-hidden="true">⚙</span>
+        <span>Settings</span>
       </button>
     </nav>
   </div>
