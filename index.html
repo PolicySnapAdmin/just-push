@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718f" />
+  <link rel="stylesheet" href="styles.css?v=20260718g" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -358,6 +358,18 @@
             </p>
           </div>
 
+          <!-- Change password (email accounts only) -->
+          <div id="change-password-block" class="email-auth-block" hidden>
+            <button type="button" class="ghost-btn link-btn" id="change-password-toggle">Change password</button>
+            <form id="change-password-form" class="stack-form" hidden>
+              <input type="password" id="new-password-input" placeholder="New password (6+ characters)" autocomplete="new-password" required minlength="6" maxlength="72" />
+              <input type="password" id="confirm-password-input" placeholder="Confirm new password" autocomplete="new-password" required minlength="6" maxlength="72" />
+              <button type="submit" class="solid-btn">Update password</button>
+              <button type="button" class="ghost-btn" id="change-password-cancel">Cancel</button>
+            </form>
+            <p class="form-msg" id="change-password-msg" role="status"></p>
+          </div>
+
           <div class="stack-form">
             <button type="button" class="solid-btn" id="github-btn-style">Sign in with GitHub</button>
             <button type="button" class="ghost-btn" id="sign-out-btn" hidden>Sign out</button>
@@ -443,7 +455,7 @@
   <div class="toast" id="toast" hidden role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718f"></script>
-  <script src="app.js?v=20260718f"></script>
+  <script src="config.js?v=20260718g"></script>
+  <script src="app.js?v=20260718g"></script>
 </body>
 </html>

@@ -371,6 +371,13 @@ const els = {
   emailLinkBtn: $("#email-link-btn"),
   emailSigninBtn: $("#email-signin-btn"),
   emailAuthMsg: $("#email-auth-msg"),
+  changePasswordBlock: $("#change-password-block"),
+  changePasswordToggle: $("#change-password-toggle"),
+  changePasswordForm: $("#change-password-form"),
+  changePasswordCancel: $("#change-password-cancel"),
+  newPasswordInput: $("#new-password-input"),
+  confirmPasswordInput: $("#confirm-password-input"),
+  changePasswordMsg: $("#change-password-msg"),
   privacyLink: $("#privacy-link"),
   termsLink: $("#terms-link"),
   ageModal: $("#age-modal"),
@@ -561,6 +568,20 @@ function setEmailAuthMsg(text, kind = "") {
   els.emailAuthMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
+function setChangePasswordMsg(text, kind = "") {
+  if (!els.changePasswordMsg) return;
+  els.changePasswordMsg.textContent = text || "";
+  els.changePasswordMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function resetChangePasswordForm() {
+  if (els.changePasswordForm) els.changePasswordForm.hidden = true;
+  if (els.changePasswordToggle) els.changePasswordToggle.hidden = false;
+  if (els.newPasswordInput) els.newPasswordInput.value = "";
+  if (els.confirmPasswordInput) els.confirmPasswordInput.value = "";
+  setChangePasswordMsg("");
+}
+
 function setOnlineUi() {
   els.app.dataset.online = online ? "1" : "0";
   const ghOn = featureGithubEnabled();
@@ -581,6 +602,7 @@ function setOnlineUi() {
     if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = true;
     if (els.deleteAccountHint) els.deleteAccountHint.hidden = true;
     if (els.emailAuthBlock) els.emailAuthBlock.hidden = true;
+    if (els.changePasswordBlock) els.changePasswordBlock.hidden = true;
     return;
   }
   if (online) {
@@ -623,6 +645,10 @@ function setOnlineUi() {
         els.emailLinkBtn.hidden = false;
       }
     }
+    if (els.changePasswordBlock) {
+      els.changePasswordBlock.hidden = !(emailOn && hasEmail);
+      if (!(emailOn && hasEmail)) resetChangePasswordForm();
+    }
   } else {
     els.syncPill.textContent = "offline";
     els.syncPill.className = "sync-pill offline";
@@ -641,6 +667,7 @@ function setOnlineUi() {
       }
       if (els.emailLinkBtn) els.emailLinkBtn.hidden = true;
     }
+    if (els.changePasswordBlock) els.changePasswordBlock.hidden = true;
     els.friendCodeHint.textContent = "Offline: long share blob. Go online for short codes + live boards.";
   }
   updateChatOnlineHint();
@@ -1437,6 +1464,24 @@ async function signInWithEmailPassword() {
   if (els.passwordInput) els.passwordInput.value = "";
   await refreshSocial();
   await loadGlobalBoard();
+}
+
+async function changePassword() {
+  if (!featureEmailEnabled()) throw new Error("Email accounts are disabled");
+  if (!sb || !session?.user) throw new Error("Not signed in");
+  if (!isEmailUser()) throw new Error("Change password is only for email accounts");
+
+  const next = String(els.newPasswordInput?.value || "");
+  const confirm = String(els.confirmPasswordInput?.value || "");
+  if (next.length < 6) throw new Error("Password must be at least 6 characters");
+  if (next !== confirm) throw new Error("Passwords do not match");
+
+  const { error } = await sb.auth.updateUser({ password: next });
+  if (error) throw error;
+
+  resetChangePasswordForm();
+  setChangePasswordMsg("Password updated.", "ok");
+  toast("Password updated");
 }
 
 async function signOut() {
@@ -2792,6 +2837,26 @@ function bindEvents() {
     } catch (err) {
       setEmailAuthMsg(err.message || "Could not sign in", "err");
       toast(err.message || "Sign-in failed");
+    }
+  });
+
+  els.changePasswordToggle?.addEventListener("click", () => {
+    setChangePasswordMsg("");
+    if (els.changePasswordForm) els.changePasswordForm.hidden = false;
+    if (els.changePasswordToggle) els.changePasswordToggle.hidden = true;
+    els.newPasswordInput?.focus();
+  });
+  els.changePasswordCancel?.addEventListener("click", () => {
+    resetChangePasswordForm();
+  });
+  els.changePasswordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setChangePasswordMsg("");
+    try {
+      await changePassword();
+    } catch (err) {
+      setChangePasswordMsg(err.message || "Could not update password", "err");
+      toast(err.message || "Password update failed");
     }
   });
 
