@@ -1479,6 +1479,60 @@ textarea#dm-input:focus {
   box-shadow: var(--shadow);
 }
 
+.name-modal-card #name-input,
+.name-modal-card #name-login-email,
+.name-modal-card #name-login-password {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+}
+
+.name-modal-card #name-input:focus,
+.name-modal-card #name-login-email:focus,
+.name-modal-card #name-login-password:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--btn) 55%, var(--border));
+}
+
+.name-modal-switch {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.text-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--btn);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.text-link-btn:hover {
+  filter: brightness(1.1);
+}
+
+.name-login-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+#name-login-panel .stack-form {
+  margin-top: 4px;
+}
+
 .modal-card h2 {
   margin: 0 0 6px;
   font-family: var(--display);

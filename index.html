@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718j" />
+  <link rel="stylesheet" href="styles.css?v=20260718k" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -448,16 +448,38 @@
     </form>
   </dialog>
 
-  <!-- Name modal -->
+  <!-- Name modal (+ login for returning players) -->
   <dialog id="name-modal" class="modal">
-    <form method="dialog" id="name-form" class="modal-card">
-      <h2>What should we call you?</h2>
-      <p>Shown on leaderboards and next to your friend code.</p>
-      <input type="text" id="name-input" maxlength="16" placeholder="Your name" required autocomplete="nickname" />
-      <div class="modal-actions">
-        <button type="submit" class="solid-btn">Save</button>
+    <div class="modal-card name-modal-card">
+      <div id="name-panel">
+        <form id="name-form">
+          <h2>What should we call you?</h2>
+          <p>Shown on leaderboards and next to your friend code.</p>
+          <input type="text" id="name-input" maxlength="16" placeholder="Your name" required autocomplete="nickname" />
+          <div class="modal-actions">
+            <button type="submit" class="solid-btn">Continue</button>
+          </div>
+        </form>
+        <p class="name-modal-switch muted">
+          Already have an account?
+          <button type="button" class="text-link-btn" id="name-show-login">Log in</button>
+        </p>
       </div>
-    </form>
+
+      <div id="name-login-panel" hidden>
+        <h2>Log in</h2>
+        <p>Sign in with email to restore your scores, friends, and name.</p>
+        <form id="name-login-form" class="stack-form">
+          <input type="email" id="name-login-email" placeholder="Email" autocomplete="email" required maxlength="120" />
+          <input type="password" id="name-login-password" placeholder="Password" autocomplete="current-password" required minlength="6" maxlength="72" />
+          <div class="modal-actions name-login-actions">
+            <button type="button" class="ghost-btn" id="name-login-back">Back</button>
+            <button type="submit" class="solid-btn">Log in</button>
+          </div>
+        </form>
+        <p class="form-msg" id="name-login-msg" role="status"></p>
+      </div>
+    </div>
   </dialog>
 
   <!-- Delete account — multi-step (hard to misclick) -->
@@ -495,7 +517,7 @@
   <div class="toast" id="toast" hidden role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718i"></script>
-  <script src="app.js?v=20260718i"></script>
+  <script src="config.js?v=20260718k"></script>
+  <script src="app.js?v=20260718k"></script>
 </body>
 </html>

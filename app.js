@@ -313,6 +313,14 @@ const els = {
   nameModal: $("#name-modal"),
   nameForm: $("#name-form"),
   nameInput: $("#name-input"),
+  namePanel: $("#name-panel"),
+  nameLoginPanel: $("#name-login-panel"),
+  nameShowLogin: $("#name-show-login"),
+  nameLoginForm: $("#name-login-form"),
+  nameLoginEmail: $("#name-login-email"),
+  nameLoginPassword: $("#name-login-password"),
+  nameLoginBack: $("#name-login-back"),
+  nameLoginMsg: $("#name-login-msg"),
   toast: $("#toast"),
   myFriendCode: $("#my-friend-code"),
   friendCodeHint: $("#friend-code-hint"),
@@ -717,12 +725,81 @@ function ensureAgeThenName() {
   ensureName();
 }
 
+function setNameLoginMsg(text, kind = "") {
+  if (!els.nameLoginMsg) return;
+  els.nameLoginMsg.textContent = text || "";
+  els.nameLoginMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function showNamePanel() {
+  if (els.namePanel) els.namePanel.hidden = false;
+  if (els.nameLoginPanel) els.nameLoginPanel.hidden = true;
+  setNameLoginMsg("");
+  setTimeout(() => els.nameInput?.focus(), 50);
+}
+
+function showNameLoginPanel() {
+  if (els.namePanel) els.namePanel.hidden = true;
+  if (els.nameLoginPanel) els.nameLoginPanel.hidden = false;
+  setNameLoginMsg("");
+  setTimeout(() => els.nameLoginEmail?.focus(), 50);
+}
+
 function ensureName() {
-  if (!state.name) {
-    els.nameInput.value = "";
-    els.nameModal.showModal();
-    setTimeout(() => els.nameInput.focus(), 50);
+  // Already have a name (local or restored after login)
+  if (state.name) {
+    if (els.nameModal?.open) els.nameModal.close();
+    return;
   }
+  // Email/GitHub session with server name may still be loading — wait for ensureProfile
+  if (session?.user && !isAnonymousUser() && !state.name) {
+    // still show modal so they can login/switch, but prefer login panel if email enabled
+  }
+  showNamePanel();
+  if (els.nameInput) els.nameInput.value = "";
+  if (!els.nameModal?.open) els.nameModal?.showModal();
+  setTimeout(() => els.nameInput?.focus(), 50);
+}
+
+/**
+ * Log in from the first-run name modal (does not require picking a guest name first).
+ */
+async function loginFromNameModal() {
+  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Still connecting — try again in a moment");
+  }
+  const email = String(els.nameLoginEmail?.value || "")
+    .trim()
+    .toLowerCase();
+  const password = String(els.nameLoginPassword?.value || "");
+  if (!email || !email.includes("@")) throw new Error("Enter a valid email");
+  if (password.length < 6) throw new Error("Password must be at least 6 characters");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  session = data.session;
+  online = true;
+  await ensureProfile();
+  setOnlineUi();
+  await refreshSocial().catch(() => {});
+  await loadGlobalBoard().catch(() => {});
+
+  if (els.nameLoginPassword) els.nameLoginPassword.value = "";
+  if (els.nameModal?.open) els.nameModal.close();
+  // If profile has no display name, ask once after login
+  if (!state.name || state.name === "Player") {
+    state.name = state.name || "";
+    if (!state.name) {
+      showNamePanel();
+      els.nameModal?.showModal();
+      setTimeout(() => els.nameInput?.focus(), 50);
+      toast("Signed in — pick a display name");
+      return;
+    }
+  }
+  toast("Welcome back");
 }
 
 /** Phrase user must type to enable permanent delete. */
@@ -2687,6 +2764,7 @@ function bindEvents() {
   els.challengeAgain.addEventListener("click", resetChallengeIdle);
 
   els.profileBtn.addEventListener("click", () => {
+    showNamePanel();
     els.nameInput.value = state.name || "";
     els.nameModal.showModal();
     setTimeout(() => {
@@ -2702,9 +2780,28 @@ function bindEvents() {
     state.name = name;
     saveState();
     renderProfile();
-    scheduleSync();
+    scheduleMetaSync();
     els.nameModal.close();
     toast(`Hey, ${name}!`);
+  });
+
+  els.nameShowLogin?.addEventListener("click", () => {
+    if (!featureEmailEnabled()) {
+      toast("Email login is disabled in this build");
+      return;
+    }
+    showNameLoginPanel();
+  });
+  els.nameLoginBack?.addEventListener("click", () => showNamePanel());
+  els.nameLoginForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setNameLoginMsg("");
+    try {
+      await loginFromNameModal();
+    } catch (err) {
+      setNameLoginMsg(err.message || "Could not log in", "err");
+      toast(err.message || "Login failed");
+    }
   });
 
   els.copyFriendCode.addEventListener("click", async () => {
