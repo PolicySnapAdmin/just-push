@@ -1,26 +1,26 @@
 /**
- * Just Push — free push + 10s challenge, localStorage + Supabase backend.
+ * Push Thru — free push + 10s challenge, localStorage + Supabase backend.
  */
 
 const STORAGE_KEY = "just-push-v2";
 const CHALLENGE_MS = 10_000;
 const CIRCUMFERENCE = 2 * Math.PI * 46;
 
-// ——— OSRS XP curve (levels 1–99) ———
-// XP to reach level L = floor( (1/4) * sum_{n=1}^{L-1} floor(n + 300 * 2^(n/7)) )
-// 1 push = 1 XP. Level 99 = 13,034,431 XP (same as Old School RuneScape).
-const OSRS_MAX_LEVEL = 99;
-const OSRS_XP_TABLE = (() => {
+// ——— Level XP curve (levels 1–99) ———
+// Exponential grind: early levels come quick, higher levels take much more XP.
+// 1 push = 1 XP.
+const MAX_LEVEL = 99;
+const XP_TABLE = (() => {
   const table = [0, 0]; // index = level; XP required to *be* that level
   let points = 0;
-  for (let n = 1; n < OSRS_MAX_LEVEL; n++) {
+  for (let n = 1; n < MAX_LEVEL; n++) {
     points += Math.floor(n + 300 * Math.pow(2, n / 7));
     table[n + 1] = Math.floor(points / 4);
   }
   return table;
 })();
 
-/** Metal/gear-style tiers for the level badge icon (inspired by OSRS progression). */
+/** Metal-style tiers for the level badge icon. */
 const LEVEL_TIERS = [
   { min: 1, id: "bronze", label: "Bronze", color: "#cd7f32" },
   { min: 10, id: "iron", label: "Iron", color: "#9ca3af" },
@@ -38,8 +38,8 @@ const LEVEL_TIERS = [
 function levelFromXp(xp) {
   const x = Math.max(0, Math.floor(Number(xp) || 0));
   let level = 1;
-  for (let l = OSRS_MAX_LEVEL; l >= 1; l--) {
-    if (x >= OSRS_XP_TABLE[l]) {
+  for (let l = MAX_LEVEL; l >= 1; l--) {
+    if (x >= XP_TABLE[l]) {
       level = l;
       break;
     }
@@ -48,8 +48,8 @@ function levelFromXp(xp) {
 }
 
 function xpForLevel(level) {
-  const l = Math.max(1, Math.min(OSRS_MAX_LEVEL, Math.floor(level)));
-  return OSRS_XP_TABLE[l] || 0;
+  const l = Math.max(1, Math.min(MAX_LEVEL, Math.floor(level)));
+  return XP_TABLE[l] || 0;
 }
 
 function tierForLevel(level) {
@@ -64,7 +64,7 @@ function levelProgress(xp) {
   const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
   const level = levelFromXp(totalXp);
   const at = xpForLevel(level);
-  if (level >= OSRS_MAX_LEVEL) {
+  if (level >= MAX_LEVEL) {
     return {
       level,
       totalXp,
@@ -873,7 +873,7 @@ async function initBackend() {
     await loadBoardPosts();
     await processPendingDeepLink();
   } catch (err) {
-    console.warn("Just Push online init failed:", err);
+    console.warn("Push Thru online init failed:", err);
     online = false;
     setOnlineUi();
   }
@@ -1130,8 +1130,8 @@ async function shareFriendInvite() {
   const name = state.name || "me";
   const result = await shareOrCopy(
     url,
-    "Just Push",
-    `Add ${name} on Just Push and compete — free push + 10 second mode:\n${url}`
+    "Push Thru",
+    `Add ${name} on Push Thru and compete — free push + 10 second mode:\n${url}`
   );
   if (result === "shared") toast("Invite sent");
   else if (result === "copied") toast("Invite link copied — paste in texts");
@@ -1142,8 +1142,8 @@ async function shareGroupInvite(code, groupName) {
   const url = groupInviteUrl(code);
   const result = await shareOrCopy(
     url,
-    "Just Push group",
-    `Join ${groupName || "our group"} on Just Push:\n${url}`
+    "Push Thru group",
+    `Join ${groupName || "our group"} on Push Thru:\n${url}`
   );
   if (result === "shared") toast("Group link sent");
   else if (result === "copied") toast("Group link copied");

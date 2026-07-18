@@ -393,7 +393,7 @@ body {
   font-size: 1.55rem;
 }
 
-/* OSRS-style level bar + metal tier icons */
+/* Level bar + metal tier icons */
 .level-bar {
   display: flex;
   align-items: center;

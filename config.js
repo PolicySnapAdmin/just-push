@@ -2,7 +2,7 @@
  * Public Supabase config (safe in the browser — same idea as Firebase).
  * Never put the service role key here.
  *
- * Shared project: PumpQuest / PolicySnap / Just Push (jpnaotxkcpnwgqkzxdue)
+ * Shared project: PumpQuest / PolicySnap / Push Thru (jpnaotxkcpnwgqkzxdue)
  * Tables are namespaced jp_* so nothing clashes.
  *
  * Set enabled: false to force offline localStorage-only mode.
