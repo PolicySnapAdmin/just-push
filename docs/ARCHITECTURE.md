@@ -21,7 +21,7 @@ Repo / GitHub Pages path remains `just-push` for stable URLs.
 | `privacy.html` / `terms.html` | Legal pages (HTTPS on Pages) |
 
 **Deploy:** GitHub Pages from `main` branch root  
-https://policysnapadmin.github.io/just-push/
+https://www.pushthrugames.com/
 
 **Feature flags** (`config.js`):
 

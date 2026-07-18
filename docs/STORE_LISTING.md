@@ -2,9 +2,9 @@
 
 Use these in **App Store Connect**. Edit free anytime before submit.
 
-**Support URL:** https://policysnapadmin.github.io/just-push/  
-**Privacy Policy URL:** https://policysnapadmin.github.io/just-push/privacy.html  
-**Marketing URL (optional):** https://policysnapadmin.github.io/just-push/  
+**Support URL:** https://www.pushthrugames.com/  
+**Privacy Policy URL:** https://www.pushthrugames.com/privacy.html  
+**Marketing URL (optional):** https://www.pushthrugames.com/  
 **Support email:** calvin.money@gmail.com  
 
 **v1 scope:** no Chat, guest accounts only (see `config.js`).
@@ -130,5 +130,5 @@ Chat / messaging is disabled in this build (enableChat: false).
 GitHub sign-in is disabled (guest only).
 
 Support: calvin.money@gmail.com
-Privacy: https://policysnapadmin.github.io/just-push/privacy.html
+Privacy: https://www.pushthrugames.com/privacy.html
 ```

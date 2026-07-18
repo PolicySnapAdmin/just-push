@@ -20,9 +20,9 @@ window.JUST_PUSH_CONFIG = {
    * Public site URL for invite links you send to friends.
    * Leave empty to use the current page URL (works on GitHub Pages).
    */
-  publicBaseUrl: "https://policysnapadmin.github.io/just-push/",
+  publicBaseUrl: "https://www.pushthrugames.com/",
   /** Marketing / multi-platform storefront */
-  storeUrl: "https://policysnapadmin.github.io/just-push/store.html",
+  storeUrl: "https://www.pushthrugames.com/store.html",
   /** GitHub OAuth redirect — must match Supabase Auth URL config */
   redirectTo: typeof location !== "undefined" ? location.origin + location.pathname : undefined,
 

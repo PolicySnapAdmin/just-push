@@ -45,8 +45,8 @@ Email tips:
 
 | Field | Value |
 |-------|--------|
-| Site URL | `https://policysnapadmin.github.io/just-push/` |
-| Redirect URLs | `https://policysnapadmin.github.io/just-push/**` |
+| Site URL | `https://www.pushthrugames.com/` |
+| Redirect URLs | `https://www.pushthrugames.com/**` |
 | | `http://localhost:3000/**` |
 | | `http://127.0.0.1:3000/**` |
 

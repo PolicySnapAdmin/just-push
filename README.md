@@ -4,10 +4,10 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 
 | | |
 |--|--|
-| **Play (game)** | https://policysnapadmin.github.io/just-push/ |
-| **Store / landing** | https://policysnapadmin.github.io/just-push/store.html |
-| **Privacy** | https://policysnapadmin.github.io/just-push/privacy.html |
-| **Terms** | https://policysnapadmin.github.io/just-push/terms.html |
+| **Play (game)** | https://www.pushthrugames.com/ |
+| **Store / landing** | https://www.pushthrugames.com/store.html |
+| **Privacy** | https://www.pushthrugames.com/privacy.html |
+| **Terms** | https://www.pushthrugames.com/terms.html |
 | **Support** | calvin.money@gmail.com |
 | **Repo path** | `just-push` (GitHub Pages URL stable) |
 
@@ -68,7 +68,7 @@ just-push/
 enableChat: false,        // hide Chat tab (App Store v1)
 enableGithubAuth: false,  // hide GitHub OAuth
 enableEmailAuth: true,    // Settings email save / sign-in
-publicBaseUrl: "https://policysnapadmin.github.io/just-push/",
+publicBaseUrl: "https://www.pushthrugames.com/",
 ```
 
 ## Backend
@@ -108,8 +108,8 @@ See [docs/APP_STORE.md](./docs/APP_STORE.md).
 ## Share links
 
 ```text
-https://policysnapadmin.github.io/just-push/?add=FRIENDCODE
-https://policysnapadmin.github.io/just-push/?join=GROUPCODE
+https://www.pushthrugames.com/?add=FRIENDCODE
+https://www.pushthrugames.com/?join=GROUPCODE
 ```
 
 ## Security (short)

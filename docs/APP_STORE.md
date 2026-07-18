@@ -2,9 +2,9 @@
 
 Work through this on Windows first. You only need a Mac later for Xcode archive + TestFlight.
 
-**Live web app:** https://policysnapadmin.github.io/just-push/  
-**Privacy:** https://policysnapadmin.github.io/just-push/privacy.html  
-**Terms:** https://policysnapadmin.github.io/just-push/terms.html  
+**Live web app:** https://www.pushthrugames.com/  
+**Privacy:** https://www.pushthrugames.com/privacy.html  
+**Terms:** https://www.pushthrugames.com/terms.html  
 **Related docs:** [ARCHITECTURE](./ARCHITECTURE.md) · [SUPABASE](./SUPABASE.md) · [SECURITY](./SECURITY.md) · [STORE_LISTING](./STORE_LISTING.md)  
 
 
@@ -63,13 +63,13 @@ Answer based on **current online build**. Adjust if you disable chat or add anal
 ### Privacy Policy URL (required)
 
 ```text
-https://policysnapadmin.github.io/just-push/privacy.html
+https://www.pushthrugames.com/privacy.html
 ```
 
 ### Support / marketing URL (optional but useful)
 
 ```text
-https://policysnapadmin.github.io/just-push/
+https://www.pushthrugames.com/
 ```
 
 ---

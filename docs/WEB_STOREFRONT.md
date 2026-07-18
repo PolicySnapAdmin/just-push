@@ -4,9 +4,9 @@
 
 | Page | URL | Purpose |
 |------|-----|---------|
-| **Store / landing** | https://policysnapadmin.github.io/just-push/store.html | Share this for marketing, platforms, “download” |
-| **Play** | https://policysnapadmin.github.io/just-push/ | Actual game + friend/group invite deep links |
-| **Web login** | https://policysnapadmin.github.io/just-push/?tab=style | Opens Settings (email sign-in) |
+| **Store / landing** | https://www.pushthrugames.com/store.html | Share this for marketing, platforms, “download” |
+| **Play** | https://www.pushthrugames.com/ | Actual game + friend/group invite deep links |
+| **Web login** | https://www.pushthrugames.com/?tab=style | Opens Settings (email sign-in) |
 
 Friend invites should keep using the **play** URL (`publicBaseUrl`), not the store.
 
@@ -15,7 +15,7 @@ Friend invites should keep using the **play** URL (`publicBaseUrl`), not the sto
 Open Graph tags on `store.html` and `index.html` point at:
 
 ```text
-https://policysnapadmin.github.io/just-push/assets/og-image.png
+https://www.pushthrugames.com/assets/og-image.png
 ```
 
 (1200×630 PNG.)
