@@ -316,6 +316,7 @@ const els = {
   namePanel: $("#name-panel"),
   nameLoginPanel: $("#name-login-panel"),
   nameShowLogin: $("#name-show-login"),
+  nameShowRegister: $("#name-show-register"),
   nameLoginForm: $("#name-login-form"),
   nameLoginEmail: $("#name-login-email"),
   nameLoginPassword: $("#name-login-password"),
@@ -731,13 +732,15 @@ function setNameLoginMsg(text, kind = "") {
   els.nameLoginMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
+/** New player: pick a display name */
 function showNamePanel() {
-  if (els.namePanel) els.namePanel.hidden = false;
   if (els.nameLoginPanel) els.nameLoginPanel.hidden = true;
+  if (els.namePanel) els.namePanel.hidden = false;
   setNameLoginMsg("");
   setTimeout(() => els.nameInput?.focus(), 50);
 }
 
+/** Default first screen: log in */
 function showNameLoginPanel() {
   if (els.namePanel) els.namePanel.hidden = true;
   if (els.nameLoginPanel) els.nameLoginPanel.hidden = false;
@@ -751,14 +754,11 @@ function ensureName() {
     if (els.nameModal?.open) els.nameModal.close();
     return;
   }
-  // Email/GitHub session with server name may still be loading — wait for ensureProfile
-  if (session?.user && !isAnonymousUser() && !state.name) {
-    // still show modal so they can login/switch, but prefer login panel if email enabled
-  }
-  showNamePanel();
+  // Prefer login first; new players use “Continue as guest”
+  if (featureEmailEnabled()) showNameLoginPanel();
+  else showNamePanel();
   if (els.nameInput) els.nameInput.value = "";
   if (!els.nameModal?.open) els.nameModal?.showModal();
-  setTimeout(() => els.nameInput?.focus(), 50);
 }
 
 /**
@@ -789,15 +789,11 @@ async function loginFromNameModal() {
   if (els.nameLoginPassword) els.nameLoginPassword.value = "";
   if (els.nameModal?.open) els.nameModal.close();
   // If profile has no display name, ask once after login
-  if (!state.name || state.name === "Player") {
-    state.name = state.name || "";
-    if (!state.name) {
-      showNamePanel();
-      els.nameModal?.showModal();
-      setTimeout(() => els.nameInput?.focus(), 50);
-      toast("Signed in — pick a display name");
-      return;
-    }
+  if (!state.name) {
+    showNamePanel();
+    els.nameModal?.showModal();
+    toast("Signed in — pick a display name");
+    return;
   }
   toast("Welcome back");
 }
@@ -2764,6 +2760,7 @@ function bindEvents() {
   els.challengeAgain.addEventListener("click", resetChallengeIdle);
 
   els.profileBtn.addEventListener("click", () => {
+    // Editing display name — go straight to name panel
     showNamePanel();
     els.nameInput.value = state.name || "";
     els.nameModal.showModal();
@@ -2785,14 +2782,8 @@ function bindEvents() {
     toast(`Hey, ${name}!`);
   });
 
-  els.nameShowLogin?.addEventListener("click", () => {
-    if (!featureEmailEnabled()) {
-      toast("Email login is disabled in this build");
-      return;
-    }
-    showNameLoginPanel();
-  });
-  els.nameLoginBack?.addEventListener("click", () => showNamePanel());
+  els.nameShowRegister?.addEventListener("click", () => showNamePanel());
+  els.nameLoginBack?.addEventListener("click", () => showNameLoginPanel());
   els.nameLoginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     setNameLoginMsg("");
