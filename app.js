@@ -660,10 +660,10 @@ function setOnlineUi() {
     }
     if (els.changePasswordBlock) {
       const showPw = emailOn && hasEmail;
+      const wasHidden = els.changePasswordBlock.hidden;
       els.changePasswordBlock.hidden = !showPw;
-      // Always start collapsed so password fields aren't sitting open
-      if (showPw) resetChangePasswordForm();
-      else resetChangePasswordForm();
+      // Collapse when block first appears or when leaving email session — not mid-edit
+      if (!showPw || wasHidden) resetChangePasswordForm();
     }
   } else {
     els.syncPill.textContent = "offline";
