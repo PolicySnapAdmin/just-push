@@ -187,6 +187,14 @@ let groupsCache = [];
 let globalBoard = []; // global 10s
 let globalLifetimeBoard = []; // global all-time pushes
 
+// Chat
+let boardPosts = [];
+let dmMessages = [];
+let chatMode = "board"; // board | dm
+let activeDmFriend = null; // { id, name, ... }
+let lastBoardPostAt = 0;
+let lastDmSendAt = 0;
+
 // Offline share-code helpers (fallback when offline)
 function toBase64Url(str) {
   const bytes = new TextEncoder().encode(str);
@@ -356,6 +364,30 @@ const els = {
   shareFriendLink: $("#share-friend-link"),
   copyFriendLink: $("#copy-friend-link"),
   pendingInvite: $("#pending-invite"),
+  // Chat
+  chatBoardView: $("#chat-board-view"),
+  chatDmView: $("#chat-dm-view"),
+  boardPostForm: $("#board-post-form"),
+  boardPostInput: $("#board-post-input"),
+  boardCharCount: $("#board-char-count"),
+  boardMsg: $("#board-msg"),
+  boardFeed: $("#board-feed"),
+  boardEmpty: $("#board-empty"),
+  refreshBoard: $("#refresh-board"),
+  dmFriendPicker: $("#dm-friend-picker"),
+  dmFriendList: $("#dm-friend-list"),
+  dmFriendsEmpty: $("#dm-friends-empty"),
+  dmThreadView: $("#dm-thread-view"),
+  dmThreadTitle: $("#dm-thread-title"),
+  dmFeed: $("#dm-feed"),
+  dmEmpty: $("#dm-empty"),
+  dmForm: $("#dm-form"),
+  dmInput: $("#dm-input"),
+  dmCharCount: $("#dm-char-count"),
+  dmMsg: $("#dm-msg"),
+  dmBack: $("#dm-back"),
+  refreshDm: $("#refresh-dm"),
+  chatOfflineHint: $("#chat-offline-hint"),
 };
 
 // Deep-link invite waiting to process after online
@@ -485,6 +517,7 @@ function setOnlineUi() {
     els.signOutBtn.hidden = true;
     els.friendCodeHint.textContent = "Offline: long share blob. Go online for short codes + live boards.";
   }
+  updateChatOnlineHint();
 }
 
 function ensureName() {
@@ -837,6 +870,7 @@ async function initBackend() {
     setOnlineUi();
     await refreshSocial();
     await loadGlobalBoard();
+    await loadBoardPosts();
     await processPendingDeepLink();
   } catch (err) {
     console.warn("Just Push online init failed:", err);
@@ -1297,8 +1331,10 @@ function renderFriends() {
           <div class="name">${levelBadgeHtml(f.lifetimeCount, true)} ${escapeHtml(f.name)}</div>
           <div class="meta">10s best ${formatNum(f.challengeBest || 0)} · life ${formatNum(f.lifetimeCount || 0)} XP</div>
         </div>
-        <div class="person-score">${formatNum(f.highScore)}</div>
-        <button type="button" class="icon-btn" data-remove-friend="${f.id}" title="Remove">✕</button>
+        <div class="friend-actions">
+          <button type="button" class="solid-btn" data-msg-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem" title="Message">Msg</button>
+          <button type="button" class="icon-btn" data-remove-friend="${f.id}" title="Remove">✕</button>
+        </div>
       </li>`
       )
       .join("");
@@ -1660,6 +1696,294 @@ function renderGlobalBoard() {
   }
 }
 
+// ——— Chat (community board + friend DMs) ———
+
+function formatChatTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = Date.now();
+  const diff = now - d.getTime();
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function setChatMode(mode) {
+  chatMode = mode === "dm" ? "dm" : "board";
+  $$("[data-chat-mode]").forEach((b) => {
+    const on = b.dataset.chatMode === chatMode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  if (els.chatBoardView) els.chatBoardView.hidden = chatMode !== "board";
+  if (els.chatDmView) els.chatDmView.hidden = chatMode !== "dm";
+  if (chatMode === "board") {
+    renderBoardFeed();
+    if (online) loadBoardPosts();
+  } else {
+    if (activeDmFriend) showDmThread(activeDmFriend);
+    else {
+      if (els.dmThreadView) els.dmThreadView.hidden = true;
+      if (els.dmFriendPicker) els.dmFriendPicker.hidden = false;
+      renderDmFriendList();
+    }
+  }
+  updateChatOnlineHint();
+}
+
+function updateChatOnlineHint() {
+  if (els.chatOfflineHint) els.chatOfflineHint.hidden = online;
+}
+
+async function loadBoardPosts() {
+  if (!sb || !online) {
+    boardPosts = [];
+    renderBoardFeed();
+    return;
+  }
+  const { data, error } = await sb
+    .from("jp_board_posts")
+    .select("id, body, created_at, user_id, jp_profiles(display_name, lifetime_count)")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    console.warn("board load", error);
+    if (els.boardMsg) {
+      els.boardMsg.className = "form-msg err";
+      els.boardMsg.textContent =
+        /relation|does not exist|schema cache/i.test(error.message || "")
+          ? "Board not set up yet — run the chat migration in Supabase."
+          : error.message || "Could not load board";
+    }
+    return;
+  }
+  if (els.boardMsg) {
+    els.boardMsg.textContent = "";
+    els.boardMsg.className = "form-msg";
+  }
+  boardPosts = data || [];
+  renderBoardFeed();
+}
+
+function renderBoardFeed() {
+  if (!els.boardFeed) return;
+  if (!boardPosts.length) {
+    els.boardFeed.innerHTML = "";
+    if (els.boardEmpty) {
+      els.boardEmpty.hidden = false;
+      els.boardEmpty.textContent = online ? "No posts yet — be first." : "Go online to use the community board.";
+    }
+    return;
+  }
+  if (els.boardEmpty) els.boardEmpty.hidden = true;
+  els.boardFeed.innerHTML = boardPosts
+    .map((p) => {
+      const prof = p.jp_profiles || {};
+      const name = prof.display_name || "Player";
+      const life = prof.lifetime_count || 0;
+      const mine = p.user_id === myId();
+      return `
+      <li class="${mine ? "mine" : ""}" data-post-id="${p.id}">
+        <div class="chat-meta">
+          ${levelBadgeHtml(life, true)}
+          <span class="chat-author">${escapeHtml(name)}${mine ? " (you)" : ""}</span>
+          <span>${formatChatTime(p.created_at)}</span>
+        </div>
+        <p class="chat-body">${escapeHtml(p.body)}</p>
+        ${
+          mine
+            ? `<div class="chat-actions"><button type="button" class="ghost-btn tiny" data-delete-board="${p.id}">Delete</button></div>`
+            : ""
+        }
+      </li>`;
+    })
+    .join("");
+}
+
+async function postToBoard(raw) {
+  if (!sb || !online || !session?.user) throw new Error("Go online to post");
+  const body = String(raw || "").trim().slice(0, 280);
+  if (!body) throw new Error("Write something first");
+  if (Date.now() - lastBoardPostAt < 3000) throw new Error("Slow down — wait a few seconds");
+  const { error } = await sb.from("jp_board_posts").insert({
+    user_id: session.user.id,
+    body,
+  });
+  if (error) {
+    if (/relation|does not exist|schema cache/i.test(error.message || "")) {
+      throw new Error("Board not set up yet — run the chat migration in Supabase.");
+    }
+    throw new Error(error.message || "Post failed");
+  }
+  lastBoardPostAt = Date.now();
+  await loadBoardPosts();
+}
+
+async function deleteBoardPost(id) {
+  if (!sb || !online) return;
+  const { error } = await sb.from("jp_board_posts").delete().eq("id", id);
+  if (error) {
+    toast(error.message || "Could not delete");
+    return;
+  }
+  boardPosts = boardPosts.filter((p) => p.id !== id);
+  renderBoardFeed();
+  toast("Post deleted");
+}
+
+function renderDmFriendList() {
+  if (!els.dmFriendList) return;
+  const list = listFriendsForUi();
+  if (!list.length) {
+    els.dmFriendList.innerHTML = "";
+    if (els.dmFriendsEmpty) els.dmFriendsEmpty.hidden = false;
+    return;
+  }
+  if (els.dmFriendsEmpty) els.dmFriendsEmpty.hidden = true;
+  els.dmFriendList.innerHTML = list
+    .map(
+      (f) => `
+    <li data-id="${f.id}">
+      <div class="avatar" style="width:36px;height:36px;font-size:0.8rem">${initials(f.name)}</div>
+      <div class="person-info">
+        <div class="name">${levelBadgeHtml(f.lifetimeCount, true)} ${escapeHtml(f.name)}</div>
+        <div class="meta">Tap to message</div>
+      </div>
+      <button type="button" class="solid-btn" data-open-dm="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:8px 12px;font-size:0.78rem">Message</button>
+    </li>`
+    )
+    .join("");
+}
+
+function openDmWithFriend(friend) {
+  if (!friend?.id) return;
+  activeDmFriend = {
+    id: friend.id,
+    name: friend.name || friend.display_name || "Friend",
+    lifetimeCount: friend.lifetimeCount || friend.lifetime_count || 0,
+  };
+  setChatMode("dm");
+  showDmThread(activeDmFriend);
+  setTab("chat");
+}
+
+function showDmThread(friend) {
+  activeDmFriend = friend;
+  if (els.dmFriendPicker) els.dmFriendPicker.hidden = true;
+  if (els.dmThreadView) els.dmThreadView.hidden = false;
+  if (els.dmThreadTitle) els.dmThreadTitle.textContent = friend.name || "Friend";
+  renderDmFeed();
+  if (online) loadDmThread(friend.id);
+}
+
+function closeDmThread() {
+  activeDmFriend = null;
+  dmMessages = [];
+  if (els.dmThreadView) els.dmThreadView.hidden = true;
+  if (els.dmFriendPicker) els.dmFriendPicker.hidden = false;
+  renderDmFriendList();
+}
+
+async function loadDmThread(friendId) {
+  if (!sb || !online || !session?.user || !friendId) {
+    dmMessages = [];
+    renderDmFeed();
+    return;
+  }
+  const me = session.user.id;
+  const { data, error } = await sb
+    .from("jp_friend_messages")
+    .select("id, body, created_at, sender_id, recipient_id")
+    .or(
+      `and(sender_id.eq.${me},recipient_id.eq.${friendId}),and(sender_id.eq.${friendId},recipient_id.eq.${me})`
+    )
+    .order("created_at", { ascending: true })
+    .limit(100);
+  if (error) {
+    console.warn("dm load", error);
+    if (els.dmMsg) {
+      els.dmMsg.className = "form-msg err";
+      els.dmMsg.textContent =
+        /relation|does not exist|schema cache/i.test(error.message || "")
+          ? "DMs not set up yet — run the chat migration in Supabase."
+          : error.message || "Could not load messages";
+    }
+    return;
+  }
+  if (els.dmMsg) {
+    els.dmMsg.textContent = "";
+    els.dmMsg.className = "form-msg";
+  }
+  dmMessages = data || [];
+  renderDmFeed();
+  // mark received as read
+  const unread = dmMessages.filter((m) => m.recipient_id === me && !m.read_at).map((m) => m.id);
+  if (unread.length) {
+    await sb
+      .from("jp_friend_messages")
+      .update({ read_at: new Date().toISOString() })
+      .in("id", unread)
+      .eq("recipient_id", me);
+  }
+}
+
+function renderDmFeed() {
+  if (!els.dmFeed) return;
+  if (!dmMessages.length) {
+    els.dmFeed.innerHTML = "";
+    if (els.dmEmpty) {
+      els.dmEmpty.hidden = false;
+      els.dmEmpty.textContent = online ? "No messages yet — say hi." : "Go online to message friends.";
+    }
+    return;
+  }
+  if (els.dmEmpty) els.dmEmpty.hidden = true;
+  const me = myId();
+  els.dmFeed.innerHTML = dmMessages
+    .map((m) => {
+      const mine = m.sender_id === me;
+      return `
+      <li class="${mine ? "mine" : "them"}">
+        <div class="chat-meta">
+          <span class="chat-author">${mine ? "You" : escapeHtml(activeDmFriend?.name || "Friend")}</span>
+          <span>${formatChatTime(m.created_at)}</span>
+        </div>
+        <p class="chat-body">${escapeHtml(m.body)}</p>
+      </li>`;
+    })
+    .join("");
+  // scroll to latest
+  requestAnimationFrame(() => {
+    els.dmFeed.scrollTop = els.dmFeed.scrollHeight;
+  });
+}
+
+async function sendDm(raw) {
+  if (!sb || !online || !session?.user) throw new Error("Go online to send messages");
+  if (!activeDmFriend?.id) throw new Error("Pick a friend first");
+  const body = String(raw || "").trim().slice(0, 500);
+  if (!body) throw new Error("Write something first");
+  if (Date.now() - lastDmSendAt < 1500) throw new Error("Slow down — wait a moment");
+  const { error } = await sb.from("jp_friend_messages").insert({
+    sender_id: session.user.id,
+    recipient_id: activeDmFriend.id,
+    body,
+  });
+  if (error) {
+    if (/relation|does not exist|schema cache/i.test(error.message || "")) {
+      throw new Error("DMs not set up yet — run the chat migration in Supabase.");
+    }
+    if (/check|policy|friends/i.test(error.message || "")) {
+      throw new Error("You can only message friends. Add them first.");
+    }
+    throw new Error(error.message || "Send failed");
+  }
+  lastDmSendAt = Date.now();
+  await loadDmThread(activeDmFriend.id);
+}
+
 // ——— Tabs ———
 
 function setTab(tab) {
@@ -1680,6 +2004,10 @@ function setTab(tab) {
     renderGroupBoards();
     renderGlobalBoard();
     if (online) loadGlobalBoard().then(() => refreshSocial());
+  }
+  if (tab === "chat") {
+    updateChatOnlineHint();
+    setChatMode(chatMode);
   }
   if (tab === "style") renderSwatches();
 }
@@ -1800,9 +2128,99 @@ function bindEvents() {
   });
 
   els.friendsList.addEventListener("click", (e) => {
+    const msgBtn = e.target.closest("[data-msg-friend]");
+    if (msgBtn) {
+      const f = listFriendsForUi().find((x) => x.id === msgBtn.dataset.msgFriend);
+      openDmWithFriend(
+        f || {
+          id: msgBtn.dataset.msgFriend,
+          name: msgBtn.dataset.name || "Friend",
+        }
+      );
+      return;
+    }
     const btn = e.target.closest("[data-remove-friend]");
     if (!btn) return;
     removeFriend(btn.dataset.removeFriend);
+  });
+
+  // Chat mode toggle
+  $$("[data-chat-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => setChatMode(btn.dataset.chatMode));
+  });
+
+  els.boardPostInput?.addEventListener("input", () => {
+    if (els.boardCharCount) {
+      els.boardCharCount.textContent = `${els.boardPostInput.value.length}/280`;
+    }
+  });
+  els.dmInput?.addEventListener("input", () => {
+    if (els.dmCharCount) {
+      els.dmCharCount.textContent = `${els.dmInput.value.length}/500`;
+    }
+  });
+
+  els.boardPostForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!els.boardMsg) return;
+    els.boardMsg.className = "form-msg";
+    try {
+      await postToBoard(els.boardPostInput.value);
+      els.boardPostInput.value = "";
+      if (els.boardCharCount) els.boardCharCount.textContent = "0/280";
+      els.boardMsg.textContent = "Posted!";
+      els.boardMsg.classList.add("ok");
+      toast("Posted to community board");
+    } catch (err) {
+      els.boardMsg.textContent = err.message || "Could not post";
+      els.boardMsg.classList.add("err");
+    }
+  });
+
+  els.boardFeed?.addEventListener("click", (e) => {
+    const del = e.target.closest("[data-delete-board]");
+    if (del) deleteBoardPost(del.dataset.deleteBoard);
+  });
+
+  els.refreshBoard?.addEventListener("click", async () => {
+    await loadBoardPosts();
+    toast("Board refreshed");
+  });
+
+  els.dmFriendList?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-open-dm]");
+    if (!btn) return;
+    const f = listFriendsForUi().find((x) => x.id === btn.dataset.openDm);
+    openDmWithFriend(
+      f || {
+        id: btn.dataset.openDm,
+        name: btn.dataset.name || "Friend",
+      }
+    );
+  });
+
+  els.dmBack?.addEventListener("click", () => closeDmThread());
+
+  els.refreshDm?.addEventListener("click", async () => {
+    if (activeDmFriend) {
+      await loadDmThread(activeDmFriend.id);
+      toast("Messages refreshed");
+    }
+  });
+
+  els.dmForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!els.dmMsg) return;
+    els.dmMsg.className = "form-msg";
+    try {
+      await sendDm(els.dmInput.value);
+      els.dmInput.value = "";
+      if (els.dmCharCount) els.dmCharCount.textContent = "0/500";
+      els.dmMsg.textContent = "";
+    } catch (err) {
+      els.dmMsg.textContent = err.message || "Could not send";
+      els.dmMsg.classList.add("err");
+    }
   });
 
   els.createGroupForm.addEventListener("submit", async (e) => {

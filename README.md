@@ -8,6 +8,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 |--------|---------|
 | **Free push** | Unlimited taps, session + lifetime + high score |
 | **Levels** | OSRS XP curve (1 push = 1 XP). Level 99 = 13,034,431 XP |
+| **Chat** | Community board (public posts) + private DMs with friends |
 | **10 second** | How many can you hit before the timer hits zero? |
 | **Friends** | Short codes (online) or share blobs (offline) |
 | **Groups** | Create / join with invite codes, group boards |
@@ -59,13 +60,13 @@ npx --yes serve .
 
 Uses the shared project **jpnaotxkcpnwgqkzxdue** with namespaced tables (`jp_profiles`, `jp_friendships`, `jp_groups`, `jp_group_members`) so PumpQuest / PolicySnap are untouched.
 
-### 1. Run the migration
+### 1. Run the migration(s)
 
 **Option A — SQL Editor (easiest)**
 
 1. Open [SQL Editor](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue/sql/new)
-2. Paste everything in `supabase/migrations/20260718000000_just_push.sql`
-3. Run
+2. Paste everything in `supabase/migrations/20260718000000_just_push.sql` and **Run**
+3. Then paste `supabase/migrations/20260718120000_just_push_chat.sql` and **Run** (community board + friend DMs)
 
 **Option B — CLI**
 

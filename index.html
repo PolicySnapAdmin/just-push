@@ -247,6 +247,70 @@
         </div>
       </section>
 
+      <!-- CHAT: community board + friend DMs -->
+      <section class="panel" data-panel="chat" hidden aria-label="Chat">
+        <h2>Chat</h2>
+        <p class="panel-sub">Community board for everyone, and private messages with friends.</p>
+
+        <div class="mode-toggle chat-mode-toggle" role="tablist" aria-label="Chat mode">
+          <button type="button" class="mode-btn active" data-chat-mode="board" role="tab" aria-selected="true">Community</button>
+          <button type="button" class="mode-btn" data-chat-mode="dm" role="tab" aria-selected="false">Friends</button>
+        </div>
+
+        <div id="chat-board-view">
+          <div class="card">
+            <div class="card-head">
+              <h3>Community board</h3>
+              <button type="button" class="ghost-btn tiny" id="refresh-board">Refresh</button>
+            </div>
+            <p class="muted" style="margin-top:0">Short posts anyone online can see (max 280 chars).</p>
+            <form id="board-post-form" class="stack-form">
+              <textarea id="board-post-input" rows="2" maxlength="280" placeholder="Say something to the community…" required></textarea>
+              <div class="chat-form-row">
+                <span class="char-count" id="board-char-count">0/280</span>
+                <button type="submit" class="solid-btn">Post</button>
+              </div>
+            </form>
+            <p class="form-msg" id="board-msg" role="status"></p>
+          </div>
+          <div class="card">
+            <ul class="chat-feed" id="board-feed"></ul>
+            <p class="empty" id="board-empty">No posts yet — be first.</p>
+          </div>
+        </div>
+
+        <div id="chat-dm-view" hidden>
+          <div class="card" id="dm-friend-picker">
+            <h3>Message a friend</h3>
+            <p class="muted" style="margin-top:0">Only people you've added as friends.</p>
+            <ul class="people-list" id="dm-friend-list"></ul>
+            <p class="empty" id="dm-friends-empty">Add friends first, then you can DM them.</p>
+          </div>
+
+          <div id="dm-thread-view" hidden>
+            <div class="card dm-thread-card">
+              <div class="card-head">
+                <button type="button" class="ghost-btn tiny" id="dm-back">← Back</button>
+                <h3 id="dm-thread-title">Friend</h3>
+                <button type="button" class="ghost-btn tiny" id="refresh-dm">Refresh</button>
+              </div>
+              <ul class="chat-feed dm-feed" id="dm-feed"></ul>
+              <p class="empty" id="dm-empty">No messages yet — say hi.</p>
+              <form id="dm-form" class="stack-form dm-compose">
+                <textarea id="dm-input" rows="2" maxlength="500" placeholder="Private message…" required></textarea>
+                <div class="chat-form-row">
+                  <span class="char-count" id="dm-char-count">0/500</span>
+                  <button type="submit" class="solid-btn">Send</button>
+                </div>
+              </form>
+              <p class="form-msg" id="dm-msg" role="status"></p>
+            </div>
+          </div>
+        </div>
+
+        <p class="muted chat-offline-hint" id="chat-offline-hint" hidden>Chat needs online mode (Supabase). Check Style → Account.</p>
+      </section>
+
       <!-- STYLE -->
       <section class="panel" data-panel="style" hidden aria-label="Style">
         <h2>Style</h2>
@@ -298,6 +362,10 @@
       <button type="button" class="tab" data-tab="groups">
         <span class="tab-icon">▣</span>
         <span>Groups</span>
+      </button>
+      <button type="button" class="tab" data-tab="chat">
+        <span class="tab-icon">✉</span>
+        <span>Chat</span>
       </button>
       <button type="button" class="tab" data-tab="style">
         <span class="tab-icon">◇</span>
