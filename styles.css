@@ -357,6 +357,30 @@ body {
   margin-bottom: 28px;
 }
 
+/* Unlimited: best run on top, session + lifetime underneath */
+.scoreboard-free {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.scoreboard-free .stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.scoreboard-free .stat-best {
+  padding: 14px 12px 12px;
+}
+
+.scoreboard-free .stat-best .stat-label {
+  margin-bottom: 6px;
+}
+
+.scoreboard-free .stat-best .stat-value {
+  font-size: 1.85rem;
+}
+
 .stat {
   background: var(--bg-card);
   border: 1px solid var(--border);

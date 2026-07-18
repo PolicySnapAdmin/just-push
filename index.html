@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718n" />
+  <link rel="stylesheet" href="styles.css?v=20260718p" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -53,18 +53,20 @@
           <button type="button" class="mode-btn" data-mode="challenge" role="tab" aria-selected="false">10 second</button>
         </div>
 
-        <div class="scoreboard" id="scoreboard-free">
-          <div class="stat">
-            <span class="stat-label">Session</span>
-            <span class="stat-value" id="session-count">0</span>
-          </div>
-          <div class="stat stat-highlight">
-            <span class="stat-label">High score</span>
+        <div class="scoreboard scoreboard-free" id="scoreboard-free">
+          <div class="stat stat-highlight stat-best">
+            <span class="stat-label">Best run</span>
             <span class="stat-value" id="high-score">0</span>
           </div>
-          <div class="stat">
-            <span class="stat-label">All-time</span>
-            <span class="stat-value" id="lifetime-count">0</span>
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat-label">This session</span>
+              <span class="stat-value" id="session-count">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Lifetime</span>
+              <span class="stat-value" id="lifetime-count">0</span>
+            </div>
           </div>
         </div>
 
@@ -147,7 +149,7 @@
             </div>
           </div>
           <ul class="rank-list" id="you-ranks">
-            <li><span>Unlimited high score</span><strong id="rank-high">0</strong></li>
+            <li><span>Best unlimited run</span><strong id="rank-high">0</strong></li>
             <li><span>Best 10 seconds</span><strong id="rank-challenge">0</strong></li>
             <li><span>Lifetime pushes (XP)</span><strong id="rank-life">0</strong></li>
             <li><span>Sessions played</span><strong id="rank-sessions">0</strong></li>
