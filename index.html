@@ -149,9 +149,15 @@
 
         <div class="card">
           <div class="card-head">
-            <h3>Global 10s leaderboard</h3>
+            <h3>Global boards</h3>
             <button type="button" class="ghost-btn tiny" id="refresh-global">Refresh</button>
           </div>
+
+          <h3 class="board-subhead">All-time pushes</h3>
+          <ol class="leaderboard" id="global-lifetime-board"></ol>
+          <p class="empty" id="global-lifetime-empty">Go online to see the world board.</p>
+
+          <h3 class="board-subhead" style="margin-top:18px">Best 10 seconds</h3>
           <ol class="leaderboard" id="global-board"></ol>
           <p class="empty" id="global-board-empty">Go online to see the world board.</p>
         </div>

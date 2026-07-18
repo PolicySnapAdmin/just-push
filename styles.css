@@ -567,6 +567,14 @@ body {
   gap: 2px 0;
 }
 
+.board-subhead {
+  margin: 4px 0 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
 /* Big button */
 .button-stage {
   position: relative;

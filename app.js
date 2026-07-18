@@ -184,7 +184,8 @@ let online = false;
 let syncTimer = null;
 let friendsCache = [];
 let groupsCache = [];
-let globalBoard = [];
+let globalBoard = []; // global 10s
+let globalLifetimeBoard = []; // global all-time pushes
 
 // Offline share-code helpers (fallback when offline)
 function toBase64Url(str) {
@@ -343,6 +344,8 @@ const els = {
   groupBoardsEmpty: $("#group-boards-empty"),
   globalBoard: $("#global-board"),
   globalBoardEmpty: $("#global-board-empty"),
+  globalLifetimeBoard: $("#global-lifetime-board"),
+  globalLifetimeEmpty: $("#global-lifetime-empty"),
   refreshGlobal: $("#refresh-global"),
   buttonSwatches: $("#button-swatches"),
   bgSwatches: $("#bg-swatches"),
@@ -1576,48 +1579,85 @@ function renderGroupBoards() {
     .join("");
 }
 
+function globalBoardRow(e, score, i) {
+  const rankClass = i === 0 ? " gold" : i === 1 ? " silver" : i === 2 ? " bronze" : "";
+  const you = e.id === myId();
+  const name = e.display_name || e.name || "Player";
+  const life = e.lifetime_count ?? e.lifetimeCount ?? 0;
+  return `
+      <li>
+        <span class="rank-num${rankClass}">${i + 1}</span>
+        <div class="person-info">
+          <div class="name">${levelBadgeHtml(life, true)} ${escapeHtml(name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
+        </div>
+        <div class="person-score">${formatNum(score)}</div>
+      </li>`;
+}
+
 async function loadGlobalBoard() {
   if (!sb || !online) {
     globalBoard = [];
+    globalLifetimeBoard = [];
     renderGlobalBoard();
     return;
   }
-  const { data, error } = await sb
-    .from("jp_profiles")
-    .select("id, display_name, challenge_best, high_score, lifetime_count")
-    .gt("challenge_best", 0)
-    .order("challenge_best", { ascending: false })
-    .limit(25);
-  if (error) {
-    console.warn(error);
-    return;
-  }
-  globalBoard = data || [];
+
+  const [challengeRes, lifetimeRes] = await Promise.all([
+    sb
+      .from("jp_profiles")
+      .select("id, display_name, challenge_best, high_score, lifetime_count")
+      .gt("challenge_best", 0)
+      .order("challenge_best", { ascending: false })
+      .limit(25),
+    sb
+      .from("jp_profiles")
+      .select("id, display_name, challenge_best, high_score, lifetime_count")
+      .gt("lifetime_count", 0)
+      .order("lifetime_count", { ascending: false })
+      .limit(25),
+  ]);
+
+  if (challengeRes.error) console.warn(challengeRes.error);
+  else globalBoard = challengeRes.data || [];
+
+  if (lifetimeRes.error) console.warn(lifetimeRes.error);
+  else globalLifetimeBoard = lifetimeRes.data || [];
+
   renderGlobalBoard();
 }
 
 function renderGlobalBoard() {
+  // All-time pushes
+  if (!els.globalLifetimeBoard) {
+    /* older cached HTML */
+  } else if (!globalLifetimeBoard.length) {
+    els.globalLifetimeBoard.innerHTML = "";
+    if (els.globalLifetimeEmpty) {
+      els.globalLifetimeEmpty.hidden = false;
+      els.globalLifetimeEmpty.textContent = online
+        ? "No all-time scores yet — start pushing!"
+        : "Go online to see the world board.";
+    }
+  } else {
+    if (els.globalLifetimeEmpty) els.globalLifetimeEmpty.hidden = true;
+    els.globalLifetimeBoard.innerHTML = globalLifetimeBoard
+      .map((e, i) => globalBoardRow(e, e.lifetime_count, i))
+      .join("");
+  }
+
+  // Best 10s
   if (!globalBoard.length) {
     els.globalBoard.innerHTML = "";
     els.globalBoardEmpty.hidden = false;
-    els.globalBoardEmpty.textContent = online ? "No 10s scores yet — be the first!" : "Go online to see the world board.";
-    return;
+    els.globalBoardEmpty.textContent = online
+      ? "No 10s scores yet — be the first!"
+      : "Go online to see the world board.";
+  } else {
+    els.globalBoardEmpty.hidden = true;
+    els.globalBoard.innerHTML = globalBoard
+      .map((e, i) => globalBoardRow(e, e.challenge_best, i))
+      .join("");
   }
-  els.globalBoardEmpty.hidden = true;
-  els.globalBoard.innerHTML = globalBoard
-    .map((e, i) => {
-      const rankClass = i === 0 ? " gold" : i === 1 ? " silver" : i === 2 ? " bronze" : "";
-      const you = e.id === myId();
-      return `
-      <li>
-        <span class="rank-num${rankClass}">${i + 1}</span>
-        <div class="person-info">
-          <div class="name">${levelBadgeHtml(e.lifetime_count, true)} ${escapeHtml(e.display_name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
-        </div>
-        <div class="person-score">${formatNum(e.challenge_best)}</div>
-      </li>`;
-    })
-    .join("");
 }
 
 // ——— Tabs ———
