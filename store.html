@@ -3,167 +3,229 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f0f14" />
-  <meta name="description" content="Push Thru — tap to score, climb levels, compete with friends. Play free on the web. iOS, Android, and downloads coming soon." />
+  <meta name="theme-color" content="#0a0a10" />
+  <meta name="description" content="Can you beat 10 seconds? Push Thru is the free tap challenge — climb levels, wreck your friends' high scores. Play now in your browser." />
   <meta name="author" content="Push Thru" />
 
-  <!-- Open Graph / link previews -->
+  <!-- Open Graph — punchy for chat previews -->
   <meta property="og:site_name" content="Push Thru" />
-  <meta property="og:title" content="Push Thru — Tap. Score. Beat friends." />
-  <meta property="og:description" content="Unlimited taps, 10-second challenges, levels, friends &amp; groups. Play free on the web. Apps coming soon." />
+  <meta property="og:title" content="How many taps in 10 seconds?" />
+  <meta property="og:description" content="FREE to play. Unlimited mode · 10s challenge · levels · friends. Open the link and push." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.pushthrugames.com/store.html" />
-  <meta property="og:image" content="https://www.pushthrugames.com/assets/og-image.png" />
+  <meta property="og:image" content="https://www.pushthrugames.com/assets/og-image.png?v=2" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Push Thru — Tap. Score. Beat friends." />
+  <meta property="og:image:alt" content="Push Thru — FREE TO PLAY. How many taps in 10 seconds?" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Push Thru — Tap. Score. Beat friends." />
-  <meta name="twitter:description" content="Play free on the web. Unlimited mode, 10s challenges, friends &amp; levels." />
-  <meta name="twitter:image" content="https://www.pushthrugames.com/assets/og-image.png" />
+  <meta name="twitter:title" content="How many taps in 10 seconds?" />
+  <meta name="twitter:description" content="FREE browser game. Challenge friends. Climb levels. No install." />
+  <meta name="twitter:image" content="https://www.pushthrugames.com/assets/og-image.png?v=2" />
 
   <link rel="canonical" href="https://www.pushthrugames.com/store.html" />
-  <title>Push Thru — Get the game</title>
+  <title>Push Thru — Free tap challenge. Beat your friends.</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/></svg>" />
-  <link rel="stylesheet" href="store.css?v=1" />
+  <link rel="stylesheet" href="store.css?v=2" />
   <link rel="manifest" href="site.webmanifest" />
 </head>
 <body class="store-body">
+  <div class="bg-orbs" aria-hidden="true"></div>
+
   <header class="store-nav">
     <a class="store-brand" href="store.html">
       <span class="store-mark" aria-hidden="true"></span>
       <span>Push Thru</span>
     </a>
     <nav class="store-nav-links">
-      <a href="#platforms">Get the game</a>
-      <a href="#features">Features</a>
-      <a href="index.html">Play</a>
+      <a href="#play">Play free</a>
+      <a href="#features">Why it’s addictive</a>
+      <a class="nav-cta" href="index.html">Open game →</a>
     </nav>
   </header>
 
   <main>
+    <!-- HERO -->
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Casual tap game · Free on web</p>
-        <h1>Push Thru</h1>
-        <p class="tagline">Tap. Score. Beat friends.</p>
+        <p class="eyebrow">
+          <span class="pill-live">LIVE</span>
+          Free browser game · No download
+        </p>
+        <h1>
+          One button.<br />
+          <span class="h1-accent">Infinite bragging rights.</span>
+        </h1>
+        <p class="tagline">How many times can <em>you</em> push it?</p>
         <p class="lede">
-          Unlimited mode, 10-second challenges, levels that get harder as you climb,
-          and invite links so your crew can compete on any phone.
+          Race the 10-second clock. Climb levels that get brutally hard.
+          Drop a link and destroy your friends on the leaderboard.
         </p>
         <div class="hero-cta">
-          <a class="btn btn-primary" href="index.html">Play free on web</a>
-          <a class="btn btn-ghost" href="index.html?tab=style">Web login / account</a>
+          <a class="btn btn-primary btn-xl pulse-cta" href="index.html">▶ Play free now</a>
+          <a class="btn btn-ghost btn-xl" href="index.html?tab=style">I already have an account</a>
         </div>
-        <p class="hero-note">No install required · Works in the browser · Save progress with email</p>
+        <ul class="hero-bullets">
+          <li>Instant play in any browser</li>
+          <li>Save progress with email</li>
+          <li>Invite friends in one tap</li>
+        </ul>
       </div>
-      <div class="hero-visual">
-        <img src="assets/hero-banner.jpg" width="1200" height="675" alt="Push Thru — big red push button on a dark background" />
+
+      <div class="hero-stage">
+        <div class="float-chip chip-1">+1,247</div>
+        <div class="float-chip chip-2">10.0s</div>
+        <div class="float-chip chip-3">LV 42</div>
+        <div class="float-chip chip-4">NEW PB!</div>
+        <a class="hero-button" href="index.html" aria-label="Play Push Thru">
+          <span class="hero-button-ring"></span>
+          <span class="hero-button-ring delay"></span>
+          <span class="hero-button-core">PUSH</span>
+        </a>
+        <p class="hero-stage-caption">Tap it. You know you want to.</p>
       </div>
     </section>
 
-    <section id="platforms" class="section">
-      <h2>Get Push Thru</h2>
-      <p class="section-sub">One game, multiple ways to play. Start on the web today — store apps next.</p>
+    <!-- SOCIAL PROOF STRIP -->
+    <section class="proof-strip" aria-label="Highlights">
+      <div class="proof-item">
+        <strong>FREE</strong>
+        <span>No paywall to start</span>
+      </div>
+      <div class="proof-item">
+        <strong>10s</strong>
+        <span>Pure chaos mode</span>
+      </div>
+      <div class="proof-item">
+        <strong>99</strong>
+        <span>Levels to grind</span>
+      </div>
+      <div class="proof-item">
+        <strong>VS</strong>
+        <span>Friends &amp; groups</span>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Why people can’t stop</p>
+        <h2>Built for “one more run.”</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature feature-hot">
+          <span class="feature-badge">⚡ HOT</span>
+          <h3>10-second challenge</h3>
+          <p>All gas, no tutorial. When the timer hits zero, your score is forever (until you beat it).</p>
+        </article>
+        <article class="feature">
+          <span class="feature-badge">∞</span>
+          <h3>Unlimited mode</h3>
+          <p>No clock. Just you, the button, and a high score that keeps whispering “again.”</p>
+        </article>
+        <article class="feature">
+          <span class="feature-badge">⬆</span>
+          <h3>Levels that scale</h3>
+          <p>Every push is XP. Easy at first… then the grind gets real. Level 99 is a journey.</p>
+        </article>
+        <article class="feature">
+          <span class="feature-badge">⚔</span>
+          <h3>Friends &amp; groups</h3>
+          <p>Share one link. They open it on their phone. Same board. No mercy.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- PLATFORMS -->
+    <section id="play" class="section">
+      <div class="section-head">
+        <p class="eyebrow">Get in</p>
+        <h2>Play anywhere. Start on web today.</h2>
+        <p class="section-sub">Native apps are cooking. The full game is already live in your browser.</p>
+      </div>
 
       <div class="platform-grid">
         <article class="platform-card platform-live">
-          <div class="platform-icon" aria-hidden="true">🌐</div>
-          <h3>Web</h3>
-          <p class="platform-status live">Available now</p>
-          <p>Full game in your browser. Guest play, email account, friends, groups, and boards.</p>
-          <a class="btn btn-primary btn-block" href="index.html">Play now</a>
-          <a class="btn btn-ghost btn-block" href="index.html?tab=style">Sign in on web</a>
+          <div class="platform-top">
+            <span class="platform-icon" aria-hidden="true">🌐</span>
+            <span class="platform-status live">Available now</span>
+          </div>
+          <h3>Web — play free</h3>
+          <p>Full game. Guest or email login. Works on phones, tablets, desktops.</p>
+          <a class="btn btn-primary btn-block" href="index.html">Launch game</a>
+          <a class="btn btn-ghost btn-block" href="index.html?tab=style">Log in</a>
         </article>
 
         <article class="platform-card">
-          <div class="platform-icon" aria-hidden="true"></div>
+          <div class="platform-top">
+            <span class="platform-icon" aria-hidden="true"></span>
+            <span class="platform-status soon">Coming soon</span>
+          </div>
           <h3>iPhone / iPad</h3>
-          <p class="platform-status soon">Coming soon</p>
-          <p>App Store build in progress (TestFlight next). Same account system as web.</p>
+          <p>App Store build on the way. Same progress system as web.</p>
           <button type="button" class="btn btn-muted btn-block" disabled>App Store — soon</button>
-          <a class="btn btn-ghost btn-block" href="mailto:calvin.money@gmail.com?subject=Push%20Thru%20iOS%20waitlist">Join waitlist</a>
+          <a class="btn btn-ghost btn-block" href="mailto:calvin.money@gmail.com?subject=Push%20Thru%20iOS%20waitlist">Join iOS waitlist</a>
         </article>
 
         <article class="platform-card">
-          <div class="platform-icon" aria-hidden="true">▶</div>
+          <div class="platform-top">
+            <span class="platform-icon" aria-hidden="true">▶</span>
+            <span class="platform-status soon">Coming soon</span>
+          </div>
           <h3>Android</h3>
-          <p class="platform-status soon">Coming soon</p>
-          <p>Google Play and/or sideload when ready. Web works on Android Chrome today.</p>
+          <p>Play Store soon. Until then — Chrome plays it great right now.</p>
           <button type="button" class="btn btn-muted btn-block" disabled>Google Play — soon</button>
-          <a class="btn btn-ghost btn-block" href="index.html">Play in Chrome</a>
+          <a class="btn btn-ghost btn-block" href="index.html">Play in browser</a>
         </article>
 
         <article class="platform-card">
-          <div class="platform-icon" aria-hidden="true">↓</div>
-          <h3>Download / install</h3>
-          <p class="platform-status live">Home screen</p>
-          <p>Add the web app to your home screen for an app-like icon (no store needed).</p>
+          <div class="platform-top">
+            <span class="platform-icon" aria-hidden="true">↓</span>
+            <span class="platform-status live">Home screen</span>
+          </div>
+          <h3>Install (no store)</h3>
+          <p>Add to Home Screen for an app-like icon. Zero app store wait.</p>
           <button type="button" class="btn btn-primary btn-block" id="install-hint-btn">How to install</button>
-          <a class="btn btn-ghost btn-block" href="site.webmanifest">Web app info</a>
+          <a class="btn btn-ghost btn-block" href="index.html">Open game first</a>
         </article>
       </div>
 
       <div id="install-hint" class="install-hint" hidden>
-        <h3>Add to Home Screen</h3>
+        <h3>Add to Home Screen in 10 seconds</h3>
         <ul>
           <li><strong>iPhone (Safari):</strong> Share → <em>Add to Home Screen</em></li>
-          <li><strong>Android (Chrome):</strong> Menu ⋮ → <em>Install app</em> or <em>Add to Home screen</em></li>
-          <li><strong>Desktop:</strong> Browser install icon in the address bar (when offered)</li>
+          <li><strong>Android (Chrome):</strong> Menu ⋮ → <em>Install app</em> / <em>Add to Home screen</em></li>
+          <li><strong>Desktop:</strong> Install icon in the address bar when your browser offers it</li>
         </ul>
-        <p class="muted">Native App Store / Play packages will appear here when published.</p>
       </div>
     </section>
 
-    <section id="features" class="section">
-      <h2>Why people play</h2>
-      <div class="feature-grid">
-        <div class="feature">
-          <h3>Unlimited</h3>
-          <p>Tap as much as you want. Session, high score, and all-time XP.</p>
-        </div>
-        <div class="feature">
-          <h3>10 second</h3>
-          <p>How many pushes before the clock hits zero?</p>
-        </div>
-        <div class="feature">
-          <h3>Levels</h3>
-          <p>Every push is XP. Early levels fly; higher ones take real grind.</p>
-        </div>
-        <div class="feature">
-          <h3>Friends &amp; groups</h3>
-          <p>Share a link. Compete on phones. One group board for the crew.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section cta-band">
-      <h2>Ready to push?</h2>
-      <p>Jump in free — create an email account in Settings to keep progress across devices.</p>
-      <a class="btn btn-primary" href="index.html">Open Push Thru</a>
+    <!-- FINAL CTA -->
+    <section class="cta-band">
+      <p class="cta-kicker">Don’t scroll past this one</p>
+      <h2>Your friends are already practicing.</h2>
+      <p>Open the game. Hit PUSH. Send them the invite when you’re winning.</p>
+      <a class="btn btn-primary btn-xl pulse-cta" href="index.html">Start pushing — it’s free</a>
     </section>
   </main>
 
   <footer class="store-footer">
-    <div>
+    <div class="footer-brand">
       <strong>Push Thru</strong>
-      <span class="muted"> · calvin.money@gmail.com</span>
+      <span class="muted">by pushthrugames.com</span>
     </div>
     <div class="footer-links">
       <a href="privacy.html">Privacy</a>
       <a href="terms.html">Terms</a>
       <a href="index.html">Play</a>
-      <a href="https://github.com/PolicySnapAdmin/just-push">GitHub</a>
+      <a href="index.html?tab=style">Login</a>
+      <a href="mailto:calvin.money@gmail.com">Contact</a>
     </div>
-    <p class="muted footer-domain">
-      Live at <strong>www.pushthrugames.com</strong>
-      · also on GitHub Pages during DNS setup.
-    </p>
+    <p class="muted footer-domain">https://www.pushthrugames.com</p>
   </footer>
 
   <script>
@@ -171,6 +233,7 @@
       const el = document.getElementById("install-hint");
       if (!el) return;
       el.hidden = !el.hidden;
+      if (!el.hidden) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   </script>
 </body>
