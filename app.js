@@ -1116,17 +1116,25 @@ function renderLevel() {
     const from = lastRenderedLevel;
     const to = prog.level;
     lastRenderedLevel = to;
-    // Queue intermediate levels on big jumps (e.g. offline reconcile), show final tier art
-    if (to - from > 1) {
-      for (let l = from + 1; l < to; l++) {
-        levelUpQueue.push({ level: l, tier: tierForLevel(l) });
+    // Don't interrupt 10s challenge with the congrats card
+    const inChallenge =
+      state.mode === "challenge" &&
+      (challenge.status === "running" || challenge.status === "done");
+    if (!inChallenge) {
+      // Queue intermediate levels on big jumps (e.g. offline reconcile)
+      if (to - from > 1) {
+        for (let l = from + 1; l < to; l++) {
+          levelUpQueue.push({ level: l, tier: tierForLevel(l) });
+        }
+        if (levelUpQueue.length > 4) {
+          levelUpQueue = levelUpQueue.slice(-3);
+        }
       }
-      if (levelUpQueue.length > 4) {
-        // Keep last few + final will show now
-        levelUpQueue = levelUpQueue.slice(-3);
-      }
+      showLevelUpPopup(to, prog.tier);
+    } else {
+      // Drop any pending queue so it doesn't pop mid-challenge later
+      levelUpQueue = [];
     }
-    showLevelUpPopup(to, prog.tier);
   } else if (prog.level < lastRenderedLevel) {
     // e.g. profile merge / reload — no popup
     lastRenderedLevel = prog.level;
