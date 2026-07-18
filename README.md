@@ -1,0 +1,131 @@
+# Just Push
+
+Push a button. Count the pushes. Beat the clock. Beat your friends.
+
+| Feature | Details |
+|--------|---------|
+| **Free push** | Unlimited taps, session + lifetime + high score |
+| **10 second** | How many can you hit before the timer hits zero? |
+| **Friends** | Short codes (online) or share blobs (offline) |
+| **Groups** | Create / join with invite codes, group boards |
+| **Style** | 10 button colors + 10 backgrounds |
+| **Backend** | Supabase (`jp_*` tables) on your existing project |
+| **Host** | GitHub Pages (workflow included) |
+
+## Quick start (local)
+
+Open `index.html` in a browser, or:
+
+```bash
+npx --yes serve .
+```
+
+## Supabase setup (one-time)
+
+Uses the shared project **jpnaotxkcpnwgqkzxdue** with namespaced tables (`jp_profiles`, `jp_friendships`, `jp_groups`, `jp_group_members`) so PumpQuest / PolicySnap are untouched.
+
+### 1. Run the migration
+
+**Option A — SQL Editor (easiest)**
+
+1. Open [SQL Editor](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue/sql/new)
+2. Paste everything in `supabase/migrations/20260718000000_just_push.sql`
+3. Run
+
+**Option B — CLI**
+
+```powershell
+cd C:\Users\conor\just-push
+supabase login
+# paste the migration in SQL editor if db query isn't available
+.\deploy_backend.ps1
+```
+
+### 2. Enable auth providers
+
+In Supabase → **Authentication → Providers**:
+
+1. **Anonymous** — ON (guest play + auto profile)
+2. **GitHub** — ON if you want “Sign in with GitHub”
+   - Create a GitHub OAuth App: https://github.com/settings/developers  
+   - Homepage: your Pages URL  
+   - Callback: `https://jpnaotxkcpnwgqkzxdue.supabase.co/auth/v1/callback`  
+   - Paste Client ID / Secret into Supabase
+
+### 3. URL configuration
+
+**Authentication → URL Configuration**:
+
+- Site URL: `https://YOURUSER.github.io/just-push/` (or local `http://localhost:3000`)
+- Redirect URLs: add the same + `http://127.0.0.1:3000/**`
+
+### 4. Config
+
+`config.js` already points at this project’s public anon key.  
+Set `enabled: false` to force pure offline mode.
+
+## GitHub Pages deploy
+
+```powershell
+cd C:\Users\conor\just-push
+git init
+git add .
+git commit -m "Just Push: free + 10s challenge + Supabase"
+gh repo create just-push --public --source=. --remote=origin --push
+```
+
+Then:
+
+1. Repo → **Settings → Pages → Source: GitHub Actions**
+2. Push to `main` (workflow `.github/workflows/deploy-pages.yml` deploys the folder)
+3. Add the Pages URL to Supabase redirect URLs
+
+If the site lives at `https://USER.github.io/just-push/`, set that as Site URL and ensure assets load with relative paths (they already do).
+
+## Share with friends (phones)
+
+After the site is on **HTTPS** (GitHub Pages):
+
+1. Open **Friends → Share invite link** (uses the phone share sheet).
+2. Friend opens the link → game loads → **you’re auto-added**.
+3. Or create a **Group** and share that link so everyone shares one board.
+
+Link shapes:
+
+```text
+https://YOURUSER.github.io/just-push/?add=A7K2M9
+https://YOURUSER.github.io/just-push/?join=GROUP1
+```
+
+You can also paste a full invite link into the “Add friend” / “Join group” fields.
+
+## How online friends / groups work
+
+1. You sign in anonymously (automatic) or with GitHub.
+2. You get a short **friend code** (e.g. `A7K2M9`).
+3. Scores (`high_score`, `challenge_best`, etc.) sync to `jp_profiles`.
+4. Adding a friend looks up their code and writes `jp_friendships`.
+5. Groups use `jp_groups.invite_code` + `jp_group_members`.
+6. Global 10s board = top `challenge_best` on `jp_profiles`.
+
+If Supabase is unreachable, the app falls back to localStorage + long share codes (`JP1.…` / `JPG1.…`).
+
+## Files
+
+```
+just-push/
+  index.html
+  styles.css
+  app.js
+  config.js
+  supabase/migrations/20260718000000_just_push.sql
+  .github/workflows/deploy-pages.yml
+  deploy_backend.ps1
+  README.md
+```
+
+## Security notes
+
+- Anon key is public by design (like Firebase web config).
+- RLS: users update only their own profile; friendships/groups scoped to auth.
+- Anonymous auth can be abused for spam accounts — fine for a toy clicker; tighten later with rate limits / captcha if needed.

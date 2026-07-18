@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0f14" />
+  <meta name="description" content="Push the button. Count the pushes. Beat your friends." />
+  <title>Just Push</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
+</head>
+<body>
+  <div id="app" data-tab="play" data-mode="free" data-online="0">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <h1>Just Push</h1>
+        <span class="sync-pill" id="sync-pill" title="Connection status">…</span>
+      </div>
+      <div class="topbar-right">
+        <button type="button" class="ghost-btn auth-btn" id="github-btn" hidden>GitHub</button>
+        <button type="button" class="profile-chip" id="profile-btn" title="Edit name">
+          <span class="avatar" id="avatar">?</span>
+          <span id="display-name">Player</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- PLAY -->
+      <section class="panel" data-panel="play" aria-label="Play">
+        <p class="pending-invite" id="pending-invite" hidden role="status"></p>
+        <div class="mode-toggle" role="tablist" aria-label="Play mode">
+          <button type="button" class="mode-btn active" data-mode="free" role="tab" aria-selected="true">Free push</button>
+          <button type="button" class="mode-btn" data-mode="challenge" role="tab" aria-selected="false">10 second</button>
+        </div>
+
+        <div class="scoreboard" id="scoreboard-free">
+          <div class="stat">
+            <span class="stat-label">Session</span>
+            <span class="stat-value" id="session-count">0</span>
+          </div>
+          <div class="stat stat-highlight">
+            <span class="stat-label">High score</span>
+            <span class="stat-value" id="high-score">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">All-time</span>
+            <span class="stat-value" id="lifetime-count">0</span>
+          </div>
+        </div>
+
+        <div class="scoreboard" id="scoreboard-challenge" hidden>
+          <div class="stat">
+            <span class="stat-label">This run</span>
+            <span class="stat-value" id="challenge-count">0</span>
+          </div>
+          <div class="stat stat-highlight stat-timer">
+            <span class="stat-label">Time left</span>
+            <span class="stat-value" id="challenge-timer">10.0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Best 10s</span>
+            <span class="stat-value" id="challenge-best">0</span>
+          </div>
+        </div>
+
+        <div class="button-stage">
+          <div class="ring ring-1" aria-hidden="true"></div>
+          <div class="ring ring-2" aria-hidden="true"></div>
+          <div class="timer-ring" id="timer-ring" hidden aria-hidden="true">
+            <svg viewBox="0 0 100 100">
+              <circle class="timer-track" cx="50" cy="50" r="46" />
+              <circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="46" />
+            </svg>
+          </div>
+          <button type="button" class="push-btn" id="push-btn" aria-label="Push the button">
+            <span class="push-label" id="push-label">PUSH</span>
+            <span class="push-hint" id="push-hint">or spacebar</span>
+          </button>
+          <div class="floaters" id="floaters" aria-hidden="true"></div>
+        </div>
+
+        <div class="session-actions">
+          <button type="button" class="ghost-btn" id="reset-session">Reset session</button>
+          <button type="button" class="ghost-btn" id="challenge-again" hidden>Play again</button>
+          <p class="new-record" id="new-record" hidden>New high score!</p>
+          <p class="challenge-result" id="challenge-result" hidden></p>
+        </div>
+      </section>
+
+      <!-- SCORES -->
+      <section class="panel" data-panel="scores" hidden aria-label="High scores">
+        <h2>High scores</h2>
+        <p class="panel-sub">You, friends, groups, and the global 10s board.</p>
+
+        <div class="card">
+          <h3>You</h3>
+          <ul class="rank-list" id="you-ranks">
+            <li><span>Free high score</span><strong id="rank-high">0</strong></li>
+            <li><span>Best 10 seconds</span><strong id="rank-challenge">0</strong></li>
+            <li><span>Lifetime pushes</span><strong id="rank-life">0</strong></li>
+            <li><span>Sessions played</span><strong id="rank-sessions">0</strong></li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Global 10s leaderboard</h3>
+            <button type="button" class="ghost-btn tiny" id="refresh-global">Refresh</button>
+          </div>
+          <ol class="leaderboard" id="global-board"></ol>
+          <p class="empty" id="global-board-empty">Go online to see the world board.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Friends leaderboard</h3>
+            <div class="board-tabs">
+              <button type="button" class="ghost-btn tiny active" data-board-metric="high">Free</button>
+              <button type="button" class="ghost-btn tiny" data-board-metric="challenge">10s</button>
+            </div>
+          </div>
+          <ol class="leaderboard" id="friends-board"></ol>
+          <p class="empty" id="friends-board-empty">Add friends to compete.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Group boards</h3>
+          </div>
+          <div id="group-boards"></div>
+          <p class="empty" id="group-boards-empty">Join a group to see rankings.</p>
+        </div>
+      </section>
+
+      <!-- FRIENDS -->
+      <section class="panel" data-panel="friends" hidden aria-label="Friends">
+        <h2>Friends</h2>
+        <p class="panel-sub">Send a link. They open it on their phone, get added, and you’re competing.</p>
+
+        <div class="card invite-card">
+          <h3>Invite a friend</h3>
+          <p class="muted" id="friend-code-hint">Best for group chats: one tap opens the game and adds you.</p>
+          <div class="stack-form">
+            <button type="button" class="solid-btn share-main" id="share-friend-link">Share invite link</button>
+            <button type="button" class="ghost-btn" id="copy-friend-link">Copy invite link</button>
+          </div>
+          <div class="code-row" style="margin-top:12px">
+            <code id="my-friend-code">…</code>
+            <button type="button" class="solid-btn" id="copy-friend-code">Code</button>
+          </div>
+          <p class="muted" style="margin-top:10px;margin-bottom:0">Or they can type your code manually.</p>
+        </div>
+
+        <div class="card">
+          <h3>Add a friend</h3>
+          <form id="add-friend-form" class="stack-form">
+            <input type="text" id="friend-code-input" placeholder="Their code or paste invite link" autocomplete="off" spellcheck="false" />
+            <button type="submit" class="solid-btn">Add friend</button>
+          </form>
+          <p class="form-msg" id="friend-msg" role="status"></p>
+        </div>
+
+        <div class="card">
+          <h3>Your friends <span class="count-badge" id="friend-count">0</span></h3>
+          <ul class="people-list" id="friends-list"></ul>
+          <p class="empty" id="friends-empty">No friends yet — share your code.</p>
+        </div>
+      </section>
+
+      <!-- GROUPS -->
+      <section class="panel" data-panel="groups" hidden aria-label="Groups">
+        <h2>Groups</h2>
+        <p class="panel-sub">Create a crew, share one link, everyone climbs the same board.</p>
+
+        <div class="card">
+          <h3>Create a group</h3>
+          <form id="create-group-form" class="stack-form">
+            <input type="text" id="group-name-input" placeholder="Group name" maxlength="24" autocomplete="off" />
+            <button type="submit" class="solid-btn">Create &amp; share link</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Join a group</h3>
+          <form id="join-group-form" class="stack-form">
+            <input type="text" id="group-code-input" placeholder="Invite code or paste group link" autocomplete="off" spellcheck="false" />
+            <button type="submit" class="solid-btn">Join group</button>
+          </form>
+          <p class="form-msg" id="group-msg" role="status"></p>
+        </div>
+
+        <div class="card">
+          <h3>Your groups <span class="count-badge" id="group-count">0</span></h3>
+          <ul class="group-list" id="groups-list"></ul>
+          <p class="empty" id="groups-empty">No groups yet — create one or join a friend.</p>
+        </div>
+      </section>
+
+      <!-- STYLE -->
+      <section class="panel" data-panel="style" hidden aria-label="Style">
+        <h2>Style</h2>
+        <p class="panel-sub">Pick your button and vibe.</p>
+
+        <div class="card">
+          <h3>Button color</h3>
+          <div class="swatch-grid" id="button-swatches" role="listbox" aria-label="Button colors"></div>
+        </div>
+
+        <div class="card">
+          <h3>Background</h3>
+          <div class="swatch-grid bg-swatches" id="bg-swatches" role="listbox" aria-label="Backgrounds"></div>
+        </div>
+
+        <div class="card">
+          <h3>Preview</h3>
+          <div class="style-preview">
+            <button type="button" class="push-btn mini" id="preview-btn" tabindex="-1" aria-hidden="true">
+              <span class="push-label">PUSH</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card" id="account-card">
+          <h3>Account</h3>
+          <p class="muted" id="account-status">Connecting…</p>
+          <div class="stack-form">
+            <button type="button" class="solid-btn" id="github-btn-style">Sign in with GitHub</button>
+            <button type="button" class="ghost-btn" id="sign-out-btn" hidden>Sign out</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="Main">
+      <button type="button" class="tab active" data-tab="play" aria-current="page">
+        <span class="tab-icon">●</span>
+        <span>Push</span>
+      </button>
+      <button type="button" class="tab" data-tab="scores">
+        <span class="tab-icon">▲</span>
+        <span>Scores</span>
+      </button>
+      <button type="button" class="tab" data-tab="friends">
+        <span class="tab-icon">◎</span>
+        <span>Friends</span>
+      </button>
+      <button type="button" class="tab" data-tab="groups">
+        <span class="tab-icon">▣</span>
+        <span>Groups</span>
+      </button>
+      <button type="button" class="tab" data-tab="style">
+        <span class="tab-icon">◇</span>
+        <span>Style</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Name modal -->
+  <dialog id="name-modal" class="modal">
+    <form method="dialog" id="name-form" class="modal-card">
+      <h2>What should we call you?</h2>
+      <p>Shown on leaderboards and next to your friend code.</p>
+      <input type="text" id="name-input" maxlength="16" placeholder="Your name" required autocomplete="nickname" />
+      <div class="modal-actions">
+        <button type="submit" class="solid-btn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" hidden role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
