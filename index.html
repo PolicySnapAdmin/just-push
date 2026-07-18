@@ -518,8 +518,26 @@
 
   <div class="toast" id="toast" hidden role="status"></div>
 
+  <!-- OSRS-style level-up (non-blocking — taps still work underneath) -->
+  <div id="level-up-popup" class="level-up-popup" hidden aria-live="polite">
+    <div class="level-up-card" id="level-up-card">
+      <button type="button" class="level-up-dismiss" id="level-up-dismiss" aria-label="Dismiss">×</button>
+      <p class="level-up-kicker">Congratulations</p>
+      <p class="level-up-title" id="level-up-title">You reached level 2</p>
+      <div class="level-up-badge-wrap">
+        <div class="level-badge level-up-badge" id="level-up-badge" data-tier="bronze" data-variant="base">
+          <span class="level-icon" aria-hidden="true"></span>
+          <span class="level-num" id="level-up-num">2</span>
+        </div>
+      </div>
+      <p class="level-up-tier" id="level-up-tier">Bronze</p>
+      <p class="level-up-sub" id="level-up-sub">Your Push Thru level is now 2.</p>
+      <p class="level-up-hint">Keep pushing · tap × or wait</p>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718n"></script>
-  <script src="app.js?v=20260718q"></script>
+  <script src="config.js?v=20260718r"></script>
+  <script src="app.js?v=20260718r"></script>
 </body>
 </html>

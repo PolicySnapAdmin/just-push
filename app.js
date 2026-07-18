@@ -354,6 +354,14 @@ const els = {
   nameLoginBack: $("#name-login-back"),
   nameLoginMsg: $("#name-login-msg"),
   toast: $("#toast"),
+  levelUpPopup: $("#level-up-popup"),
+  levelUpCard: $("#level-up-card"),
+  levelUpTitle: $("#level-up-title"),
+  levelUpBadge: $("#level-up-badge"),
+  levelUpNum: $("#level-up-num"),
+  levelUpTier: $("#level-up-tier"),
+  levelUpSub: $("#level-up-sub"),
+  levelUpDismiss: $("#level-up-dismiss"),
   myFriendCode: $("#my-friend-code"),
   friendCodeHint: $("#friend-code-hint"),
   copyFriendCode: $("#copy-friend-code"),
@@ -469,6 +477,9 @@ let pendingDeepLink = null; // { type: 'friend'|'group', code: string }
 
 let toastTimer = null;
 let recordTimer = null;
+let levelUpTimer = null;
+let levelUpQueue = [];
+let levelUpShowing = false;
 
 function toast(msg) {
   els.toast.hidden = false;
@@ -481,6 +492,69 @@ function toast(msg) {
       els.toast.hidden = true;
     }, 200);
   }, 2200);
+}
+
+function hideLevelUpPopup() {
+  clearTimeout(levelUpTimer);
+  levelUpTimer = null;
+  if (els.levelUpPopup) els.levelUpPopup.hidden = true;
+  levelUpShowing = false;
+  // Show next queued level-up (multi-level jumps)
+  if (levelUpQueue.length) {
+    const next = levelUpQueue.shift();
+    requestAnimationFrame(() => showLevelUpPopup(next.level, next.tier, { fromQueue: true }));
+  }
+}
+
+/**
+ * OSRS-style level-up card. Does not block input on the play area
+ * (overlay has pointer-events: none; only the card can be dismissed).
+ */
+function showLevelUpPopup(level, tier, opts = {}) {
+  if (!els.levelUpPopup || !els.levelUpCard) {
+    toast(`Level ${level}!`);
+    return;
+  }
+  if (levelUpShowing && !opts.fromQueue) {
+    levelUpQueue.push({ level, tier });
+    // Cap queue so spam jumps don't stack forever
+    if (levelUpQueue.length > 5) levelUpQueue.shift();
+    return;
+  }
+
+  const t = tier || tierForLevel(level);
+  levelUpShowing = true;
+
+  if (els.levelUpTitle) {
+    els.levelUpTitle.textContent =
+      level >= MAX_LEVEL
+        ? `You reached level ${level} — Max!`
+        : `You reached level ${level}`;
+  }
+  if (els.levelUpNum) els.levelUpNum.textContent = String(level);
+  if (els.levelUpTier) els.levelUpTier.textContent = t.label;
+  if (els.levelUpSub) {
+    els.levelUpSub.textContent =
+      level >= MAX_LEVEL
+        ? `Your Push Thru level is now ${level}. Absolute unit.`
+        : `Your Push Thru level is now ${level}.`;
+  }
+  if (els.levelUpBadge) {
+    els.levelUpBadge.dataset.tier = t.id;
+    els.levelUpBadge.dataset.variant = t.variant || "base";
+    els.levelUpBadge.style.setProperty("--tier", t.color);
+  }
+  if (els.levelUpCard) {
+    els.levelUpCard.style.setProperty("--tier", t.color);
+  }
+
+  els.levelUpPopup.hidden = false;
+  // Soft confetti — screenshot-friendly, not a full-screen takeover
+  confettiBurst();
+
+  clearTimeout(levelUpTimer);
+  // Long enough to screenshot; auto-clear so it never traps the player
+  levelUpTimer = setTimeout(() => hideLevelUpPopup(), 4500);
 }
 
 async function copyText(text) {
@@ -1039,12 +1113,22 @@ function renderLevel() {
   );
 
   if (prog.level > lastRenderedLevel) {
-    const jumped = prog.level - lastRenderedLevel;
-    lastRenderedLevel = prog.level;
-    showNewRecord(jumped > 1 ? `Levels up! Now ${prog.level}` : `Level up! Level ${prog.level}`);
-    toast(`${prog.tier.label} · Level ${prog.level}`);
+    const from = lastRenderedLevel;
+    const to = prog.level;
+    lastRenderedLevel = to;
+    // Queue intermediate levels on big jumps (e.g. offline reconcile), show final tier art
+    if (to - from > 1) {
+      for (let l = from + 1; l < to; l++) {
+        levelUpQueue.push({ level: l, tier: tierForLevel(l) });
+      }
+      if (levelUpQueue.length > 4) {
+        // Keep last few + final will show now
+        levelUpQueue = levelUpQueue.slice(-3);
+      }
+    }
+    showLevelUpPopup(to, prog.tier);
   } else if (prog.level < lastRenderedLevel) {
-    // e.g. profile merge / reload
+    // e.g. profile merge / reload — no popup
     lastRenderedLevel = prog.level;
   }
 }
@@ -3090,6 +3174,13 @@ function bindEvents() {
   els.githubBtn.addEventListener("click", signInWithGithub);
   els.githubBtnStyle.addEventListener("click", signInWithGithub);
   els.signOutBtn.addEventListener("click", signOut);
+  els.levelUpDismiss?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideLevelUpPopup();
+  });
+  // Clicking the dim backdrop area is non-interactive (pointer-events: none on popup).
+  // Card itself doesn't close on accidental mis-tap of content — only × or timeout.
   els.deleteAccountBtn?.addEventListener("click", () => openDeleteModal());
   els.deleteCancelBtn?.addEventListener("click", () => closeDeleteModal());
   els.deleteFinalBtn?.addEventListener("click", () => executeDeleteAccount());
