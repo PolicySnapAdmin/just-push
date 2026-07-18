@@ -340,6 +340,19 @@
           <div class="stack-form">
             <button type="button" class="solid-btn" id="github-btn-style">Sign in with GitHub</button>
             <button type="button" class="ghost-btn" id="sign-out-btn" hidden>Sign out</button>
+            <button type="button" class="ghost-btn danger-btn" id="delete-account-btn" hidden>Delete account</button>
+          </div>
+          <p class="muted account-delete-hint" id="delete-account-hint" hidden>
+            Permanently removes your online profile, scores sync, friends, and groups data from the server. Local progress is cleared on this device.
+          </p>
+        </div>
+
+        <div class="card" id="legal-card">
+          <h3>Legal</h3>
+          <p class="muted" style="margin-top:0">Policies for the web app and future App Store build.</p>
+          <div class="stack-form">
+            <a class="ghost-btn link-btn" id="privacy-link" href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+            <a class="ghost-btn link-btn" id="terms-link" href="terms.html" target="_blank" rel="noopener">Terms of Use</a>
           </div>
         </div>
       </section>
@@ -362,7 +375,7 @@
         <span class="tab-icon">▣</span>
         <span>Groups</span>
       </button>
-      <button type="button" class="tab" data-tab="chat">
+      <button type="button" class="tab" data-tab="chat" id="chat-tab">
         <span class="tab-icon">✉</span>
         <span>Chat</span>
       </button>
@@ -372,6 +385,27 @@
       </button>
     </nav>
   </div>
+
+  <!-- Age gate (App Store / COPPA hygiene) -->
+  <dialog id="age-modal" class="modal">
+    <form method="dialog" id="age-form" class="modal-card">
+      <h2>Age confirmation</h2>
+      <p>Push Thru is for players <strong id="age-min-label">13</strong> and older. It is not directed at children under 13.</p>
+      <label class="age-check">
+        <input type="checkbox" id="age-confirm" required />
+        <span>I confirm I am at least <span id="age-min-label-2">13</span> years old</span>
+      </label>
+      <p class="muted legal-inline">
+        By continuing you agree to the
+        <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+        and
+        <a href="terms.html" target="_blank" rel="noopener">Terms of Use</a>.
+      </p>
+      <div class="modal-actions">
+        <button type="submit" class="solid-btn" id="age-continue" disabled>Continue</button>
+      </div>
+    </form>
+  </dialog>
 
   <!-- Name modal -->
   <dialog id="name-modal" class="modal">

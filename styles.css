@@ -1279,6 +1279,69 @@ textarea#dm-input:focus {
   opacity: 1;
 }
 
+/* Legal / account extras */
+.danger-btn {
+  color: #ff8a8a !important;
+  border-color: color-mix(in srgb, #ff4d6d 40%, var(--border)) !important;
+}
+
+.danger-btn:hover {
+  background: color-mix(in srgb, #ff4d6d 12%, transparent) !important;
+}
+
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  text-align: center;
+}
+
+.account-delete-hint {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.age-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 12px;
+  font-size: 0.92rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.age-check input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.legal-inline {
+  font-size: 0.8rem;
+  margin: 0 0 8px;
+}
+
+.legal-inline a {
+  color: var(--btn);
+}
+
+#app[data-chat="0"] .tab[data-tab="chat"] {
+  display: none;
+}
+
+#app[data-chat="0"] .tabbar {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+#app[data-github="0"] #github-btn,
+#app[data-github="0"] #github-btn-style {
+  display: none !important;
+}
+
 /* Modal */
 .modal {
   border: none;

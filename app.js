@@ -360,7 +360,18 @@ const els = {
   githubBtn: $("#github-btn"),
   githubBtnStyle: $("#github-btn-style"),
   signOutBtn: $("#sign-out-btn"),
+  deleteAccountBtn: $("#delete-account-btn"),
+  deleteAccountHint: $("#delete-account-hint"),
   accountStatus: $("#account-status"),
+  privacyLink: $("#privacy-link"),
+  termsLink: $("#terms-link"),
+  ageModal: $("#age-modal"),
+  ageForm: $("#age-form"),
+  ageConfirm: $("#age-confirm"),
+  ageContinue: $("#age-continue"),
+  ageMinLabel: $("#age-min-label"),
+  ageMinLabel2: $("#age-min-label-2"),
+  chatTab: $("#chat-tab"),
   shareFriendLink: $("#share-friend-link"),
   copyFriendLink: $("#copy-friend-link"),
   pendingInvite: $("#pending-invite"),
@@ -483,8 +494,31 @@ function renderProfile() {
   els.avatar.textContent = initials(name);
 }
 
+function featureChatEnabled() {
+  return getConfig().enableChat !== false;
+}
+
+function featureGithubEnabled() {
+  return getConfig().enableGithubAuth !== false;
+}
+
+function applyFeatureFlags() {
+  const cfg = getConfig();
+  const chatOn = featureChatEnabled();
+  const ghOn = featureGithubEnabled();
+  els.app.dataset.chat = chatOn ? "1" : "0";
+  els.app.dataset.github = ghOn ? "1" : "0";
+  if (els.chatTab) els.chatTab.hidden = !chatOn;
+  if (els.privacyLink && cfg.privacyUrl) els.privacyLink.href = cfg.privacyUrl;
+  if (els.termsLink && cfg.termsUrl) els.termsLink.href = cfg.termsUrl;
+  const minAge = Number(cfg.minAge) || 13;
+  if (els.ageMinLabel) els.ageMinLabel.textContent = String(minAge);
+  if (els.ageMinLabel2) els.ageMinLabel2.textContent = String(minAge);
+}
+
 function setOnlineUi() {
   els.app.dataset.online = online ? "1" : "0";
+  const ghOn = featureGithubEnabled();
   if (!window.JUST_PUSH_CONFIG?.enabled) {
     els.syncPill.textContent = "local";
     els.syncPill.className = "sync-pill local";
@@ -492,6 +526,8 @@ function setOnlineUi() {
     els.githubBtn.hidden = true;
     els.githubBtnStyle.hidden = true;
     els.signOutBtn.hidden = true;
+    if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = true;
+    if (els.deleteAccountHint) els.deleteAccountHint.hidden = true;
     return;
   }
   if (online) {
@@ -501,23 +537,49 @@ function setOnlineUi() {
     els.syncPill.className = "sync-pill online";
     els.accountStatus.textContent = isGithub
       ? `Signed in with GitHub · code ${profile?.friend_code || "…"}`
-      : `Online (guest) · code ${profile?.friend_code || "…"} · link GitHub to keep this account`;
-    els.githubBtn.hidden = isGithub;
-    els.githubBtnStyle.hidden = isGithub;
+      : ghOn
+        ? `Online (guest) · code ${profile?.friend_code || "…"} · link GitHub to keep this account`
+        : `Online (guest) · code ${profile?.friend_code || "…"}`;
+    els.githubBtn.hidden = !ghOn || isGithub;
+    els.githubBtnStyle.hidden = !ghOn || isGithub;
     els.githubBtnStyle.textContent = "Sign in with GitHub";
     els.signOutBtn.hidden = false;
+    if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = false;
+    if (els.deleteAccountHint) els.deleteAccountHint.hidden = false;
     els.friendCodeHint.textContent = "Short code works worldwide. Scores sync to Supabase.";
   } else {
     els.syncPill.textContent = "offline";
     els.syncPill.className = "sync-pill offline";
     els.accountStatus.textContent = "Could not reach Supabase — playing offline. Local share codes still work.";
     els.githubBtn.hidden = true;
-    els.githubBtnStyle.hidden = false;
-    els.githubBtnStyle.textContent = "Retry / Sign in with GitHub";
+    els.githubBtnStyle.hidden = !ghOn;
+    els.githubBtnStyle.textContent = ghOn ? "Retry / Sign in with GitHub" : "Retry connection";
     els.signOutBtn.hidden = true;
+    if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = true;
+    if (els.deleteAccountHint) els.deleteAccountHint.hidden = true;
     els.friendCodeHint.textContent = "Offline: long share blob. Go online for short codes + live boards.";
   }
   updateChatOnlineHint();
+}
+
+const AGE_KEY = "push-thru-age-ok";
+
+function hasAcceptedAge() {
+  try {
+    return localStorage.getItem(AGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function ensureAgeThenName() {
+  if (!hasAcceptedAge() && els.ageModal) {
+    if (els.ageConfirm) els.ageConfirm.checked = false;
+    if (els.ageContinue) els.ageContinue.disabled = true;
+    els.ageModal.showModal();
+    return;
+  }
+  ensureName();
 }
 
 function ensureName() {
@@ -526,6 +588,47 @@ function ensureName() {
     els.nameModal.showModal();
     setTimeout(() => els.nameInput.focus(), 50);
   }
+}
+
+async function deleteMyAccount() {
+  if (!sb || !online || !session?.user) {
+    toast("Go online to delete your account");
+    return;
+  }
+  const ok = window.confirm(
+    "Delete your Push Thru account permanently?\n\nThis removes your online profile, scores sync, friends, and groups data from the server. This device’s local progress will also be cleared.\n\nThis cannot be undone."
+  );
+  if (!ok) return;
+  const ok2 = window.confirm("Final confirmation: delete account now?");
+  if (!ok2) return;
+
+  try {
+    const { error } = await sb.rpc("jp_delete_my_account");
+    if (error) throw error;
+  } catch (err) {
+    console.warn(err);
+    toast(err.message || "Could not delete account");
+    return;
+  }
+
+  try {
+    await sb.auth.signOut({ scope: "local" });
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("just-push-v1");
+    // keep age acceptance so we don’t re-prompt immediately; user can clear site data
+  } catch {
+    /* ignore */
+  }
+
+  toast("Account deleted");
+  setTimeout(() => {
+    location.reload();
+  }, 600);
 }
 
 // ——— Scores render ———
@@ -1006,6 +1109,10 @@ async function pushProfile() {
 }
 
 async function signInWithGithub() {
+  if (!featureGithubEnabled()) {
+    toast("GitHub sign-in is disabled in this build");
+    return;
+  }
   if (!sb) {
     await initBackend();
     if (!sb) {
@@ -2006,6 +2113,10 @@ function setTab(tab) {
     if (online) loadGlobalBoard().then(() => refreshSocial());
   }
   if (tab === "chat") {
+    if (!featureChatEnabled()) {
+      setTab("play");
+      return;
+    }
     updateChatOnlineHint();
     setChatMode(chatMode);
   }
@@ -2334,12 +2445,29 @@ function bindEvents() {
   els.githubBtn.addEventListener("click", signInWithGithub);
   els.githubBtnStyle.addEventListener("click", signInWithGithub);
   els.signOutBtn.addEventListener("click", signOut);
+  els.deleteAccountBtn?.addEventListener("click", () => deleteMyAccount());
+
+  els.ageConfirm?.addEventListener("change", () => {
+    if (els.ageContinue) els.ageContinue.disabled = !els.ageConfirm.checked;
+  });
+  els.ageForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!els.ageConfirm?.checked) return;
+    try {
+      localStorage.setItem(AGE_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+    els.ageModal?.close();
+    ensureName();
+  });
 }
 
 // ——— Boot ———
 
 async function init() {
   pendingDeepLink = parseDeepLink();
+  applyFeatureFlags();
   applyTheme();
   renderProfile();
   renderScores();
@@ -2356,7 +2484,7 @@ async function init() {
   } else if (pendingDeepLink?.type === "group") {
     showPendingBanner(`Group invite detected — joining ${pendingDeepLink.code.toUpperCase()} when online…`);
   }
-  ensureName();
+  ensureAgeThenName();
   // timer ring geometry
   els.timerProgress.style.strokeDasharray = String(CIRCUMFERENCE);
   els.timerProgress.style.strokeDashoffset = "0";

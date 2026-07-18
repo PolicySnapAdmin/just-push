@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index,follow" />
+  <title>Privacy Policy · Push Thru</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0f0f14; --text:#e8e8f0; --muted:#9a9aab; --link:#7c9cff; --card:#16161e; --border:#2a2a36; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    a { color: var(--link); }
+    h1 { font-size: 1.75rem; margin: 0 0 8px; }
+    h2 { font-size: 1.1rem; margin: 28px 0 10px; }
+    p, li { color: var(--muted); }
+    .meta { font-size: 0.9rem; color: var(--muted); margin-bottom: 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin: 16px 0; }
+    ul { padding-left: 1.2rem; }
+    .back { display: inline-block; margin-bottom: 20px; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="./">← Back to Push Thru</a>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Push Thru · Last updated: July 18, 2026</p>
+
+    <p>This policy describes how <strong>Push Thru</strong> (“the App,” “we”) handles information when you use the web app or a future mobile app. It is written for transparency and App Store / store-listing readiness. It is not legal advice.</p>
+
+    <h2>1. Who we are</h2>
+    <p>Push Thru is a casual game for counting button presses, competing on scores, and connecting with friends/groups. The service is operated by the publisher of the App (the GitHub / App Store account holder who ships Push Thru).</p>
+    <p>Contact for privacy requests: use the contact method listed on the App Store listing or repository, or the email you configure before shipping.</p>
+
+    <h2>2. Information we collect</h2>
+    <div class="card">
+      <p><strong>Account &amp; identity</strong></p>
+      <ul>
+        <li>Guest (anonymous) account identifiers created when you play online</li>
+        <li>Optional GitHub sign-in identifiers if you link GitHub</li>
+        <li>Display name and friend code you choose</li>
+      </ul>
+      <p><strong>Gameplay data</strong></p>
+      <ul>
+        <li>Scores (session high score, 10-second best, lifetime push count / XP, sessions played)</li>
+        <li>Theme preferences (button color, background)</li>
+        <li>Friends and group memberships</li>
+      </ul>
+      <p><strong>Device / local data</strong></p>
+      <ul>
+        <li>Data stored in your browser or device storage (localStorage) so progress works offline</li>
+        <li>Age confirmation flag (that you indicated you meet the minimum age)</li>
+      </ul>
+      <p><strong>Optional social features (if enabled in your build)</strong></p>
+      <ul>
+        <li>Community board posts and private friend messages (content you submit)</li>
+      </ul>
+      <p><strong>We do not intentionally collect</strong></p>
+      <ul>
+        <li>Precise location, contacts, photos, microphone, or health data</li>
+        <li>Payment card data (the free web game does not process payments)</li>
+        <li>Advertising tracking identifiers for cross-app ads (no third-party ad SDK in the current web build)</li>
+      </ul>
+    </div>
+
+    <h2>3. How we use information</h2>
+    <ul>
+      <li>To run the game (accounts, scores, leaderboards, friends, groups)</li>
+      <li>To sync progress across devices when you are signed in online</li>
+      <li>To show public leaderboards and friend/group rankings</li>
+      <li>To operate optional chat features when enabled</li>
+      <li>To secure the service and prevent abuse (rate limits, basic spam controls)</li>
+      <li>To comply with law and App Store / platform requirements (e.g. account deletion)</li>
+    </ul>
+
+    <h2>4. Where data is stored</h2>
+    <p>Online features use <strong>Supabase</strong> (hosted database and authentication). Local progress may also be stored on your device. Servers may be located in the regions provided by Supabase’s infrastructure.</p>
+    <p>The static website may be hosted on <strong>GitHub Pages</strong> or another host you configure.</p>
+
+    <h2>5. Sharing</h2>
+    <ul>
+      <li><strong>Other players</strong> can see your display name, friend code, scores, level derived from lifetime pushes, and group membership as part of normal gameplay.</li>
+      <li><strong>Service providers</strong> (Supabase, hosting) process data only to provide the service.</li>
+      <li>We do not sell your personal information.</li>
+      <li>We may disclose information if required by law or to protect safety and the service.</li>
+    </ul>
+
+    <h2>6. Your choices</h2>
+    <ul>
+      <li><strong>Display name</strong> — change it anytime in the app.</li>
+      <li><strong>Sign out</strong> — ends the current session; guest progress may remain on the server until deleted.</li>
+      <li><strong>Delete account</strong> — available in Style → Account when online. This requests deletion of your server account and associated Push Thru profile data (scores, friendships, group memberships, and chat content tied to your account when those tables exist).</li>
+      <li><strong>Local data</strong> — you can clear site data in your browser or reinstall the app to remove local storage.</li>
+      <li><strong>Offline mode</strong> — you can play with cloud sync disabled; only device storage is used.</li>
+    </ul>
+
+    <h2>7. Children</h2>
+    <p>Push Thru is a general-audience casual game. It is <strong>not directed at children under 13</strong>. You must confirm you meet the minimum age shown in the app (13+) before playing. If you believe we have collected data from a child under 13, contact us and we will delete it.</p>
+    <p>If a future App Store build includes unrestricted chat, the age rating and parental expectations may change; chat can be disabled for a given release.</p>
+
+    <h2>8. Retention</h2>
+    <p>We keep account and gameplay data while your account is active. After you delete your account, we remove or anonymize associated personal data from active systems within a reasonable period, except where we must retain limited records for security, fraud prevention, or legal obligations.</p>
+
+    <h2>9. Security</h2>
+    <p>We use industry-standard providers and access controls (including database row-level security for user-owned data). No method of transmission or storage is 100% secure.</p>
+
+    <h2>10. International users</h2>
+    <p>If you use the App from outside the country where servers are located, your information may be transferred and processed in other countries with different data protection laws.</p>
+
+    <h2>11. Changes</h2>
+    <p>We may update this policy. The “Last updated” date will change when we do. Continued use after updates means you accept the revised policy, where permitted by law.</p>
+
+    <h2>12. Contact</h2>
+    <p>For privacy questions or deletion requests: configure a contact email in App Store Connect before launch, and list it here before public App Store release.</p>
+    <p class="meta">Publisher contact (edit before ship): <em>your-email@example.com</em></p>
+
+    <p><a href="./terms.html">Terms of Use</a> · <a href="./">Play Push Thru</a></p>
+  </main>
+</body>
+</html>
