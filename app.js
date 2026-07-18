@@ -378,6 +378,14 @@ const els = {
   newPasswordInput: $("#new-password-input"),
   confirmPasswordInput: $("#confirm-password-input"),
   changePasswordMsg: $("#change-password-msg"),
+  deleteModal: $("#delete-modal"),
+  deleteConfirmInput: $("#delete-confirm-input"),
+  deleteUnderstand: $("#delete-understand"),
+  deleteTypeHint: $("#delete-type-hint"),
+  deleteModalMsg: $("#delete-modal-msg"),
+  deleteCancelBtn: $("#delete-cancel-btn"),
+  deleteFinalBtn: $("#delete-final-btn"),
+  deleteCountdown: $("#delete-countdown"),
   privacyLink: $("#privacy-link"),
   termsLink: $("#terms-link"),
   ageModal: $("#age-modal"),
@@ -717,24 +725,137 @@ function ensureName() {
   }
 }
 
-async function deleteMyAccount() {
+/** Phrase user must type to enable permanent delete. */
+function deleteConfirmPhrase() {
+  if (isEmailUser() && session?.user?.email) {
+    return String(session.user.email).trim().toLowerCase();
+  }
+  // Guests: must type this exact token (not a soft "yes")
+  return "DELETE MY ACCOUNT";
+}
+
+let deleteCountdownTimer = null;
+let deleteUnlockAt = 0;
+
+function setDeleteModalMsg(text, kind = "") {
+  if (!els.deleteModalMsg) return;
+  els.deleteModalMsg.textContent = text || "";
+  els.deleteModalMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function closeDeleteModal() {
+  clearInterval(deleteCountdownTimer);
+  deleteCountdownTimer = null;
+  deleteUnlockAt = 0;
+  if (els.deleteModal?.open) els.deleteModal.close();
+  if (els.deleteConfirmInput) els.deleteConfirmInput.value = "";
+  if (els.deleteUnderstand) els.deleteUnderstand.checked = false;
+  if (els.deleteFinalBtn) {
+    els.deleteFinalBtn.disabled = true;
+    els.deleteFinalBtn.textContent = "Delete forever";
+  }
+  if (els.deleteCountdown) {
+    els.deleteCountdown.hidden = true;
+    els.deleteCountdown.textContent = "";
+  }
+  setDeleteModalMsg("");
+}
+
+function updateDeleteFinalEnabled() {
+  if (!els.deleteFinalBtn) return;
+  const phrase = deleteConfirmPhrase();
+  const typed = String(els.deleteConfirmInput?.value || "").trim();
+  const typedOk = isEmailUser()
+    ? typed.toLowerCase() === phrase
+    : typed === phrase;
+  const checked = !!els.deleteUnderstand?.checked;
+  const delayDone = Date.now() >= deleteUnlockAt;
+  els.deleteFinalBtn.disabled = !(typedOk && checked && delayDone && online && session?.user);
+}
+
+function openDeleteModal() {
   if (!sb || !online || !session?.user) {
     toast("Go online to delete your account");
     return;
   }
-  const ok = window.confirm(
-    "Delete your Push Thru account permanently?\n\nThis removes your online profile, scores sync, friends, and groups data from the server. This device's local progress will also be cleared.\n\nThis cannot be undone."
-  );
-  if (!ok) return;
-  const ok2 = window.confirm("Final confirmation: delete account now?");
-  if (!ok2) return;
+  const phrase = deleteConfirmPhrase();
+  if (els.deleteTypeHint) {
+    els.deleteTypeHint.innerHTML = isEmailUser()
+      ? `Type your email exactly to confirm: <strong>${escapeHtml(phrase)}</strong>`
+      : `Type this exactly to confirm: <strong>${escapeHtml(phrase)}</strong>`;
+  }
+  if (els.deleteConfirmInput) {
+    els.deleteConfirmInput.value = "";
+    els.deleteConfirmInput.placeholder = phrase;
+  }
+  if (els.deleteUnderstand) els.deleteUnderstand.checked = false;
+  setDeleteModalMsg("");
+
+  // 5s cool-down before the final button can ever enable
+  deleteUnlockAt = Date.now() + 5000;
+  if (els.deleteFinalBtn) {
+    els.deleteFinalBtn.disabled = true;
+    els.deleteFinalBtn.textContent = "Delete forever";
+  }
+  if (els.deleteCountdown) {
+    els.deleteCountdown.hidden = false;
+  }
+  clearInterval(deleteCountdownTimer);
+  const tick = () => {
+    const left = Math.ceil((deleteUnlockAt - Date.now()) / 1000);
+    if (els.deleteCountdown) {
+      if (left > 0) {
+        els.deleteCountdown.hidden = false;
+        els.deleteCountdown.textContent = `Final delete unlocks in ${left}s…`;
+      } else {
+        els.deleteCountdown.hidden = true;
+        els.deleteCountdown.textContent = "";
+      }
+    }
+    updateDeleteFinalEnabled();
+    if (left <= 0) clearInterval(deleteCountdownTimer);
+  };
+  tick();
+  deleteCountdownTimer = setInterval(tick, 250);
+
+  els.deleteModal?.showModal();
+  setTimeout(() => els.deleteConfirmInput?.focus(), 50);
+}
+
+async function executeDeleteAccount() {
+  if (!sb || !online || !session?.user) {
+    setDeleteModalMsg("Go online to delete your account", "err");
+    return;
+  }
+  const phrase = deleteConfirmPhrase();
+  const typed = String(els.deleteConfirmInput?.value || "").trim();
+  const typedOk = isEmailUser() ? typed.toLowerCase() === phrase : typed === phrase;
+  if (!typedOk) {
+    setDeleteModalMsg("Confirmation text does not match.", "err");
+    return;
+  }
+  if (!els.deleteUnderstand?.checked) {
+    setDeleteModalMsg("Check the box to confirm you understand.", "err");
+    return;
+  }
+  if (Date.now() < deleteUnlockAt) {
+    setDeleteModalMsg("Wait for the timer to finish.", "err");
+    return;
+  }
+
+  if (els.deleteFinalBtn) {
+    els.deleteFinalBtn.disabled = true;
+    els.deleteFinalBtn.textContent = "Deleting…";
+  }
 
   try {
     const { error } = await sb.rpc("jp_delete_my_account");
     if (error) throw error;
   } catch (err) {
     console.warn(err);
-    toast(err.message || "Could not delete account");
+    setDeleteModalMsg(err.message || "Could not delete account", "err");
+    if (els.deleteFinalBtn) els.deleteFinalBtn.textContent = "Delete forever";
+    updateDeleteFinalEnabled();
     return;
   }
 
@@ -747,15 +868,20 @@ async function deleteMyAccount() {
   try {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem("just-push-v1");
-    // keep age acceptance so we don’t re-prompt immediately; user can clear site data
   } catch {
     /* ignore */
   }
 
+  closeDeleteModal();
   toast("Account deleted");
   setTimeout(() => {
     location.reload();
   }, 600);
+}
+
+/** Opens multi-step delete flow (not immediate delete). */
+function deleteMyAccount() {
+  openDeleteModal();
 }
 
 // ——— Scores render ———
@@ -2834,7 +2960,15 @@ function bindEvents() {
   els.githubBtn.addEventListener("click", signInWithGithub);
   els.githubBtnStyle.addEventListener("click", signInWithGithub);
   els.signOutBtn.addEventListener("click", signOut);
-  els.deleteAccountBtn?.addEventListener("click", () => deleteMyAccount());
+  els.deleteAccountBtn?.addEventListener("click", () => openDeleteModal());
+  els.deleteCancelBtn?.addEventListener("click", () => closeDeleteModal());
+  els.deleteFinalBtn?.addEventListener("click", () => executeDeleteAccount());
+  els.deleteConfirmInput?.addEventListener("input", () => updateDeleteFinalEnabled());
+  els.deleteUnderstand?.addEventListener("change", () => updateDeleteFinalEnabled());
+  els.deleteModal?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeDeleteModal();
+  });
 
   els.emailAuthForm?.addEventListener("submit", async (e) => {
     e.preventDefault();

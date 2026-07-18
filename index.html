@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718h" />
+  <link rel="stylesheet" href="styles.css?v=20260718i" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -452,10 +452,42 @@
     </form>
   </dialog>
 
+  <!-- Delete account — multi-step (hard to misclick) -->
+  <dialog id="delete-modal" class="modal">
+    <div class="modal-card delete-modal-card">
+      <h2>Delete account?</h2>
+      <p class="delete-warn">
+        This permanently removes your online profile, scores, friends, groups, and chat data.
+        <strong>This cannot be undone.</strong>
+      </p>
+      <ul class="delete-list">
+        <li>Scores &amp; levels wiped from the server</li>
+        <li>Friend list &amp; group memberships removed</li>
+        <li>Email sign-in for this account stops working</li>
+      </ul>
+
+      <p class="muted" id="delete-type-hint">Type the confirmation text below exactly.</p>
+      <input type="text" id="delete-confirm-input" autocomplete="off" spellcheck="false" placeholder="" />
+
+      <label class="age-check delete-check">
+        <input type="checkbox" id="delete-understand" />
+        <span>I understand this is permanent and cannot be recovered</span>
+      </label>
+
+      <p class="form-msg" id="delete-modal-msg" role="status"></p>
+
+      <div class="modal-actions delete-modal-actions">
+        <button type="button" class="ghost-btn" id="delete-cancel-btn">Cancel</button>
+        <button type="button" class="solid-btn danger-solid" id="delete-final-btn" disabled>Delete forever</button>
+      </div>
+      <p class="muted delete-countdown" id="delete-countdown" hidden></p>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" hidden role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718h"></script>
-  <script src="app.js?v=20260718h"></script>
+  <script src="config.js?v=20260718i"></script>
+  <script src="app.js?v=20260718i"></script>
 </body>
 </html>
