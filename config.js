@@ -26,16 +26,15 @@ window.JUST_PUSH_CONFIG = {
 
   /**
    * Community board + friend DMs.
-   * Set false before App Store v1 if you want to skip UGC review requirements.
+   * false = App Store v1 (no UGC review requirements). Web can re-enable later.
    */
-  enableChat: true,
+  enableChat: false,
 
   /**
    * Show “Sign in with GitHub”.
-   * If true on iOS, plan for Sign in with Apple as well.
-   * Guest-only (false) is simpler for first App Store review.
+   * false = guest-only for simpler first App Store review (no SIWA required yet).
    */
-  enableGithubAuth: true,
+  enableGithubAuth: false,
 
   /** Minimum age confirmation shown once on first launch */
   minAge: 13,

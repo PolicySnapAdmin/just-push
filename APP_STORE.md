@@ -27,12 +27,10 @@ Work through this on Windows first. You only need a Mac later for Xcode archive 
 
 ## Before you pay for Apple Developer ($99/year)
 
-1. Edit **contact email** in `privacy.html` and `terms.html` (search `your-email@example.com`).
-2. Decide ship mode:
-   - **Recommended first ship:** `enableChat: false` in `config.js` (no community board / DMs).
-   - Friends, groups, scores, levels still work.
-3. Create [Apple Developer](https://developer.apple.com) account when ready.
-4. Pick bundle ID, e.g. `com.yourname.pushthru`.
+1. ~~Edit contact email~~ → **calvin.money@gmail.com** (in Privacy + Terms)
+2. ~~Ship mode~~ → **v1:** `enableChat: false`, `enableGithubAuth: false` (guest only; friends/groups/scores stay)
+3. Create [Apple Developer](https://developer.apple.com) account when ready (use a stable Apple ID; support contact can be calvin.money@gmail.com).
+4. Pick bundle ID, e.g. `com.calvinmoney.pushthru` or `com.policysnap.pushthru`.
 
 ---
 
@@ -150,8 +148,8 @@ No chat-specific screenshots needed if chat is off.
 - [x] Age gate  
 - [x] Delete account  
 - [x] `enableChat` flag  
-- [ ] Replace placeholder contact email in legal pages  
-- [ ] Decide: ship with `enableChat: false`  
+- [x] Replace placeholder contact email in legal pages (`calvin.money@gmail.com`)  
+- [x] Decide: ship with `enableChat: false` + `enableGithubAuth: false`  
 - [ ] Apple Developer enrollment  
 - [ ] Write 1-paragraph App Store description  
 - [ ] 1024 icon  
