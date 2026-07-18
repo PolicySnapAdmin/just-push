@@ -14,9 +14,9 @@ Work through this on Windows first. You only need a Mac later for Xcode archive 
 |------|--------|
 | Privacy Policy page | `privacy.html` |
 | Terms of Use page | `terms.html` |
-| In-app links to legal pages | Style → Legal |
+| In-app links to legal pages | Settings → Legal |
 | Age gate (13+) | First launch |
-| Account deletion (server + UI) | Style → Account → Delete account |
+| Account deletion (server + UI) | Settings → Account → Delete account |
 | Chat feature flag | `config.js` → `enableChat` (set `false` to ship without chat) |
 | Privacy nutrition label draft | Section below |
 | Capacitor notes | Section below |
@@ -88,7 +88,7 @@ Ship **without chat** for the simplest first review.
 Implemented:
 
 - RPC: `jp_delete_my_account()` (migration `20260718140000_just_push_delete_account.sql`)
-- UI: Style → Account → **Delete account**
+- UI: Settings → Account → **Delete account**
 - Clears server profile + related rows, deletes `auth.users`, wipes local storage, reloads
 
 Test on web before App Review.
