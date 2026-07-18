@@ -2,6 +2,8 @@
 
 Push a button. Count the pushes. Beat the clock. Beat your friends.
 
+**Live site:** https://policysnapadmin.github.io/just-push/
+
 | Feature | Details |
 |--------|---------|
 | **Free push** | Unlimited taps, session + lifetime + high score |
@@ -10,7 +12,39 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 | **Groups** | Create / join with invite codes, group boards |
 | **Style** | 10 button colors + 10 backgrounds |
 | **Backend** | Supabase (`jp_*` tables) on your existing project |
-| **Host** | GitHub Pages (workflow included) |
+| **Host** | GitHub Pages — [open live](https://policysnapadmin.github.io/just-push/) |
+
+## Go live checklist
+
+Already done in this repo:
+
+- [x] App on GitHub Pages (HTTPS)
+- [x] `publicBaseUrl` set for invite links
+- [x] Supabase tables (`jp_*`) + anon key in `config.js`
+- [x] Anonymous auth enabled (guest play)
+
+**You still do once in the Supabase dashboard:**
+
+1. Open [URL Configuration](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue/auth/url-configuration)
+2. **Site URL:**
+   ```text
+   https://policysnapadmin.github.io/just-push/
+   ```
+3. **Redirect URLs** — add all of these:
+   ```text
+   https://policysnapadmin.github.io/just-push/**
+   http://localhost:3000/**
+   http://127.0.0.1:3000/**
+   ```
+4. Confirm [Anonymous provider](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue/auth/providers) is **ON**
+
+Then on two phones:
+
+1. Open https://policysnapadmin.github.io/just-push/
+2. Set a display name when prompted
+3. **Friends → Share invite link** (or create a **Group** and Share)
+4. Friend opens the link → auto-added / joins the group
+5. Play **10 second** and check the boards
 
 ## Quick start (local)
 
@@ -56,8 +90,11 @@ In Supabase → **Authentication → Providers**:
 
 **Authentication → URL Configuration**:
 
-- Site URL: `https://YOURUSER.github.io/just-push/` (or local `http://localhost:3000`)
-- Redirect URLs: add the same + `http://127.0.0.1:3000/**`
+- Site URL: `https://policysnapadmin.github.io/just-push/`
+- Redirect URLs:
+  - `https://policysnapadmin.github.io/just-push/**`
+  - `http://localhost:3000/**`
+  - `http://127.0.0.1:3000/**`
 
 ### 4. Config
 
@@ -93,8 +130,8 @@ After the site is on **HTTPS** (GitHub Pages):
 Link shapes:
 
 ```text
-https://YOURUSER.github.io/just-push/?add=A7K2M9
-https://YOURUSER.github.io/just-push/?join=GROUP1
+https://policysnapadmin.github.io/just-push/?add=A7K2M9
+https://policysnapadmin.github.io/just-push/?join=GROUP1
 ```
 
 You can also paste a full invite link into the “Add friend” / “Join group” fields.
