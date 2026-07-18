@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718e" />
+  <link rel="stylesheet" href="styles.css?v=20260718f" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -337,6 +337,27 @@
         <div class="card" id="account-card">
           <h3>Account</h3>
           <p class="muted" id="account-status">Connecting…</p>
+
+          <!-- Email auth: link guest → email (keeps scores) or sign in -->
+          <div id="email-auth-block" class="email-auth-block" hidden>
+            <p class="muted email-auth-blurb" id="email-auth-blurb">
+              Save this guest with email so you can sign in on other devices. Your scores and friends stay on this account.
+            </p>
+            <form id="email-auth-form" class="stack-form">
+              <input type="email" id="email-input" placeholder="Email" autocomplete="email" required maxlength="120" />
+              <input type="password" id="password-input" placeholder="Password (6+ characters)" autocomplete="current-password" required minlength="6" maxlength="72" />
+              <div class="email-auth-actions">
+                <button type="submit" class="solid-btn" id="email-link-btn" data-email-action="link">Save progress with email</button>
+                <button type="button" class="ghost-btn" id="email-signin-btn" data-email-action="signin">Sign in with email</button>
+              </div>
+            </form>
+            <p class="form-msg" id="email-auth-msg" role="status"></p>
+            <p class="muted email-auth-note">
+              <strong>Save progress</strong> links email to your current guest (recommended).
+              <strong>Sign in</strong> switches to an existing email account (this guest’s unsaved progress won’t move over).
+            </p>
+          </div>
+
           <div class="stack-form">
             <button type="button" class="solid-btn" id="github-btn-style">Sign in with GitHub</button>
             <button type="button" class="ghost-btn" id="sign-out-btn" hidden>Sign out</button>
@@ -422,7 +443,7 @@
   <div class="toast" id="toast" hidden role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718e"></script>
-  <script src="app.js?v=20260718e"></script>
+  <script src="config.js?v=20260718f"></script>
+  <script src="app.js?v=20260718f"></script>
 </body>
 </html>

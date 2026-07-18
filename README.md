@@ -11,6 +11,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 | **Unlimited** | Unlimited taps, session + lifetime + high score |
 | **Levels** | 1 push = 1 XP · scales up to level 99 |
 | **Chat** | Community board (public posts) + private DMs with friends |
+| **Email** | Optional email+password; guests can save progress in place (Settings) |
 | **10 second** | How many can you hit before the timer hits zero? |
 | **Friends** | Short codes (online) or share blobs (offline) |
 | **Groups** | Create / join with invite codes, group boards |

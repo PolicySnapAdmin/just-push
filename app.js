@@ -363,6 +363,14 @@ const els = {
   deleteAccountBtn: $("#delete-account-btn"),
   deleteAccountHint: $("#delete-account-hint"),
   accountStatus: $("#account-status"),
+  emailAuthBlock: $("#email-auth-block"),
+  emailAuthBlurb: $("#email-auth-blurb"),
+  emailAuthForm: $("#email-auth-form"),
+  emailInput: $("#email-input"),
+  passwordInput: $("#password-input"),
+  emailLinkBtn: $("#email-link-btn"),
+  emailSigninBtn: $("#email-signin-btn"),
+  emailAuthMsg: $("#email-auth-msg"),
   privacyLink: $("#privacy-link"),
   termsLink: $("#terms-link"),
   ageModal: $("#age-modal"),
@@ -502,12 +510,33 @@ function featureGithubEnabled() {
   return getConfig().enableGithubAuth !== false;
 }
 
+function featureEmailEnabled() {
+  return getConfig().enableEmailAuth !== false;
+}
+
+function isAnonymousUser(user = session?.user) {
+  if (!user) return false;
+  if (user.is_anonymous === true) return true;
+  const providers = (user.identities || []).map((i) => i.provider);
+  if (providers.includes("email") || providers.includes("github")) return false;
+  if (user.email) return false;
+  return providers.includes("anonymous") || providers.length === 0;
+}
+
+function isEmailUser(user = session?.user) {
+  if (!user) return false;
+  if (user.email) return true;
+  return (user.identities || []).some((i) => i.provider === "email");
+}
+
 function applyFeatureFlags() {
   const cfg = getConfig();
   const chatOn = featureChatEnabled();
   const ghOn = featureGithubEnabled();
+  const emailOn = featureEmailEnabled();
   els.app.dataset.chat = chatOn ? "1" : "0";
   els.app.dataset.github = ghOn ? "1" : "0";
+  els.app.dataset.email = emailOn ? "1" : "0";
   // Hide Chat tab + panel when disabled (both attribute + style for stubborn caches)
   const chatTab = els.chatTab || document.getElementById("chat-tab");
   const chatPanel = document.querySelector('.panel[data-panel="chat"]');
@@ -526,9 +555,22 @@ function applyFeatureFlags() {
   if (els.ageMinLabel2) els.ageMinLabel2.textContent = String(minAge);
 }
 
+function setEmailAuthMsg(text, kind = "") {
+  if (!els.emailAuthMsg) return;
+  els.emailAuthMsg.textContent = text || "";
+  els.emailAuthMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
 function setOnlineUi() {
   els.app.dataset.online = online ? "1" : "0";
   const ghOn = featureGithubEnabled();
+  const emailOn = featureEmailEnabled();
+  const user = session?.user;
+  const anon = isAnonymousUser(user);
+  const hasEmail = isEmailUser(user);
+  const provider = user?.app_metadata?.provider || user?.identities?.[0]?.provider;
+  const isGithub = provider === "github";
+
   if (!window.JUST_PUSH_CONFIG?.enabled) {
     els.syncPill.textContent = "local";
     els.syncPill.className = "sync-pill local";
@@ -538,25 +580,49 @@ function setOnlineUi() {
     els.signOutBtn.hidden = true;
     if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = true;
     if (els.deleteAccountHint) els.deleteAccountHint.hidden = true;
+    if (els.emailAuthBlock) els.emailAuthBlock.hidden = true;
     return;
   }
   if (online) {
-    const provider = session?.user?.app_metadata?.provider || session?.user?.identities?.[0]?.provider;
-    const isGithub = provider === "github";
-    els.syncPill.textContent = isGithub ? "github" : "online";
-    els.syncPill.className = "sync-pill online";
-    els.accountStatus.textContent = isGithub
-      ? `Signed in with GitHub · code ${profile?.friend_code || "…"}`
-      : ghOn
-        ? `Online (guest) · code ${profile?.friend_code || "…"} · link GitHub to keep this account`
-        : `Online (guest) · code ${profile?.friend_code || "…"}`;
-    els.githubBtn.hidden = !ghOn || isGithub;
-    els.githubBtnStyle.hidden = !ghOn || isGithub;
+    const code = profile?.friend_code || "…";
+    if (hasEmail) {
+      els.syncPill.textContent = "email";
+      els.syncPill.className = "sync-pill online";
+      els.accountStatus.textContent = `Signed in · ${user.email} · code ${code}`;
+    } else if (isGithub) {
+      els.syncPill.textContent = "github";
+      els.syncPill.className = "sync-pill online";
+      els.accountStatus.textContent = `Signed in with GitHub · code ${code}`;
+    } else {
+      els.syncPill.textContent = "guest";
+      els.syncPill.className = "sync-pill online";
+      els.accountStatus.textContent = emailOn
+        ? `Guest online · code ${code} · save with email below to keep this account`
+        : `Guest online · code ${code}`;
+    }
+
+    els.githubBtn.hidden = !ghOn || isGithub || hasEmail;
+    els.githubBtnStyle.hidden = !ghOn || isGithub || hasEmail;
     els.githubBtnStyle.textContent = "Sign in with GitHub";
     els.signOutBtn.hidden = false;
     if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = false;
     if (els.deleteAccountHint) els.deleteAccountHint.hidden = false;
     els.friendCodeHint.textContent = "Short code works worldwide. Scores sync to Supabase.";
+
+    // Email form: show for guests (link) and also when we want sign-in (always if email on & not already email user)
+    if (els.emailAuthBlock) {
+      const showEmailUi = emailOn && !hasEmail;
+      els.emailAuthBlock.hidden = !showEmailUi;
+      if (showEmailUi && els.emailAuthBlurb) {
+        els.emailAuthBlurb.textContent = anon
+          ? "Save this guest with email so you can sign in on other devices. Scores, friends, and groups stay on this same account."
+          : "Add an email and password to this account, or sign in with an existing email.";
+      }
+      if (els.emailLinkBtn) {
+        els.emailLinkBtn.textContent = anon ? "Save progress with email" : "Add email to this account";
+        els.emailLinkBtn.hidden = false;
+      }
+    }
   } else {
     els.syncPill.textContent = "offline";
     els.syncPill.className = "sync-pill offline";
@@ -567,6 +633,14 @@ function setOnlineUi() {
     els.signOutBtn.hidden = true;
     if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = true;
     if (els.deleteAccountHint) els.deleteAccountHint.hidden = true;
+    if (els.emailAuthBlock) {
+      // Offline: still allow sign-in attempt if email enabled
+      els.emailAuthBlock.hidden = !emailOn;
+      if (els.emailAuthBlurb) {
+        els.emailAuthBlurb.textContent = "Sign in with email when you’re back online, or retry connection.";
+      }
+      if (els.emailLinkBtn) els.emailLinkBtn.hidden = true;
+    }
     els.friendCodeHint.textContent = "Offline: long share blob. Go online for short codes + live boards.";
   }
   updateChatOnlineHint();
@@ -1277,10 +1351,113 @@ async function signInWithGithub() {
   if (error) toast(error.message || "GitHub sign-in failed");
 }
 
+function readEmailPassword() {
+  const email = String(els.emailInput?.value || "")
+    .trim()
+    .toLowerCase();
+  const password = String(els.passwordInput?.value || "");
+  if (!email || !email.includes("@")) throw new Error("Enter a valid email");
+  if (password.length < 6) throw new Error("Password must be at least 6 characters");
+  return { email, password };
+}
+
+/**
+ * Link email+password to the CURRENT session (guest → permanent).
+ * Same user id → scores / friends / groups stay.
+ */
+async function linkEmailToCurrentAccount() {
+  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Not connected");
+  }
+  if (!session?.user) throw new Error("No session — go online first");
+  if (isEmailUser()) throw new Error("This account already has an email");
+
+  const { email, password } = readEmailPassword();
+  // Flush name/theme before converting
+  await pushProfileMeta().catch(() => {});
+
+  const { data, error } = await sb.auth.updateUser({ email, password });
+  if (error) throw error;
+
+  const { data: sessData } = await sb.auth.getSession();
+  session = sessData.session || session;
+  await ensureProfile();
+  online = true;
+  setOnlineUi();
+
+  const confirmed = !!(data?.user?.email && !data.user.email_confirmed_at === false);
+  // If project requires email confirm, identities may still be pending
+  const needsConfirm =
+    data?.user &&
+    data.user.email &&
+    data.user.email_confirmed_at == null &&
+    data.user.confirmation_sent_at;
+
+  if (needsConfirm) {
+    setEmailAuthMsg(
+      `Check ${email} to confirm. After that, sign in with this email on any device — same scores & friends.`,
+      "ok"
+    );
+    toast("Confirmation email sent");
+  } else {
+    setEmailAuthMsg(`Saved! Signed in as ${email}. Use this on other devices.`, "ok");
+    toast("Account saved with email");
+  }
+  if (els.passwordInput) els.passwordInput.value = "";
+}
+
+/**
+ * Sign in with an existing email account (replaces current guest session).
+ */
+async function signInWithEmailPassword() {
+  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Not connected");
+  }
+  const { email, password } = readEmailPassword();
+
+  if (isAnonymousUser() && online) {
+    const ok = window.confirm(
+      "Sign in with email will switch accounts.\n\nYour current guest progress will NOT move to the email account (use “Save progress with email” for that).\n\nContinue signing in?"
+    );
+    if (!ok) return;
+  }
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  session = data.session;
+  await ensureProfile();
+  online = true;
+  setOnlineUi();
+  setEmailAuthMsg(`Signed in as ${email}`, "ok");
+  toast("Signed in");
+  if (els.passwordInput) els.passwordInput.value = "";
+  await refreshSocial();
+  await loadGlobalBoard();
+}
+
 async function signOut() {
   if (!sb) return;
   await sb.auth.signOut();
+  // New guest so play keeps working online
+  try {
+    const { data: anon, error } = await sb.auth.signInAnonymously();
+    if (!error) {
+      session = anon.session;
+      await ensureProfile();
+      online = true;
+      setOnlineUi();
+      toast("Signed out — back to guest");
+      return;
+    }
+  } catch {
+    /* fall through */
+  }
   toast("Signed out");
+  setOnlineUi();
 }
 
 // ——— Share links (phone-friendly) ———
@@ -2597,6 +2774,26 @@ function bindEvents() {
   els.githubBtnStyle.addEventListener("click", signInWithGithub);
   els.signOutBtn.addEventListener("click", signOut);
   els.deleteAccountBtn?.addEventListener("click", () => deleteMyAccount());
+
+  els.emailAuthForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setEmailAuthMsg("");
+    try {
+      await linkEmailToCurrentAccount();
+    } catch (err) {
+      setEmailAuthMsg(err.message || "Could not save email account", "err");
+      toast(err.message || "Email save failed");
+    }
+  });
+  els.emailSigninBtn?.addEventListener("click", async () => {
+    setEmailAuthMsg("");
+    try {
+      await signInWithEmailPassword();
+    } catch (err) {
+      setEmailAuthMsg(err.message || "Could not sign in", "err");
+      toast(err.message || "Sign-in failed");
+    }
+  });
 
   els.ageConfirm?.addEventListener("change", () => {
     if (els.ageContinue) els.ageContinue.disabled = !els.ageConfirm.checked;

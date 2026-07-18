@@ -32,9 +32,16 @@ window.JUST_PUSH_CONFIG = {
 
   /**
    * Show “Sign in with GitHub”.
-   * false = guest-only for simpler first App Store review (no SIWA required yet).
+   * false = no GitHub (no SIWA required for email/password alone).
    */
   enableGithubAuth: false,
+
+  /**
+   * Email + password sign-up / sign-in in Settings.
+   * Guests can “Save progress with email” to keep the same account id (scores/friends).
+   * Requires Email provider ON in Supabase Auth.
+   */
+  enableEmailAuth: true,
 
   /** Minimum age confirmation shown once on first launch */
   minAge: 13,

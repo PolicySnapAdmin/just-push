@@ -1303,6 +1303,45 @@ textarea#dm-input:focus {
   line-height: 1.4;
 }
 
+.email-auth-block {
+  margin: 12px 0 14px;
+  padding-top: 4px;
+}
+
+.email-auth-blurb {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.email-auth-block input[type="email"],
+.email-auth-block input[type="password"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+}
+
+.email-auth-block input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--btn) 55%, var(--border));
+}
+
+.email-auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.email-auth-note {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
 .age-check {
   display: flex;
   align-items: flex-start;
