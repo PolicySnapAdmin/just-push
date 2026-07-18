@@ -109,7 +109,7 @@ Set `enabled: false` to force pure offline mode.
 cd C:\Users\conor\just-push
 git init
 git add .
-git commit -m "Just Push: free + 10s challenge + Supabase"
+git commit -m "Push Thru: free + 10s challenge + Supabase"
 gh repo create just-push --public --source=. --remote=origin --push
 ```
 
