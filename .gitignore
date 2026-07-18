@@ -6,3 +6,14 @@ Thumbs.db
 .supabase/
 supabase/.temp/
 node_modules/
+www/
+dist/
+.capacitor/
+*.xcuserdata
+**/xcuserdata/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/DerivedData/
+android/.gradle/
+android/app/build/
+android/build/

@@ -101,23 +101,38 @@ Test on web before App Review.
 
 ---
 
+## Listing copy
+
+See **[STORE_LISTING.md](./STORE_LISTING.md)** for subtitle, description, keywords, and App Review notes.
+
 ## Packaging options (when you have a Mac)
 
-### A) Capacitor (recommended for this codebase)
+### A) Capacitor (scaffolded in this repo)
 
-Wrap the existing static site:
-
-```bash
-cd just-push
-npm init -y
-npm install @capacitor/core @capacitor/cli @capacitor/ios
-npx cap init "Push Thru" com.yourname.pushthru --web-dir .
-npx cap add ios
+**On Windows (already set up):**
+```powershell
+cd C:\Users\conor\just-push
+npm install
+npm run build          # copies site → www/
+npx cap add ios        # once — creates ios/ (can run on Windows)
 npx cap sync ios
-npx cap open ios
 ```
 
-Then in Xcode: signing team, icons, splash, archive → TestFlight.
+**On Mac (ship day):**
+```bash
+cd just-push
+npm install
+npm run cap:ios        # build www + sync + open Xcode
+```
+
+Bundle ID: `com.calvinmoney.pushthru`  
+Then in Xcode: Team signing → icons → Archive → TestFlight.
+
+| Script | What it does |
+|--------|----------------|
+| `npm run build` | Copy HTML/JS/CSS/legal into `www/` |
+| `npm run cap:sync` | Build + `cap sync` |
+| `npm run cap:ios` | Build + sync iOS + open Xcode (Mac) |
 
 ### B) Native rewrite later
 

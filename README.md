@@ -4,7 +4,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 
 **Live site:** https://policysnapadmin.github.io/just-push/  
 **Privacy:** https://policysnapadmin.github.io/just-push/privacy.html · **Terms:** https://policysnapadmin.github.io/just-push/terms.html  
-**App Store prep:** see [APP_STORE.md](./APP_STORE.md)
+**App Store prep:** [APP_STORE.md](./APP_STORE.md) · [STORE_LISTING.md](./STORE_LISTING.md) (subtitle/description) · Capacitor: `npm install && npm run build`
 
 | Feature | Details |
 |--------|---------|
