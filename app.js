@@ -1439,7 +1439,11 @@ function renderFriends() {
           <div class="meta">10s best ${formatNum(f.challengeBest || 0)} · life ${formatNum(f.lifetimeCount || 0)} XP</div>
         </div>
         <div class="friend-actions">
-          <button type="button" class="solid-btn" data-msg-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem" title="Message">Msg</button>
+          ${
+            featureChatEnabled()
+              ? `<button type="button" class="solid-btn" data-msg-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem" title="Message">Msg</button>`
+              : ""
+          }
           <button type="button" class="icon-btn" data-remove-friend="${f.id}" title="Remove">✕</button>
         </div>
       </li>`
