@@ -575,11 +575,24 @@ function setChangePasswordMsg(text, kind = "") {
 }
 
 function resetChangePasswordForm() {
-  if (els.changePasswordForm) els.changePasswordForm.hidden = true;
+  if (els.changePasswordForm) {
+    els.changePasswordForm.hidden = true;
+    els.changePasswordForm.classList.add("is-collapsed");
+  }
   if (els.changePasswordToggle) els.changePasswordToggle.hidden = false;
   if (els.newPasswordInput) els.newPasswordInput.value = "";
   if (els.confirmPasswordInput) els.confirmPasswordInput.value = "";
   setChangePasswordMsg("");
+}
+
+function openChangePasswordForm() {
+  setChangePasswordMsg("");
+  if (els.changePasswordForm) {
+    els.changePasswordForm.hidden = false;
+    els.changePasswordForm.classList.remove("is-collapsed");
+  }
+  if (els.changePasswordToggle) els.changePasswordToggle.hidden = true;
+  els.newPasswordInput?.focus();
 }
 
 function setOnlineUi() {
@@ -646,8 +659,11 @@ function setOnlineUi() {
       }
     }
     if (els.changePasswordBlock) {
-      els.changePasswordBlock.hidden = !(emailOn && hasEmail);
-      if (!(emailOn && hasEmail)) resetChangePasswordForm();
+      const showPw = emailOn && hasEmail;
+      els.changePasswordBlock.hidden = !showPw;
+      // Always start collapsed so password fields aren't sitting open
+      if (showPw) resetChangePasswordForm();
+      else resetChangePasswordForm();
     }
   } else {
     els.syncPill.textContent = "offline";
@@ -2841,10 +2857,7 @@ function bindEvents() {
   });
 
   els.changePasswordToggle?.addEventListener("click", () => {
-    setChangePasswordMsg("");
-    if (els.changePasswordForm) els.changePasswordForm.hidden = false;
-    if (els.changePasswordToggle) els.changePasswordToggle.hidden = true;
-    els.newPasswordInput?.focus();
+    openChangePasswordForm();
   });
   els.changePasswordCancel?.addEventListener("click", () => {
     resetChangePasswordForm();

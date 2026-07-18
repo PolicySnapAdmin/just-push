@@ -1342,6 +1342,16 @@ textarea#dm-input:focus {
   line-height: 1.4;
 }
 
+/* Must beat .stack-form { display } so fields stay collapsed until opened */
+#change-password-form[hidden],
+#change-password-form.is-collapsed {
+  display: none !important;
+}
+
+#change-password-block .link-btn {
+  width: 100%;
+}
+
 .age-check {
   display: flex;
   align-items: flex-start;
