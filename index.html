@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718d" />
+  <link rel="stylesheet" href="styles.css?v=20260718e" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -41,7 +41,7 @@
       <section class="panel" data-panel="play" aria-label="Play">
         <p class="pending-invite" id="pending-invite" hidden role="status"></p>
         <div class="mode-toggle" role="tablist" aria-label="Play mode">
-          <button type="button" class="mode-btn active" data-mode="free" role="tab" aria-selected="true">Free push</button>
+          <button type="button" class="mode-btn active" data-mode="free" role="tab" aria-selected="true">Unlimited</button>
           <button type="button" class="mode-btn" data-mode="challenge" role="tab" aria-selected="false">10 second</button>
         </div>
 
@@ -139,7 +139,7 @@
             </div>
           </div>
           <ul class="rank-list" id="you-ranks">
-            <li><span>Free high score</span><strong id="rank-high">0</strong></li>
+            <li><span>Unlimited high score</span><strong id="rank-high">0</strong></li>
             <li><span>Best 10 seconds</span><strong id="rank-challenge">0</strong></li>
             <li><span>Lifetime pushes (XP)</span><strong id="rank-life">0</strong></li>
             <li><span>Sessions played</span><strong id="rank-sessions">0</strong></li>
@@ -165,7 +165,7 @@
           <div class="card-head">
             <h3>Friends leaderboard</h3>
             <div class="board-tabs">
-              <button type="button" class="ghost-btn tiny active" data-board-metric="high">Free</button>
+              <button type="button" class="ghost-btn tiny active" data-board-metric="high">Unlimited</button>
               <button type="button" class="ghost-btn tiny" data-board-metric="challenge">10s</button>
             </div>
           </div>
@@ -422,7 +422,7 @@
   <div class="toast" id="toast" hidden role="status"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718d"></script>
-  <script src="app.js?v=20260718d"></script>
+  <script src="config.js?v=20260718e"></script>
+  <script src="app.js?v=20260718e"></script>
 </body>
 </html>

@@ -39,7 +39,7 @@ Simple tap races & boards
 ## Promotional text (170 chars, can change without new review)
 
 ```
-Push Thru is live — free push mode, 10-second challenges, levels that get harder as you climb, and friend/group boards. Add friends with a link and climb together.
+Push Thru is live — Unlimited mode, 10-second challenges, levels that get harder as you climb, and friend/group boards. Add friends with a link and climb together.
 ```
 
 ## Description (up to 4000 chars)
@@ -48,7 +48,7 @@ Push Thru is live — free push mode, 10-second challenges, levels that get hard
 Push Thru is a simple, addictive tap game: hit the button, rack up pushes, and climb the boards with friends.
 
 HOW TO PLAY
-• Free Push — tap as much as you want. Session score, high score, and all-time pushes.
+• Unlimited — tap as much as you want. Session score, high score, and all-time pushes.
 • 10 Second Challenge — how many taps can you land before the clock hits zero?
 • Levels — every push earns XP. Early levels fly by; higher levels take real grind.
 • Style it — pick button colors and backgrounds that feel like you.
@@ -85,7 +85,7 @@ push,tap game,clicker,friends,groups,leaderboard,10 second,casual,score,levels
 
 ```
 Welcome to Push Thru!
-• Free push and 10-second challenge modes
+• Unlimited and 10-second challenge modes
 • Levels and XP from every tap
 • Friends, groups, and global leaderboards
 • Themes, guest play, and account deletion in Settings
@@ -123,7 +123,7 @@ Demo account: not required — the app signs in anonymously (guest) automaticall
 To test:
 1. Accept the age confirmation (13+).
 2. Enter a display name.
-3. Play Free Push and 10 Second mode.
+3. Play Unlimited and 10 Second mode.
 4. Settings → themes, Privacy Policy, Terms, Delete account.
 
 Chat / messaging is disabled in this build (enableChat: false).

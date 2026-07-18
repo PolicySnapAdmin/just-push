@@ -1,5 +1,5 @@
 /**
- * Push Thru — free push + 10s challenge, localStorage + Supabase backend.
+ * Push Thru — unlimited + 10s challenge, localStorage + Supabase backend.
  */
 
 const STORAGE_KEY = "just-push-v2";
@@ -1385,7 +1385,7 @@ async function shareFriendInvite() {
   const result = await shareOrCopy(
     url,
     "Push Thru",
-    `Add ${name} on Push Thru and compete — free push + 10 second mode:\n${url}`
+    `Add ${name} on Push Thru and compete — Unlimited + 10 second mode:\n${url}`
   );
   if (result === "shared") toast("Invite sent");
   else if (result === "copied") toast("Invite link copied — paste in texts");

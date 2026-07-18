@@ -8,7 +8,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 
 | Feature | Details |
 |--------|---------|
-| **Free push** | Unlimited taps, session + lifetime + high score |
+| **Unlimited** | Unlimited taps, session + lifetime + high score |
 | **Levels** | 1 push = 1 XP · scales up to level 99 |
 | **Chat** | Community board (public posts) + private DMs with friends |
 | **10 second** | How many can you hit before the timer hits zero? |
