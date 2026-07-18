@@ -11,10 +11,13 @@ Repo / GitHub Pages path remains `just-push` for stable URLs.
 
 | File | Role |
 |------|------|
-| `index.html` | Structure, tabs, modals |
-| `styles.css` | Theme / layout |
+| `index.html` | Game app (invite links `?add=` / `?join=` land here) |
+| `store.html` + `store.css` | Marketing storefront (platforms, previews, waitlist) |
+| `styles.css` | In-game theme / layout |
 | `app.js` | Game logic, auth UI, Supabase client |
 | `config.js` | Public flags + Supabase anon config |
+| `assets/og-image.png` | Open Graph / link-preview image |
+| `site.webmanifest` | Add-to-home-screen / install metadata |
 | `privacy.html` / `terms.html` | Legal pages (HTTPS on Pages) |
 
 **Deploy:** GitHub Pages from `main` branch root  

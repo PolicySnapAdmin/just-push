@@ -16,6 +16,9 @@ const files = [
   "styles.css",
   "privacy.html",
   "terms.html",
+  "store.html",
+  "store.css",
+  "site.webmanifest",
   ".nojekyll",
 ];
 
@@ -29,6 +32,11 @@ for (const f of files) {
     continue;
   }
   cpSync(src, join(www, f));
+}
+
+const assetsSrc = join(root, "assets");
+if (existsSync(assetsSrc)) {
+  cpSync(assetsSrc, join(www, "assets"), { recursive: true });
 }
 
 // Capacitor loads from local bundle — invite links still use publicBaseUrl from config.js.

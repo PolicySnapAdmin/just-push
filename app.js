@@ -1705,15 +1705,22 @@ function parseDeepLink() {
   const params = new URLSearchParams(location.search);
   const add = params.get("add") || params.get("friend") || params.get("f");
   const join = params.get("join") || params.get("group") || params.get("g");
+  const tab = params.get("tab") || params.get("settings");
   if (add) return { type: "friend", code: add.trim() };
   if (join) return { type: "group", code: join.trim() };
+  if (tab === "style" || tab === "settings" || params.has("settings")) {
+    return { type: "tab", tab: "style" };
+  }
+  if (tab === "scores" || tab === "friends" || tab === "groups" || tab === "play" || tab === "chat") {
+    return { type: "tab", tab };
+  }
   return null;
 }
 
 function clearDeepLinkFromUrl() {
   if (!location.search) return;
   const url = new URL(location.href);
-  ["add", "friend", "f", "join", "group", "g"].forEach((k) => url.searchParams.delete(k));
+  ["add", "friend", "f", "join", "group", "g", "tab", "settings"].forEach((k) => url.searchParams.delete(k));
   const clean = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : "") + url.hash;
   history.replaceState({}, "", clean);
 }
@@ -3037,12 +3044,24 @@ async function init() {
   renderGlobalBoard();
   setMode(state.mode === "challenge" ? "challenge" : "free");
   bindEvents();
-  setTab(pendingDeepLink?.type === "group" ? "groups" : pendingDeepLink?.type === "friend" ? "friends" : "play");
+  const bootTab =
+    pendingDeepLink?.type === "group"
+      ? "groups"
+      : pendingDeepLink?.type === "friend"
+        ? "friends"
+        : pendingDeepLink?.type === "tab"
+          ? pendingDeepLink.tab
+          : "play";
+  setTab(bootTab);
   setOnlineUi();
   if (pendingDeepLink?.type === "friend") {
     showPendingBanner(`Invite detected — adding ${pendingDeepLink.code.toUpperCase()} when online…`);
   } else if (pendingDeepLink?.type === "group") {
     showPendingBanner(`Group invite detected — joining ${pendingDeepLink.code.toUpperCase()} when online…`);
+  } else if (pendingDeepLink?.type === "tab") {
+    // one-shot navigation from store / marketing links
+    clearDeepLinkFromUrl();
+    pendingDeepLink = null;
   }
   ensureAgeThenName();
   // timer ring geometry

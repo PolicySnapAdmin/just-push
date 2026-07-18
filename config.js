@@ -21,6 +21,8 @@ window.JUST_PUSH_CONFIG = {
    * Leave empty to use the current page URL (works on GitHub Pages).
    */
   publicBaseUrl: "https://policysnapadmin.github.io/just-push/",
+  /** Marketing / multi-platform storefront */
+  storeUrl: "https://policysnapadmin.github.io/just-push/store.html",
   /** GitHub OAuth redirect — must match Supabase Auth URL config */
   redirectTo: typeof location !== "undefined" ? location.origin + location.pathname : undefined,
 

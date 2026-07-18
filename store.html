@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f0f14" />
+  <meta name="description" content="Push Thru — tap to score, climb levels, compete with friends. Play free on the web. iOS, Android, and downloads coming soon." />
+  <meta name="author" content="Push Thru" />
+
+  <!-- Open Graph / link previews -->
+  <meta property="og:site_name" content="Push Thru" />
+  <meta property="og:title" content="Push Thru — Tap. Score. Beat friends." />
+  <meta property="og:description" content="Unlimited taps, 10-second challenges, levels, friends &amp; groups. Play free on the web. Apps coming soon." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://policysnapadmin.github.io/just-push/store.html" />
+  <meta property="og:image" content="https://policysnapadmin.github.io/just-push/assets/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Push Thru — Tap. Score. Beat friends." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Push Thru — Tap. Score. Beat friends." />
+  <meta name="twitter:description" content="Play free on the web. Unlimited mode, 10s challenges, friends &amp; levels." />
+  <meta name="twitter:image" content="https://policysnapadmin.github.io/just-push/assets/og-image.png" />
+
+  <link rel="canonical" href="https://policysnapadmin.github.io/just-push/store.html" />
+  <title>Push Thru — Get the game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/></svg>" />
+  <link rel="stylesheet" href="store.css?v=1" />
+  <link rel="manifest" href="site.webmanifest" />
+</head>
+<body class="store-body">
+  <header class="store-nav">
+    <a class="store-brand" href="store.html">
+      <span class="store-mark" aria-hidden="true"></span>
+      <span>Push Thru</span>
+    </a>
+    <nav class="store-nav-links">
+      <a href="#platforms">Get the game</a>
+      <a href="#features">Features</a>
+      <a href="index.html">Play</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Casual tap game · Free on web</p>
+        <h1>Push Thru</h1>
+        <p class="tagline">Tap. Score. Beat friends.</p>
+        <p class="lede">
+          Unlimited mode, 10-second challenges, levels that get harder as you climb,
+          and invite links so your crew can compete on any phone.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="index.html">Play free on web</a>
+          <a class="btn btn-ghost" href="index.html?tab=style">Web login / account</a>
+        </div>
+        <p class="hero-note">No install required · Works in the browser · Save progress with email</p>
+      </div>
+      <div class="hero-visual">
+        <img src="assets/hero-banner.jpg" width="1200" height="675" alt="Push Thru — big red push button on a dark background" />
+      </div>
+    </section>
+
+    <section id="platforms" class="section">
+      <h2>Get Push Thru</h2>
+      <p class="section-sub">One game, multiple ways to play. Start on the web today — store apps next.</p>
+
+      <div class="platform-grid">
+        <article class="platform-card platform-live">
+          <div class="platform-icon" aria-hidden="true">🌐</div>
+          <h3>Web</h3>
+          <p class="platform-status live">Available now</p>
+          <p>Full game in your browser. Guest play, email account, friends, groups, and boards.</p>
+          <a class="btn btn-primary btn-block" href="index.html">Play now</a>
+          <a class="btn btn-ghost btn-block" href="index.html?tab=style">Sign in on web</a>
+        </article>
+
+        <article class="platform-card">
+          <div class="platform-icon" aria-hidden="true"></div>
+          <h3>iPhone / iPad</h3>
+          <p class="platform-status soon">Coming soon</p>
+          <p>App Store build in progress (TestFlight next). Same account system as web.</p>
+          <button type="button" class="btn btn-muted btn-block" disabled>App Store — soon</button>
+          <a class="btn btn-ghost btn-block" href="mailto:calvin.money@gmail.com?subject=Push%20Thru%20iOS%20waitlist">Join waitlist</a>
+        </article>
+
+        <article class="platform-card">
+          <div class="platform-icon" aria-hidden="true">▶</div>
+          <h3>Android</h3>
+          <p class="platform-status soon">Coming soon</p>
+          <p>Google Play and/or sideload when ready. Web works on Android Chrome today.</p>
+          <button type="button" class="btn btn-muted btn-block" disabled>Google Play — soon</button>
+          <a class="btn btn-ghost btn-block" href="index.html">Play in Chrome</a>
+        </article>
+
+        <article class="platform-card">
+          <div class="platform-icon" aria-hidden="true">↓</div>
+          <h3>Download / install</h3>
+          <p class="platform-status live">Home screen</p>
+          <p>Add the web app to your home screen for an app-like icon (no store needed).</p>
+          <button type="button" class="btn btn-primary btn-block" id="install-hint-btn">How to install</button>
+          <a class="btn btn-ghost btn-block" href="site.webmanifest">Web app info</a>
+        </article>
+      </div>
+
+      <div id="install-hint" class="install-hint" hidden>
+        <h3>Add to Home Screen</h3>
+        <ul>
+          <li><strong>iPhone (Safari):</strong> Share → <em>Add to Home Screen</em></li>
+          <li><strong>Android (Chrome):</strong> Menu ⋮ → <em>Install app</em> or <em>Add to Home screen</em></li>
+          <li><strong>Desktop:</strong> Browser install icon in the address bar (when offered)</li>
+        </ul>
+        <p class="muted">Native App Store / Play packages will appear here when published.</p>
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <h2>Why people play</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <h3>Unlimited</h3>
+          <p>Tap as much as you want. Session, high score, and all-time XP.</p>
+        </div>
+        <div class="feature">
+          <h3>10 second</h3>
+          <p>How many pushes before the clock hits zero?</p>
+        </div>
+        <div class="feature">
+          <h3>Levels</h3>
+          <p>Every push is XP. Early levels fly; higher ones take real grind.</p>
+        </div>
+        <div class="feature">
+          <h3>Friends &amp; groups</h3>
+          <p>Share a link. Compete on phones. One group board for the crew.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section cta-band">
+      <h2>Ready to push?</h2>
+      <p>Jump in free — create an email account in Settings to keep progress across devices.</p>
+      <a class="btn btn-primary" href="index.html">Open Push Thru</a>
+    </section>
+  </main>
+
+  <footer class="store-footer">
+    <div>
+      <strong>Push Thru</strong>
+      <span class="muted"> · calvin.money@gmail.com</span>
+    </div>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="index.html">Play</a>
+      <a href="https://github.com/PolicySnapAdmin/just-push">GitHub</a>
+    </div>
+    <p class="muted footer-domain">
+      Live at <code>policysnapadmin.github.io/just-push</code> —
+      custom domain (e.g. pushthru.app) can point here anytime via GitHub Pages DNS.
+    </p>
+  </footer>
+
+  <script>
+    document.getElementById("install-hint-btn")?.addEventListener("click", () => {
+      const el = document.getElementById("install-hint");
+      if (!el) return;
+      el.hidden = !el.hidden;
+    });
+  </script>
+</body>
+</html>

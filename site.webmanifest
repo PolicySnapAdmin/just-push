@@ -1,0 +1,20 @@
+{
+  "name": "Push Thru",
+  "short_name": "Push Thru",
+  "description": "Tap. Score. Beat friends. Unlimited and 10-second challenge modes.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f0f14",
+  "theme_color": "#0f0f14",
+  "orientation": "portrait-primary",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "assets/og-image.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

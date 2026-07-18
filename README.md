@@ -4,7 +4,8 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 
 | | |
 |--|--|
-| **Live** | https://policysnapadmin.github.io/just-push/ |
+| **Play (game)** | https://policysnapadmin.github.io/just-push/ |
+| **Store / landing** | https://policysnapadmin.github.io/just-push/store.html |
 | **Privacy** | https://policysnapadmin.github.io/just-push/privacy.html |
 | **Terms** | https://policysnapadmin.github.io/just-push/terms.html |
 | **Support** | calvin.money@gmail.com |
