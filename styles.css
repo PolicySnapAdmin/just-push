@@ -393,6 +393,180 @@ body {
   font-size: 1.55rem;
 }
 
+/* OSRS-style level bar + metal tier icons */
+.level-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: -12px 0 20px;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.level-bar-card {
+  margin: 0 0 14px;
+}
+
+.level-badge {
+  --tier: #cd7f32;
+  position: relative;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--tier) 55%, #fff) 0%, transparent 45%),
+    linear-gradient(145deg, color-mix(in srgb, var(--tier) 85%, #fff), color-mix(in srgb, var(--tier) 55%, #000));
+  border: 2px solid color-mix(in srgb, var(--tier) 70%, #fff);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tier) 40%, transparent),
+    0 6px 16px color-mix(in srgb, var(--tier) 35%, transparent);
+}
+
+.level-badge[data-tier="max"] {
+  animation: max-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes max-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5), 0 6px 18px rgba(251, 191, 36, 0.35); }
+  50% { box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.8), 0 8px 28px rgba(251, 191, 36, 0.55); }
+}
+
+.level-icon {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 50% 58%, transparent 28%, color-mix(in srgb, #000 25%, transparent) 29% 42%, transparent 43%),
+    conic-gradient(from 210deg, transparent 0 40%, color-mix(in srgb, #fff 28%, transparent) 50%, transparent 60% 100%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.level-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 10px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, #fff 70%, var(--tier));
+  clip-path: polygon(50% 0%, 100% 30%, 80% 100%, 20% 100%, 0% 30%);
+  opacity: 0.9;
+}
+
+.level-num {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #0a0a0c;
+  text-shadow: 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
+  line-height: 1;
+  margin-top: 10px;
+}
+
+.level-progress-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.level-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.level-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.level-xp-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.level-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  overflow: hidden;
+}
+
+.level-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--tier, var(--btn)) 70%, #fff), var(--tier, var(--btn)));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--tier, var(--btn)) 50%, transparent);
+  transition: width 0.15s ease-out;
+}
+
+.level-bar .level-progress-fill {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--btn) 50%, #fff), var(--btn));
+}
+
+.level-hint {
+  margin: 8px 0 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.level-chip {
+  --tier: #cd7f32;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: middle;
+  padding: 1px 6px 1px 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tier) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tier) 55%, transparent);
+  color: color-mix(in srgb, var(--tier) 40%, #fff);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  margin-right: 4px;
+}
+
+.level-chip.compact {
+  padding: 0 5px 0 3px;
+  font-size: 0.68rem;
+}
+
+.level-chip-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tier) 80%, #fff), var(--tier));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 25%, transparent);
+}
+
+.level-chip-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.person-info .name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 0;
+}
+
 /* Big button */
 .button-stage {
   position: relative;

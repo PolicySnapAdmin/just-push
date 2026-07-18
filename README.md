@@ -7,6 +7,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 | Feature | Details |
 |--------|---------|
 | **Free push** | Unlimited taps, session + lifetime + high score |
+| **Levels** | OSRS XP curve (1 push = 1 XP). Level 99 = 13,034,431 XP |
 | **10 second** | How many can you hit before the timer hits zero? |
 | **Friends** | Short codes (online) or share blobs (offline) |
 | **Groups** | Create / join with invite codes, group boards |

@@ -75,6 +75,23 @@
           </div>
         </div>
 
+        <!-- OSRS-style level (1 XP per push, same curve as Runescape) -->
+        <div class="level-bar" id="level-bar" title="Levels use the Old School RuneScape XP curve. 1 push = 1 XP.">
+          <div class="level-badge" id="level-badge" data-tier="bronze">
+            <span class="level-icon" id="level-icon" aria-hidden="true"></span>
+            <span class="level-num" id="level-num">1</span>
+          </div>
+          <div class="level-progress-wrap">
+            <div class="level-progress-meta">
+              <span class="level-title" id="level-title">Level 1</span>
+              <span class="level-xp-label" id="level-xp-label">0 / 83 XP</span>
+            </div>
+            <div class="level-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="level-progress-track">
+              <div class="level-progress-fill" id="level-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="button-stage">
           <div class="ring ring-1" aria-hidden="true"></div>
           <div class="ring ring-2" aria-hidden="true"></div>
@@ -106,10 +123,26 @@
 
         <div class="card">
           <h3>You</h3>
+          <div class="level-bar level-bar-card" id="level-bar-scores">
+            <div class="level-badge" id="rank-level-badge" data-tier="bronze">
+              <span class="level-icon" aria-hidden="true"></span>
+              <span class="level-num" id="rank-level">1</span>
+            </div>
+            <div class="level-progress-wrap">
+              <div class="level-progress-meta">
+                <span class="level-title" id="rank-level-title">Level 1</span>
+                <span class="level-xp-label" id="rank-level-xp">0 / 83 XP</span>
+              </div>
+              <div class="level-progress-track">
+                <div class="level-progress-fill" id="rank-level-fill"></div>
+              </div>
+              <p class="level-hint">OSRS XP curve · 1 push = 1 XP · 99 needs 13,034,431</p>
+            </div>
+          </div>
           <ul class="rank-list" id="you-ranks">
             <li><span>Free high score</span><strong id="rank-high">0</strong></li>
             <li><span>Best 10 seconds</span><strong id="rank-challenge">0</strong></li>
-            <li><span>Lifetime pushes</span><strong id="rank-life">0</strong></li>
+            <li><span>Lifetime pushes (XP)</span><strong id="rank-life">0</strong></li>
             <li><span>Sessions played</span><strong id="rank-sessions">0</strong></li>
           </ul>
         </div>

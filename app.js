@@ -6,6 +6,98 @@ const STORAGE_KEY = "just-push-v2";
 const CHALLENGE_MS = 10_000;
 const CIRCUMFERENCE = 2 * Math.PI * 46;
 
+// ——— OSRS XP curve (levels 1–99) ———
+// XP to reach level L = floor( (1/4) * sum_{n=1}^{L-1} floor(n + 300 * 2^(n/7)) )
+// 1 push = 1 XP. Level 99 = 13,034,431 XP (same as Old School RuneScape).
+const OSRS_MAX_LEVEL = 99;
+const OSRS_XP_TABLE = (() => {
+  const table = [0, 0]; // index = level; XP required to *be* that level
+  let points = 0;
+  for (let n = 1; n < OSRS_MAX_LEVEL; n++) {
+    points += Math.floor(n + 300 * Math.pow(2, n / 7));
+    table[n + 1] = Math.floor(points / 4);
+  }
+  return table;
+})();
+
+/** Metal/gear-style tiers for the level badge icon (inspired by OSRS progression). */
+const LEVEL_TIERS = [
+  { min: 1, id: "bronze", label: "Bronze", color: "#cd7f32" },
+  { min: 10, id: "iron", label: "Iron", color: "#9ca3af" },
+  { min: 20, id: "steel", label: "Steel", color: "#cbd5e1" },
+  { min: 30, id: "black", label: "Black", color: "#71717a" },
+  { min: 40, id: "mithril", label: "Mithril", color: "#a78bfa" },
+  { min: 50, id: "adamant", label: "Adamant", color: "#22c55e" },
+  { min: 60, id: "rune", label: "Rune", color: "#38bdf8" },
+  { min: 70, id: "dragon", label: "Dragon", color: "#ef4444" },
+  { min: 80, id: "barrows", label: "Barrows", color: "#c084fc" },
+  { min: 90, id: "crystal", label: "Crystal", color: "#67e8f9" },
+  { min: 99, id: "max", label: "Max", color: "#fbbf24" },
+];
+
+function levelFromXp(xp) {
+  const x = Math.max(0, Math.floor(Number(xp) || 0));
+  let level = 1;
+  for (let l = OSRS_MAX_LEVEL; l >= 1; l--) {
+    if (x >= OSRS_XP_TABLE[l]) {
+      level = l;
+      break;
+    }
+  }
+  return level;
+}
+
+function xpForLevel(level) {
+  const l = Math.max(1, Math.min(OSRS_MAX_LEVEL, Math.floor(level)));
+  return OSRS_XP_TABLE[l] || 0;
+}
+
+function tierForLevel(level) {
+  let tier = LEVEL_TIERS[0];
+  for (const t of LEVEL_TIERS) {
+    if (level >= t.min) tier = t;
+  }
+  return tier;
+}
+
+function levelProgress(xp) {
+  const totalXp = Math.max(0, Math.floor(Number(xp) || 0));
+  const level = levelFromXp(totalXp);
+  const at = xpForLevel(level);
+  if (level >= OSRS_MAX_LEVEL) {
+    return {
+      level,
+      totalXp,
+      xpIntoLevel: totalXp - at,
+      xpForNext: 0,
+      xpToNext: 0,
+      fraction: 1,
+      maxed: true,
+      tier: tierForLevel(level),
+    };
+  }
+  const next = xpForLevel(level + 1);
+  const span = Math.max(1, next - at);
+  const into = totalXp - at;
+  return {
+    level,
+    totalXp,
+    xpIntoLevel: into,
+    xpForNext: next - at,
+    xpToNext: next - totalXp,
+    fraction: Math.min(1, into / span),
+    maxed: false,
+    tier: tierForLevel(level),
+  };
+}
+
+function formatXp(n) {
+  const x = Math.max(0, Math.floor(Number(n) || 0));
+  if (x >= 1_000_000) return (x / 1_000_000).toFixed(x >= 10_000_000 ? 1 : 2).replace(/\.0+$/, "") + "m";
+  if (x >= 10_000) return Math.floor(x / 1000) + "k";
+  return String(x);
+}
+
 const BUTTON_COLORS = [
   { id: "rose", label: "Rose", value: "#ff4d6d" },
   { id: "coral", label: "Coral", value: "#ff7a59" },
@@ -73,6 +165,7 @@ function saveState() {
 }
 
 let state = loadState();
+let lastRenderedLevel = levelFromXp(state.lifetimeCount || 0);
 
 // Challenge runtime (not persisted mid-run)
 let challenge = {
@@ -233,6 +326,17 @@ const els = {
   rankChallenge: $("#rank-challenge"),
   rankLife: $("#rank-life"),
   rankSessions: $("#rank-sessions"),
+  levelBadge: $("#level-badge"),
+  levelNum: $("#level-num"),
+  levelTitle: $("#level-title"),
+  levelXpLabel: $("#level-xp-label"),
+  levelProgressFill: $("#level-progress-fill"),
+  levelProgressTrack: $("#level-progress-track"),
+  rankLevelBadge: $("#rank-level-badge"),
+  rankLevel: $("#rank-level"),
+  rankLevelTitle: $("#rank-level-title"),
+  rankLevelXp: $("#rank-level-xp"),
+  rankLevelFill: $("#rank-level-fill"),
   friendsBoard: $("#friends-board"),
   friendsBoardEmpty: $("#friends-board-empty"),
   groupBoards: $("#group-boards"),
@@ -390,6 +494,68 @@ function ensureName() {
 
 // ——— Scores render ———
 
+function applyLevelUi(badgeEl, numEl, titleEl, xpLabelEl, fillEl, trackEl, prog) {
+  if (numEl) numEl.textContent = String(prog.level);
+  if (badgeEl) {
+    badgeEl.dataset.tier = prog.tier.id;
+    badgeEl.style.setProperty("--tier", prog.tier.color);
+    badgeEl.title = `${prog.tier.label} · Level ${prog.level}`;
+  }
+  if (titleEl) {
+    titleEl.textContent = prog.maxed ? `Level ${prog.level} · Max` : `Level ${prog.level} · ${prog.tier.label}`;
+  }
+  if (xpLabelEl) {
+    if (prog.maxed) {
+      xpLabelEl.textContent = `${formatNum(prog.totalXp)} XP (maxed)`;
+    } else {
+      xpLabelEl.textContent = `${formatNum(prog.xpIntoLevel)} / ${formatNum(prog.xpForNext)} XP`;
+    }
+  }
+  if (fillEl) fillEl.style.width = `${Math.round(prog.fraction * 1000) / 10}%`;
+  if (trackEl) {
+    trackEl.setAttribute("aria-valuenow", String(Math.round(prog.fraction * 100)));
+    trackEl.setAttribute("aria-label", prog.maxed ? `Level ${prog.level} maxed` : `Level ${prog.level}, ${Math.round(prog.fraction * 100)}% to next`);
+  }
+}
+
+function renderLevel() {
+  const prog = levelProgress(state.lifetimeCount);
+  applyLevelUi(
+    els.levelBadge,
+    els.levelNum,
+    els.levelTitle,
+    els.levelXpLabel,
+    els.levelProgressFill,
+    els.levelProgressTrack,
+    prog
+  );
+  applyLevelUi(
+    els.rankLevelBadge,
+    els.rankLevel,
+    els.rankLevelTitle,
+    els.rankLevelXp,
+    els.rankLevelFill,
+    null,
+    prog
+  );
+
+  if (prog.level > lastRenderedLevel) {
+    const jumped = prog.level - lastRenderedLevel;
+    lastRenderedLevel = prog.level;
+    showNewRecord(jumped > 1 ? `Levels up! Now ${prog.level}` : `Level up! Level ${prog.level}`);
+    toast(`${prog.tier.label} · Level ${prog.level}`);
+  } else if (prog.level < lastRenderedLevel) {
+    // e.g. profile merge / reload
+    lastRenderedLevel = prog.level;
+  }
+}
+
+function levelBadgeHtml(lifetime, compact = false) {
+  const prog = levelProgress(lifetime || 0);
+  const cls = compact ? "level-chip compact" : "level-chip";
+  return `<span class="${cls}" data-tier="${prog.tier.id}" style="--tier:${prog.tier.color}" title="${prog.tier.label} level ${prog.level}"><span class="level-chip-icon" aria-hidden="true"></span><span class="level-chip-num">${prog.level}</span></span>`;
+}
+
 function renderScores() {
   els.sessionCount.textContent = formatNum(state.sessionCount);
   els.highScore.textContent = formatNum(state.highScore);
@@ -400,6 +566,7 @@ function renderScores() {
   els.rankChallenge.textContent = formatNum(state.challengeBest);
   els.rankLife.textContent = formatNum(state.lifetimeCount);
   els.rankSessions.textContent = formatNum(state.sessionsPlayed);
+  renderLevel();
 }
 
 function spawnFloater() {
@@ -1124,8 +1291,8 @@ function renderFriends() {
       <li data-id="${f.id}">
         <div class="avatar" style="width:36px;height:36px;font-size:0.8rem">${initials(f.name)}</div>
         <div class="person-info">
-          <div class="name">${escapeHtml(f.name)}</div>
-          <div class="meta">10s best ${formatNum(f.challengeBest || 0)} · life ${formatNum(f.lifetimeCount || 0)}</div>
+          <div class="name">${levelBadgeHtml(f.lifetimeCount, true)} ${escapeHtml(f.name)}</div>
+          <div class="meta">10s best ${formatNum(f.challengeBest || 0)} · life ${formatNum(f.lifetimeCount || 0)} XP</div>
         </div>
         <div class="person-score">${formatNum(f.highScore)}</div>
         <button type="button" class="icon-btn" data-remove-friend="${f.id}" title="Remove">✕</button>
@@ -1144,6 +1311,7 @@ function renderFriendsBoard() {
       name: state.name || "You",
       highScore: state.highScore,
       challengeBest: state.challengeBest,
+      lifetimeCount: state.lifetimeCount,
       you: true,
     },
     ...listFriendsForUi().map((f) => ({ ...f, you: false })),
@@ -1163,7 +1331,7 @@ function renderFriendsBoard() {
       <li>
         <span class="rank-num${rankClass}">${i + 1}</span>
         <div class="person-info">
-          <div class="name">${escapeHtml(e.name)}${e.you ? '<span class="you-tag">You</span>' : ""}</div>
+          <div class="name">${levelBadgeHtml(e.lifetimeCount, true)} ${escapeHtml(e.name)}${e.you ? '<span class="you-tag">You</span>' : ""}</div>
         </div>
         <div class="person-score">${formatNum(score)}</div>
       </li>`;
@@ -1346,7 +1514,7 @@ function renderGroups() {
           .slice(0, 5)
           .map(
             (m) =>
-              `<li><span>${escapeHtml(m.name)}${m.id === myId() ? " (you)" : ""}</span><strong>${formatNum(m.highScore)}</strong></li>`
+              `<li><span>${levelBadgeHtml(m.lifetimeCount, true)} ${escapeHtml(m.name)}${m.id === myId() ? " (you)" : ""}</span><strong>${formatNum(m.highScore)}</strong></li>`
           )
           .join("");
         const code = g.invite_code || g.code || "";
@@ -1393,7 +1561,7 @@ function renderGroupBoards() {
           <li>
             <span class="rank-num${rankClass}">${i + 1}</span>
             <div class="person-info">
-              <div class="name">${escapeHtml(m.name)}${m.id === myId() ? '<span class="you-tag">You</span>' : ""}</div>
+              <div class="name">${levelBadgeHtml(m.lifetimeCount, true)} ${escapeHtml(m.name)}${m.id === myId() ? '<span class="you-tag">You</span>' : ""}</div>
             </div>
             <div class="person-score">${formatNum(score)}</div>
           </li>`;
@@ -1416,7 +1584,7 @@ async function loadGlobalBoard() {
   }
   const { data, error } = await sb
     .from("jp_profiles")
-    .select("id, display_name, challenge_best, high_score")
+    .select("id, display_name, challenge_best, high_score, lifetime_count")
     .gt("challenge_best", 0)
     .order("challenge_best", { ascending: false })
     .limit(25);
@@ -1444,7 +1612,7 @@ function renderGlobalBoard() {
       <li>
         <span class="rank-num${rankClass}">${i + 1}</span>
         <div class="person-info">
-          <div class="name">${escapeHtml(e.display_name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
+          <div class="name">${levelBadgeHtml(e.lifetime_count, true)} ${escapeHtml(e.display_name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
         </div>
         <div class="person-score">${formatNum(e.challenge_best)}</div>
       </li>`;
