@@ -102,7 +102,7 @@ These are **not** hidden — the game needs them:
 | Shared Supabase project | Low | `jp_*` namespacing + RLS; other apps on same project must not weaken shared policies. |
 | Security definer RPCs | Low | `jp_delete_my_account`, `jp_add_friend_by_code` use `auth.uid()` — only act as caller. |
 | No server rate limits on posts/DMs | Low | Client cooldowns only; re-enable chat carefully. |
-| Client can set own scores | Medium | Players can cheat local/API score updates (own row only). Fine for casual; not anti-cheat. |
+| Client sets scores via REST | **Mitigated** | Score columns locked by trigger; play uses RPCs only (increment/capped). |
 
 ---
 

@@ -874,8 +874,9 @@ function endChallenge() {
   }
   state.sessionsPlayed += 1;
   saveState();
-  scheduleSync();
   renderScores();
+  // Server: challenge best + session bump (scores cannot be set via plain REST)
+  reportChallengeToServer(challenge.count).catch((e) => console.warn("challenge sync", e));
 
   els.challengeResult.hidden = false;
   els.challengeResult.textContent = isRecord
@@ -913,6 +914,7 @@ function push() {
     renderScores();
     spawnFloater();
     pulseRings();
+    schedulePushRpc(0);
     return;
   }
 
@@ -925,7 +927,8 @@ function push() {
     isRecord = true;
   }
   saveState();
-  scheduleSync();
+  schedulePushRpc(state.sessionCount);
+  scheduleMetaSync();
   renderScores();
   spawnFloater();
   pulseRings();
@@ -933,11 +936,14 @@ function push() {
 }
 
 function resetSession() {
-  if (state.sessionCount > 0) state.sessionsPlayed += 1;
+  if (state.sessionCount > 0) {
+    state.sessionsPlayed += 1;
+    bumpSessionOnServer().catch((e) => console.warn("session bump", e));
+  }
   state.sessionCount = 0;
   els.newRecord.hidden = true;
   saveState();
-  scheduleSync();
+  scheduleMetaSync();
   renderScores();
   toast("Session reset");
 }
@@ -1037,16 +1043,12 @@ async function ensureProfile() {
   if (error) throw error;
 
   if (!data) {
-    // trigger may race; insert ourselves
+    // Scores always start at 0 server-side (insert guard). Name/theme only.
     const code = Math.random().toString(36).slice(2, 8).toUpperCase();
     const insert = {
       id: uid,
       display_name: state.name || "Player",
       friend_code: code,
-      high_score: state.highScore,
-      challenge_best: state.challengeBest,
-      lifetime_count: state.lifetimeCount,
-      sessions_played: state.sessionsPlayed,
       theme_button: state.theme.button,
       theme_bg: state.theme.background,
     };
@@ -1055,49 +1057,177 @@ async function ensureProfile() {
     data = res.data;
   }
 
-  // Merge: take the max of local vs server so we never lose a better score
-  const merged = {
-    name: state.name || data.display_name || "Player",
-    highScore: Math.max(state.highScore, data.high_score || 0),
-    challengeBest: Math.max(state.challengeBest, data.challenge_best || 0),
-    lifetimeCount: Math.max(state.lifetimeCount, data.lifetime_count || 0),
-    sessionsPlayed: Math.max(state.sessionsPlayed, data.sessions_played || 0),
-  };
-  state.name = merged.name === "Player" && data.display_name !== "Player" ? data.display_name : merged.name;
+  profile = data;
+
+  // Prefer higher of local vs server for display, then push any local-ahead via RPCs
+  const localAhead =
+    state.lifetimeCount > (data.lifetime_count || 0) ||
+    state.highScore > (data.high_score || 0) ||
+    state.challengeBest > (data.challenge_best || 0);
+
+  if (!localAhead) {
+    state.highScore = Math.max(state.highScore, data.high_score || 0);
+    state.challengeBest = Math.max(state.challengeBest, data.challenge_best || 0);
+    state.lifetimeCount = Math.max(state.lifetimeCount, data.lifetime_count || 0);
+    state.sessionsPlayed = Math.max(state.sessionsPlayed, data.sessions_played || 0);
+  }
+
+  if (data.display_name && data.display_name !== "Player") {
+    if (!state.name || state.name === "Player") state.name = data.display_name;
+  } else if (state.name) {
+    /* keep local name */
+  }
   if (data.theme_button) state.theme.button = data.theme_button;
   if (data.theme_bg) state.theme.background = data.theme_bg;
-  state.highScore = merged.highScore;
-  state.challengeBest = merged.challengeBest;
-  state.lifetimeCount = merged.lifetimeCount;
-  state.sessionsPlayed = merged.sessionsPlayed;
+
   saveState();
   applyTheme();
   renderProfile();
   renderScores();
 
-  profile = data;
-  // push merge up if local was ahead
-  await pushProfile();
+  // Name/theme only via table update; scores only via RPCs
+  await pushProfileMeta();
+  if (localAhead) {
+    await reconcileLocalScoresToServer();
+  }
   const refreshed = await sb.from("jp_profiles").select("*").eq("id", uid).single();
-  if (refreshed.data) profile = refreshed.data;
+  if (refreshed.data) {
+    profile = refreshed.data;
+    // After reconcile, adopt server truth for scores
+    state.highScore = Math.max(state.highScore, profile.high_score || 0);
+    state.challengeBest = Math.max(state.challengeBest, profile.challenge_best || 0);
+    state.lifetimeCount = Math.max(state.lifetimeCount, profile.lifetime_count || 0);
+    state.sessionsPlayed = Math.max(state.sessionsPlayed, profile.sessions_played || 0);
+    saveState();
+    renderScores();
+  }
 }
 
-function scheduleSync() {
+/** Debounced name/theme sync (scores never go through this path). */
+function scheduleMetaSync() {
   clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
-    pushProfile().catch((e) => console.warn("sync", e));
+    pushProfileMeta().catch((e) => console.warn("meta sync", e));
   }, 400);
 }
 
-async function pushProfile() {
+/** @deprecated name kept for any leftover callers */
+function scheduleSync() {
+  scheduleMetaSync();
+}
+
+let pushRpcTimer = null;
+let pendingPushSession = 0;
+let pendingPushCount = 0;
+
+/** Batch push RPCs so rapid taps don't flood the network. */
+function schedulePushRpc(sessionCount) {
+  pendingPushCount += 1;
+  pendingPushSession = Math.max(pendingPushSession, sessionCount || 0);
+  clearTimeout(pushRpcTimer);
+  pushRpcTimer = setTimeout(() => {
+    const n = pendingPushCount;
+    const sess = pendingPushSession;
+    pendingPushCount = 0;
+    pendingPushSession = 0;
+    recordPushesOnServer(n, sess).catch((e) => console.warn("push rpc", e));
+  }, 350);
+}
+
+function applyServerProfile(row) {
+  if (!row) return;
+  profile = row;
+  // Never lower local mid-play if server is briefly behind a pending batch
+  state.highScore = Math.max(state.highScore, row.high_score || 0);
+  state.challengeBest = Math.max(state.challengeBest, row.challenge_best || 0);
+  state.lifetimeCount = Math.max(state.lifetimeCount, row.lifetime_count || 0);
+  state.sessionsPlayed = Math.max(state.sessionsPlayed, row.sessions_played || 0);
+  saveState();
+  renderScores();
+  online = true;
+  setOnlineUi();
+}
+
+async function recordPushesOnServer(count, sessionCount) {
+  if (!sb || !session?.user || !online) return;
+  const n = Math.max(0, Math.floor(Number(count) || 0));
+  if (!n) return;
+  // Chunk at 200 (server max per RPC)
+  let left = n;
+  let last = null;
+  while (left > 0) {
+    const chunk = Math.min(200, left);
+    const { data, error } = await sb.rpc("jp_record_pushes", {
+      p_count: chunk,
+      p_session_count: Math.floor(Number(sessionCount) || 0),
+    });
+    if (error) {
+      console.warn("jp_record_pushes", error);
+      return;
+    }
+    last = data;
+    left -= chunk;
+  }
+  if (last) applyServerProfile(last);
+}
+
+async function reportChallengeToServer(count, bumpSession = true) {
+  if (!sb || !session?.user || !online) return;
+  const { data, error } = await sb.rpc("jp_report_challenge", {
+    p_count: Math.floor(Number(count) || 0),
+    p_bump_session: !!bumpSession,
+  });
+  if (error) {
+    console.warn("jp_report_challenge", error);
+    return;
+  }
+  applyServerProfile(data);
+}
+
+async function bumpSessionOnServer() {
+  if (!sb || !session?.user || !online) return;
+  const { data, error } = await sb.rpc("jp_bump_session");
+  if (error) {
+    console.warn("jp_bump_session", error);
+    return;
+  }
+  applyServerProfile(data);
+}
+
+/** If local offline progress is ahead of server, claim it via capped RPCs (not raw UPDATE). */
+async function reconcileLocalScoresToServer() {
+  if (!sb || !session?.user || !profile) return;
+  let serverLife = profile.lifetime_count || 0;
+  let guard = 0;
+  while (state.lifetimeCount > serverLife && guard < 50) {
+    const delta = Math.min(200, state.lifetimeCount - serverLife);
+    const { data, error } = await sb.rpc("jp_record_pushes", {
+      p_count: delta,
+      p_session_count: state.highScore,
+    });
+    if (error) {
+      console.warn("reconcile pushes", error);
+      break;
+    }
+    profile = data;
+    serverLife = data.lifetime_count || serverLife;
+    guard += 1;
+  }
+  if (state.challengeBest > (profile.challenge_best || 0)) {
+    const { data, error } = await sb.rpc("jp_report_challenge", {
+      p_count: state.challengeBest,
+      p_bump_session: false,
+    });
+    if (!error && data) profile = data;
+  }
+}
+
+/** Name + theme only — score columns are ignored by DB trigger if sent. */
+async function pushProfileMeta() {
   if (!sb || !session?.user) return;
 
   const payload = {
     display_name: (state.name || "Player").slice(0, 16),
-    high_score: state.highScore,
-    challenge_best: state.challengeBest,
-    lifetime_count: state.lifetimeCount,
-    sessions_played: state.sessionsPlayed,
     theme_button: state.theme.button,
     theme_bg: state.theme.background,
   };
@@ -1110,12 +1240,19 @@ async function pushProfile() {
     .single();
 
   if (error) {
-    console.warn("profile sync", error);
+    console.warn("profile meta sync", error);
     return;
   }
-  profile = data;
-  online = true;
-  setOnlineUi();
+  // Keep server scores; don't overwrite local mid-tap with stale zeros
+  if (data) {
+    profile = data;
+    online = true;
+    setOnlineUi();
+  }
+}
+
+async function pushProfile() {
+  await pushProfileMeta();
 }
 
 async function signInWithGithub() {
