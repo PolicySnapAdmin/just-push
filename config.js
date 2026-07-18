@@ -18,7 +18,7 @@ window.JUST_PUSH_CONFIG = {
    * Set after deploy if you test locally but want phone-ready links, e.g.:
    * "https://YOURUSER.github.io/just-push/"
    */
-  publicBaseUrl: "",
+  publicBaseUrl: "https://policysnapadmin.github.io/just-push/",
   /** GitHub OAuth redirect — must match Supabase Auth URL config */
   redirectTo: typeof location !== "undefined" ? location.origin + location.pathname : undefined,
 };
