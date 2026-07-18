@@ -20,20 +20,51 @@ const XP_TABLE = (() => {
   return table;
 })();
 
-/** Metal-style tiers for the level badge icon. */
-const LEVEL_TIERS = [
-  { min: 1, id: "bronze", label: "Bronze", color: "#cd7f32" },
-  { min: 10, id: "iron", label: "Iron", color: "#9ca3af" },
-  { min: 20, id: "steel", label: "Steel", color: "#cbd5e1" },
-  { min: 30, id: "black", label: "Black", color: "#71717a" },
-  { min: 40, id: "mithril", label: "Mithril", color: "#a78bfa" },
-  { min: 50, id: "adamant", label: "Adamant", color: "#22c55e" },
-  { min: 60, id: "rune", label: "Rune", color: "#38bdf8" },
-  { min: 70, id: "dragon", label: "Dragon", color: "#ef4444" },
-  { min: 80, id: "barrows", label: "Barrows", color: "#c084fc" },
-  { min: 90, id: "crystal", label: "Crystal", color: "#67e8f9" },
-  { min: 99, id: "max", label: "Max", color: "#fbbf24" },
-];
+/**
+ * Metal badge families with (t)rimmed + (g)old variants between ranks.
+ * Pattern per metal band (~10 levels): base → (t) → (g) → next metal.
+ *
+ *  1–3 Bronze · 4–6 Bronze (t) · 7–9 Bronze (g)
+ * 10–12 Iron  · 13–15 Iron (t)  · 16–19 Iron (g)
+ * 20–22 Steel · 23–25 Steel (t) · 26–29 Steel (g)
+ * 30–32 Black · 33–35 Black (t) · 36–39 Black (g)
+ * 40–42 Mithril · 43–45 Mithril (t) · 46–49 Mithril (g)
+ * 50–52 Adamant · 53–55 Adamant (t) · 56–59 Adamant (g)
+ * 60–62 Rune · 63–65 Rune (t) · 66–69 Rune (g)
+ * 70–72 Dragon · 73–75 Dragon (t) · 76–79 Dragon (g)
+ * 80–82 Barrows · 83–85 Barrows (t) · 86–89 Barrows (g)
+ * 90–92 Crystal · 93–95 Crystal (t) · 96–98 Crystal (g)
+ * 99 Max
+ */
+const LEVEL_TIERS = (() => {
+  const band = (metal, color, start) => [
+    { min: start, id: metal, label: metal[0].toUpperCase() + metal.slice(1), color, variant: "base" },
+    { min: start + 3, id: `${metal}-t`, label: `${metal[0].toUpperCase() + metal.slice(1)} (t)`, color, variant: "trim" },
+    { min: start + 6, id: `${metal}-g`, label: `${metal[0].toUpperCase() + metal.slice(1)} (g)`, color, variant: "gold" },
+  ];
+  // Special labels for multi-word feel
+  const named = (idBase, labelBase, color, start) => [
+    { min: start, id: idBase, label: labelBase, color, variant: "base" },
+    { min: start + 3, id: `${idBase}-t`, label: `${labelBase} (t)`, color, variant: "trim" },
+    { min: start + 6, id: `${idBase}-g`, label: `${labelBase} (g)`, color, variant: "gold" },
+  ];
+  return [
+    ...named("bronze", "Bronze", "#cd7f32", 1),
+    ...named("iron", "Iron", "#9ca3af", 10),
+    ...named("steel", "Steel", "#cbd5e1", 20),
+    ...named("black", "Black", "#71717a", 30),
+    ...named("mithril", "Mithril", "#a78bfa", 40),
+    ...named("adamant", "Adamant", "#22c55e", 50),
+    ...named("rune", "Rune", "#38bdf8", 60),
+    ...named("dragon", "Dragon", "#ef4444", 70),
+    ...named("barrows", "Barrows", "#c084fc", 80),
+    // Crystal band ends at 98; Max is exclusive cap
+    { min: 90, id: "crystal", label: "Crystal", color: "#67e8f9", variant: "base" },
+    { min: 93, id: "crystal-t", label: "Crystal (t)", color: "#67e8f9", variant: "trim" },
+    { min: 96, id: "crystal-g", label: "Crystal (g)", color: "#67e8f9", variant: "gold" },
+    { min: 99, id: "max", label: "Max", color: "#fbbf24", variant: "max" },
+  ];
+})();
 
 function levelFromXp(xp) {
   const x = Math.max(0, Math.floor(Number(xp) || 0));
@@ -963,11 +994,14 @@ function applyLevelUi(badgeEl, numEl, titleEl, xpLabelEl, fillEl, trackEl, prog)
   if (numEl) numEl.textContent = String(prog.level);
   if (badgeEl) {
     badgeEl.dataset.tier = prog.tier.id;
+    badgeEl.dataset.variant = prog.tier.variant || "base";
     badgeEl.style.setProperty("--tier", prog.tier.color);
     badgeEl.title = `${prog.tier.label} · Level ${prog.level}`;
   }
   if (titleEl) {
-    titleEl.textContent = prog.maxed ? `Level ${prog.level} · Max` : `Level ${prog.level} · ${prog.tier.label}`;
+    titleEl.textContent = prog.maxed
+      ? `Level ${prog.level} · Max`
+      : `Level ${prog.level} · ${prog.tier.label}`;
   }
   if (xpLabelEl) {
     if (prog.maxed) {
@@ -1018,7 +1052,8 @@ function renderLevel() {
 function levelBadgeHtml(lifetime, compact = false) {
   const prog = levelProgress(lifetime || 0);
   const cls = compact ? "level-chip compact" : "level-chip";
-  return `<span class="${cls}" data-tier="${prog.tier.id}" style="--tier:${prog.tier.color}" title="${prog.tier.label} level ${prog.level}"><span class="level-chip-icon" aria-hidden="true"></span><span class="level-chip-num">${prog.level}</span></span>`;
+  const variant = prog.tier.variant || "base";
+  return `<span class="${cls}" data-tier="${prog.tier.id}" data-variant="${variant}" style="--tier:${prog.tier.color}" title="${prog.tier.label} · level ${prog.level}"><span class="level-chip-icon" aria-hidden="true"></span><span class="level-chip-num">${prog.level}</span></span>`;
 }
 
 function renderScores() {
