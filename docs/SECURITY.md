@@ -1,6 +1,9 @@
 # Push Thru — security notes
 
-Last live probe: 2026-07-18. Not a formal audit; practical review of Supabase RLS + client surface.
+Last live probe: 2026-07-18 (updated after score-guard + email auth).  
+Not a formal audit; practical review of Supabase RLS + client surface.
+
+See also: [ARCHITECTURE.md](./ARCHITECTURE.md) · [SUPABASE.md](./SUPABASE.md)
 
 ## Short answers
 
@@ -103,6 +106,9 @@ These are **not** hidden — the game needs them:
 | Security definer RPCs | Low | `jp_delete_my_account`, `jp_add_friend_by_code` use `auth.uid()` — only act as caller. |
 | No server rate limits on posts/DMs | Low | Client cooldowns only; re-enable chat carefully. |
 | Client sets scores via REST | **Mitigated** | Score columns locked by trigger; play uses RPCs only (increment/capped). |
+| Public GitHub repo | Info | Anon key + source visible — expected for this architecture. |
+| Email without confirm | Low | Instant account link; attackers need password. Enable confirm later if needed. |
+| Delete account UX | Mitigated | Multi-step modal + type-to-confirm + delay. |
 
 ---
 
@@ -111,9 +117,10 @@ These are **not** hidden — the game needs them:
 1. Restrict profile SELECT columns via a `jp_public_profiles` view (hide nothing critical today).  
 2. Friend add only via RPC (already primary path); remove direct friendship insert if unused.  
 3. Group join only via RPC that checks invite code without listing all groups.  
-4. Score updates via RPC with light validation.  
-5. Supabase Auth rate limits / disable email if unused.  
+4. ~~Score updates via RPC~~ — done (`jp_record_pushes` / guards).  
+5. Supabase Auth rate limits / captcha for anonymous spam.  
 6. If chat ships: report/block + moderation.  
+7. Join groups only via invite RPC (avoid listing all invite codes).
 
 ---
 

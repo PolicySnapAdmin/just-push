@@ -3,17 +3,27 @@ Thumbs.db
 .env
 .env.*
 *.log
+*.bak
+
+# Supabase CLI local state (may contain pooler URLs)
 .supabase/
 supabase/.temp/
+
+# Node / Capacitor build outputs
 node_modules/
 www/
 dist/
 .capacitor/
+
+# Xcode / CocoaPods noise
 *.xcuserdata
 **/xcuserdata/
 ios/App/Pods/
 ios/App/Podfile.lock
 ios/DerivedData/
+ios/App/App/public/
+
+# Android (if added later)
 android/.gradle/
 android/app/build/
 android/build/

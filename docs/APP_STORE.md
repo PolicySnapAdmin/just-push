@@ -5,6 +5,8 @@ Work through this on Windows first. You only need a Mac later for Xcode archive 
 **Live web app:** https://policysnapadmin.github.io/just-push/  
 **Privacy:** https://policysnapadmin.github.io/just-push/privacy.html  
 **Terms:** https://policysnapadmin.github.io/just-push/terms.html  
+**Related docs:** [ARCHITECTURE](./ARCHITECTURE.md) · [SUPABASE](./SUPABASE.md) · [SECURITY](./SECURITY.md) · [STORE_LISTING](./STORE_LISTING.md)  
+
 
 ---
 
@@ -103,7 +105,8 @@ Test on web before App Review.
 
 ## Listing copy
 
-See **[STORE_LISTING.md](./STORE_LISTING.md)** for subtitle, description, keywords, and App Review notes.
+See **[STORE_LISTING.md](./STORE_LISTING.md)** for subtitle, description, keywords, and App Review notes.  
+See **[SUPABASE.md](./SUPABASE.md)** for auth providers you must enable (Anonymous + Email).
 
 ## Packaging options (when you have a Mac)
 
