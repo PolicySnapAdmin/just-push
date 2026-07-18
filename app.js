@@ -508,7 +508,17 @@ function applyFeatureFlags() {
   const ghOn = featureGithubEnabled();
   els.app.dataset.chat = chatOn ? "1" : "0";
   els.app.dataset.github = ghOn ? "1" : "0";
-  if (els.chatTab) els.chatTab.hidden = !chatOn;
+  // Hide Chat tab + panel when disabled (both attribute + style for stubborn caches)
+  const chatTab = els.chatTab || document.getElementById("chat-tab");
+  const chatPanel = document.querySelector('.panel[data-panel="chat"]');
+  if (chatTab) {
+    chatTab.hidden = !chatOn;
+    chatTab.style.display = chatOn ? "" : "none";
+    chatTab.setAttribute("aria-hidden", chatOn ? "false" : "true");
+  }
+  if (chatPanel && !chatOn) {
+    chatPanel.hidden = true;
+  }
   if (els.privacyLink && cfg.privacyUrl) els.privacyLink.href = cfg.privacyUrl;
   if (els.termsLink && cfg.termsUrl) els.termsLink.href = cfg.termsUrl;
   const minAge = Number(cfg.minAge) || 13;
@@ -596,7 +606,7 @@ async function deleteMyAccount() {
     return;
   }
   const ok = window.confirm(
-    "Delete your Push Thru account permanently?\n\nThis removes your online profile, scores sync, friends, and groups data from the server. This device’s local progress will also be cleared.\n\nThis cannot be undone."
+    "Delete your Push Thru account permanently?\n\nThis removes your online profile, scores sync, friends, and groups data from the server. This device's local progress will also be cleared.\n\nThis cannot be undone."
   );
   if (!ok) return;
   const ok2 = window.confirm("Final confirmation: delete account now?");
