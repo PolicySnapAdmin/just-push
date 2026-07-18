@@ -1650,6 +1650,128 @@ textarea#dm-input:focus {
   visibility: hidden;
 }
 
+/* Level-up popup — non-modal; overlay ignores taps so you keep pushing */
+.level-up-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px calc(100px + var(--safe-bottom));
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, 0.35), transparent 65%);
+  animation: level-up-fade-in 0.25s ease-out;
+}
+
+.level-up-popup[hidden] {
+  display: none !important;
+}
+
+@keyframes level-up-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.level-up-card {
+  position: relative;
+  width: min(300px, 100%);
+  padding: 22px 20px 16px;
+  border-radius: 18px;
+  text-align: center;
+  pointer-events: auto;
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--tier, var(--btn)) 18%, #1a1a24), #14141c 55%);
+  border: 2px solid color-mix(in srgb, var(--tier, var(--btn)) 55%, #fff);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--tier, var(--btn)) 30%, transparent),
+    0 20px 50px rgba(0, 0, 0, 0.55),
+    0 0 40px color-mix(in srgb, var(--tier, var(--btn)) 25%, transparent);
+  animation: level-up-pop 0.4s cubic-bezier(0.22, 1.2, 0.36, 1);
+}
+
+@keyframes level-up-pop {
+  0% { transform: scale(0.75) translateY(16px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.level-up-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.level-up-dismiss:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.level-up-kicker {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--tier, var(--btn)) 70%, #fff);
+}
+
+.level-up-title {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.level-up-badge-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.level-up-badge {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 18px !important;
+}
+
+.level-up-badge .level-num {
+  font-size: 1.35rem !important;
+  margin-top: 12px !important;
+}
+
+.level-up-tier {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--tier, var(--btn)) 40%, #fff);
+}
+
+.level-up-sub {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.level-up-hint {
+  margin: 0;
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+  letter-spacing: 0.02em;
+}
+
 /* Confetti burst (CSS particles via JS-injected spans) */
 .confetti-piece {
   position: fixed;
