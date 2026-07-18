@@ -1140,6 +1140,38 @@ function levelBadgeHtml(lifetime, compact = false) {
   return `<span class="${cls}" data-tier="${prog.tier.id}" data-variant="${variant}" style="--tier:${prog.tier.color}" title="${prog.tier.label} · level ${prog.level}"><span class="level-chip-icon" aria-hidden="true"></span><span class="level-chip-num">${prog.level}</span></span>`;
 }
 
+/** Rank place class — cooler emblems as you approach #1 */
+function rankPlaceClass(index) {
+  const place = index + 1;
+  if (place === 1) return "place-1";
+  if (place === 2) return "place-2";
+  if (place === 3) return "place-3";
+  if (place <= 5) return "place-top5";
+  if (place <= 10) return "place-top10";
+  return "place-rest";
+}
+
+/** Emblem around leaderboard rank number */
+function rankEmblemHtml(index) {
+  const place = index + 1;
+  const cls = rankPlaceClass(index);
+  return `<span class="rank-emblem ${cls}" title="Rank #${place}" aria-label="Rank ${place}">
+    <span class="rank-emblem-aura" aria-hidden="true"></span>
+    <span class="rank-emblem-ring" aria-hidden="true"></span>
+    <span class="rank-emblem-num">${place}</span>
+  </span>`;
+}
+
+/** Score pill framed by the player's metal tier (from lifetime XP) */
+function scoreEmblemHtml(score, lifetime) {
+  const prog = levelProgress(lifetime || 0);
+  const t = prog.tier;
+  return `<div class="score-emblem" data-variant="${t.variant || "base"}" style="--tier:${t.color}" title="${t.label}">
+    <span class="score-emblem-ring" aria-hidden="true"></span>
+    <span class="score-emblem-val">${formatNum(score)}</span>
+  </div>`;
+}
+
 function renderScores() {
   els.sessionCount.textContent = formatNum(state.sessionCount);
   els.highScore.textContent = formatNum(state.highScore);
@@ -2185,15 +2217,15 @@ function renderFriendsBoard() {
   els.friendsBoardEmpty.hidden = true;
   els.friendsBoard.innerHTML = entries
     .map((e, i) => {
-      const rankClass = i === 0 ? " gold" : i === 1 ? " silver" : i === 2 ? " bronze" : "";
       const score = metric === "challengeBest" ? e.challengeBest : e.highScore;
+      const life = e.lifetimeCount || 0;
       return `
-      <li>
-        <span class="rank-num${rankClass}">${i + 1}</span>
+      <li class="board-row ${rankPlaceClass(i)}">
+        ${rankEmblemHtml(i)}
         <div class="person-info">
-          <div class="name">${levelBadgeHtml(e.lifetimeCount, true)} ${escapeHtml(e.name)}${e.you ? '<span class="you-tag">You</span>' : ""}</div>
+          <div class="name">${levelBadgeHtml(life, true)} ${escapeHtml(e.name)}${e.you ? '<span class="you-tag">You</span>' : ""}</div>
         </div>
-        <div class="person-score">${formatNum(score)}</div>
+        ${scoreEmblemHtml(score, life)}
       </li>`;
     })
     .join("");
@@ -2415,15 +2447,15 @@ function renderGroupBoards() {
       const members = [...(g.members || [])].sort((a, b) => (b[metric] || 0) - (a[metric] || 0));
       const rows = members
         .map((m, i) => {
-          const rankClass = i === 0 ? " gold" : i === 1 ? " silver" : i === 2 ? " bronze" : "";
           const score = metric === "challengeBest" ? m.challengeBest : m.highScore;
+          const life = m.lifetimeCount || 0;
           return `
-          <li>
-            <span class="rank-num${rankClass}">${i + 1}</span>
+          <li class="board-row ${rankPlaceClass(i)}">
+            ${rankEmblemHtml(i)}
             <div class="person-info">
-              <div class="name">${levelBadgeHtml(m.lifetimeCount, true)} ${escapeHtml(m.name)}${m.id === myId() ? '<span class="you-tag">You</span>' : ""}</div>
+              <div class="name">${levelBadgeHtml(life, true)} ${escapeHtml(m.name)}${m.id === myId() ? '<span class="you-tag">You</span>' : ""}</div>
             </div>
-            <div class="person-score">${formatNum(score)}</div>
+            ${scoreEmblemHtml(score, life)}
           </li>`;
         })
         .join("");
@@ -2437,17 +2469,16 @@ function renderGroupBoards() {
 }
 
 function globalBoardRow(e, score, i) {
-  const rankClass = i === 0 ? " gold" : i === 1 ? " silver" : i === 2 ? " bronze" : "";
   const you = e.id === myId();
   const name = e.display_name || e.name || "Player";
   const life = e.lifetime_count ?? e.lifetimeCount ?? 0;
   return `
-      <li>
-        <span class="rank-num${rankClass}">${i + 1}</span>
+      <li class="board-row ${rankPlaceClass(i)}">
+        ${rankEmblemHtml(i)}
         <div class="person-info">
           <div class="name">${levelBadgeHtml(life, true)} ${escapeHtml(name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
         </div>
-        <div class="person-score">${formatNum(score)}</div>
+        ${scoreEmblemHtml(score, life)}
       </li>`;
 }
 

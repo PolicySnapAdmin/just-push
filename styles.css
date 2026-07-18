@@ -1112,32 +1112,258 @@ textarea#dm-input:focus {
   padding-top: 0;
 }
 
-.rank-num {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+/* Rank emblems — progressively cooler toward #1 */
+.rank-emblem {
+  --rank-c: #6b6b7a;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  flex-shrink: 0;
 }
 
-.rank-num.gold {
-  background: color-mix(in srgb, #ffd700 25%, transparent);
+.rank-emblem-aura {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rank-emblem-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, #fff 35%, var(--rank-c)), transparent 42%),
+    linear-gradient(145deg, color-mix(in srgb, var(--rank-c) 90%, #fff), color-mix(in srgb, var(--rank-c) 55%, #000));
+  border: 2px solid color-mix(in srgb, var(--rank-c) 70%, #fff);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--rank-c) 40%, transparent),
+    0 4px 12px color-mix(in srgb, var(--rank-c) 25%, transparent);
+}
+
+.rank-emblem-num {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: #0c0c10;
+  text-shadow: 0 1px 0 color-mix(in srgb, #fff 35%, transparent);
+  line-height: 1;
+}
+
+/* #1 — radiant gold crown ring */
+.rank-emblem.place-1 {
+  --rank-c: #ffd700;
+  width: 42px;
+  height: 42px;
+}
+
+.rank-emblem.place-1 .rank-emblem-aura {
+  opacity: 1;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.45), transparent 70%);
+  animation: rank-pulse 2s ease-in-out infinite;
+}
+
+.rank-emblem.place-1 .rank-emblem-ring {
+  border-width: 2.5px;
+  border-color: #fff3a0;
+  box-shadow:
+    0 0 0 2px rgba(255, 180, 0, 0.5),
+    0 0 18px rgba(255, 200, 40, 0.55),
+    0 6px 16px rgba(255, 180, 0, 0.35);
+}
+
+.rank-emblem.place-1 .rank-emblem-num {
+  font-size: 1rem;
+  color: #3a2800;
+}
+
+.rank-emblem.place-1 .rank-emblem-ring::after {
+  content: "★";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
   color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 200, 0, 0.9);
+  line-height: 1;
 }
 
-.rank-num.silver {
-  background: color-mix(in srgb, #c0c0c0 20%, transparent);
-  color: #c0c0c0;
+/* #2 — polished silver */
+.rank-emblem.place-2 {
+  --rank-c: #c0c8d4;
+  width: 40px;
+  height: 40px;
 }
 
-.rank-num.bronze {
-  background: color-mix(in srgb, #cd7f32 25%, transparent);
-  color: #e0a060;
+.rank-emblem.place-2 .rank-emblem-aura {
+  opacity: 0.7;
+  background: radial-gradient(circle, rgba(200, 210, 230, 0.35), transparent 70%);
+}
+
+.rank-emblem.place-2 .rank-emblem-ring {
+  border-color: #f0f4f8;
+  box-shadow:
+    0 0 0 2px rgba(180, 190, 210, 0.4),
+    0 0 14px rgba(180, 200, 220, 0.35);
+}
+
+.rank-emblem.place-2 .rank-emblem-num {
+  font-size: 0.95rem;
+  color: #1a1e28;
+}
+
+/* #3 — bronze medal */
+.rank-emblem.place-3 {
+  --rank-c: #cd7f32;
+  width: 38px;
+  height: 38px;
+}
+
+.rank-emblem.place-3 .rank-emblem-aura {
+  opacity: 0.55;
+  background: radial-gradient(circle, rgba(205, 127, 50, 0.4), transparent 70%);
+}
+
+.rank-emblem.place-3 .rank-emblem-ring {
+  border-color: #e8b87a;
+  box-shadow:
+    0 0 0 2px rgba(205, 127, 50, 0.35),
+    0 0 12px rgba(205, 127, 50, 0.3);
+}
+
+.rank-emblem.place-3 .rank-emblem-num {
+  font-size: 0.9rem;
+  color: #2a1808;
+}
+
+/* #4–5 */
+.rank-emblem.place-top5 {
+  --rank-c: #a78bfa;
+}
+
+.rank-emblem.place-top5 .rank-emblem-ring {
+  border-color: color-mix(in srgb, #c4b5fd 60%, #fff);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+}
+
+/* #6–10 */
+.rank-emblem.place-top10 {
+  --rank-c: #38bdf8;
+}
+
+.rank-emblem.place-top10 .rank-emblem-ring {
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.22);
+}
+
+/* #11+ */
+.rank-emblem.place-rest {
+  --rank-c: #5c5c6e;
+}
+
+.rank-emblem.place-rest .rank-emblem-num {
+  color: #e8e8f0;
+  text-shadow: none;
+  font-size: 0.78rem;
+}
+
+.rank-emblem.place-rest .rank-emblem-ring {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+@keyframes rank-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+/* Top-row highlight on podium places */
+.board-row.place-1 {
+  background: linear-gradient(90deg, color-mix(in srgb, #ffd700 12%, transparent), transparent 70%);
+  border-radius: 12px;
+  margin: 0 -6px;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.board-row.place-2 {
+  background: linear-gradient(90deg, color-mix(in srgb, #c0c8d4 8%, transparent), transparent 65%);
+  border-radius: 12px;
+  margin: 0 -6px;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+.board-row.place-3 {
+  background: linear-gradient(90deg, color-mix(in srgb, #cd7f32 10%, transparent), transparent 65%);
+  border-radius: 12px;
+  margin: 0 -6px;
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+/* Score framed by player's metal tier */
+.score-emblem {
+  --tier: var(--btn);
+  position: relative;
+  flex-shrink: 0;
+  min-width: 52px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+.score-emblem-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--tier) 14%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--tier) 55%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #fff 8%, transparent),
+    0 0 12px color-mix(in srgb, var(--tier) 18%, transparent);
+  z-index: 0;
+}
+
+.score-emblem[data-variant="trim"] .score-emblem-ring {
+  border-color: color-mix(in srgb, #f8fafc 70%, var(--tier));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #fff 25%, transparent),
+    0 0 10px color-mix(in srgb, var(--tier) 25%, transparent);
+}
+
+.score-emblem[data-variant="gold"] .score-emblem-ring {
+  border-color: #fbbf24;
+  background: color-mix(in srgb, #fbbf24 12%, color-mix(in srgb, var(--tier) 12%, transparent));
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.35),
+    0 0 14px rgba(251, 191, 36, 0.25);
+}
+
+.score-emblem[data-variant="max"] .score-emblem-ring {
+  border-color: #fde68a;
+  animation: rank-pulse 2.4s ease-in-out infinite;
+}
+
+.score-emblem-val {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--tier) 35%, #fff);
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .person-info {
@@ -1159,12 +1385,26 @@ textarea#dm-input:focus {
   margin-top: 2px;
 }
 
+/* legacy class kept for any leftover markup */
 .person-score {
   font-family: var(--display);
   font-weight: 700;
   font-size: 1.1rem;
   font-variant-numeric: tabular-nums;
   color: var(--btn);
+}
+
+.rank-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .you-tag {
