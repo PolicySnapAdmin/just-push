@@ -2680,3 +2680,66 @@ textarea#dm-input:focus {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+.pvp-code-form {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pvp-code-form input {
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pvp-code-form select {
+  padding: 10px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.pvp-code-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+}
+
+.pvp-friends-quick {
+  margin: 16px 0 4px;
+}
+
+.friend-req-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.friend-req-actions .solid-btn,
+.friend-req-actions .ghost-btn {
+  padding: 6px 10px;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 400px) {
+  .pvp-code-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pvp-code-form input {
+    grid-column: 1 / -1;
+  }
+  .pvp-code-form .solid-btn {
+    grid-column: 1 / -1;
+  }
+}

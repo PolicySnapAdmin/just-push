@@ -512,7 +512,6 @@ const els = {
   pvpLosses: $("#pvp-losses"),
   pvpDraws: $("#pvp-draws"),
   pvpKd: $("#pvp-kd"),
-  pvpFriendSelect: $("#pvp-friend-select"),
   pvpDurationSelect: $("#pvp-duration-select"),
   pvpChallengeBtn: $("#pvp-challenge-btn"),
   pvpMsg: $("#pvp-msg"),
@@ -537,6 +536,15 @@ const els = {
   socialFriendsView: $("#social-friends-view"),
   socialGroupsView: $("#social-groups-view"),
   socialPvpView: $("#social-pvp-view"),
+  friendRequestsRefresh: $("#friend-requests-refresh"),
+  friendRequestsIncoming: $("#friend-requests-incoming"),
+  friendRequestsIncomingEmpty: $("#friend-requests-incoming-empty"),
+  friendRequestsOutgoing: $("#friend-requests-outgoing"),
+  friendRequestsOutgoingEmpty: $("#friend-requests-outgoing-empty"),
+  pvpCodeForm: $("#pvp-code-form"),
+  pvpCodeInput: $("#pvp-code-input"),
+  pvpFriendsQuick: $("#pvp-friends-quick"),
+  pvpFriendsQuickEmpty: $("#pvp-friends-quick-empty"),
 };
 
 // Deep-link invite waiting to process after online
@@ -614,6 +622,8 @@ let pvpSubmitted = false;
 
 /** Social hub sub-tab: friends | groups | pvp */
 let socialMode = "friends";
+let friendRequestsIncoming = [];
+let friendRequestsOutgoing = [];
 
 let toastTimer = null;
 let recordTimer = null;
@@ -2448,28 +2458,34 @@ async function processPendingDeepLink() {
   const { type, code } = pendingDeepLink;
 
   if (type === "friend") {
-    showPendingBanner(`Adding friend ${code.toUpperCase()}…`);
+    showPendingBanner(`Sending friend request ${code.toUpperCase()}…`);
+    setSocialMode("friends");
     setTab("friends");
     if (!online) {
-      showPendingBanner("Connecting… then we’ll add your friend.");
+      showPendingBanner("Connecting… then we’ll send the friend request.");
       return;
     }
     try {
-      const name = await addFriendOnline(code);
+      const data = await addFriendOnline(code);
       pendingDeepLink = null;
       clearDeepLinkFromUrl();
       showPendingBanner("");
+      const name = data?.display_name || "Player";
       els.friendMsg.className = "form-msg ok";
-      els.friendMsg.textContent = `Added ${name}! You’re connected.`;
+      if (data?.status === "accepted") {
+        els.friendMsg.textContent = `You're now friends with ${name}!`;
+        toast(`Friends with ${name}`);
+      } else {
+        els.friendMsg.textContent = `Request sent to ${name} — they must accept.`;
+        toast("Friend request sent");
+      }
       renderFriends();
-      toast(`Added ${name} — go beat them`);
-      setTab("scores");
+      renderFriendRequests();
     } catch (err) {
       showPendingBanner("");
       els.friendMsg.className = "form-msg err";
-      els.friendMsg.textContent = err.message || "Could not add friend";
-      toast(err.message || "Could not add friend");
-      // keep pending if offline-ish; clear if permanent fail
+      els.friendMsg.textContent = err.message || "Could not send request";
+      toast(err.message || "Could not send request");
       if (!/online|network|fetch/i.test(err.message || "")) {
         pendingDeepLink = null;
         clearDeepLinkFromUrl();
@@ -2536,14 +2552,17 @@ function listFriendsForUi() {
 async function refreshSocial() {
   if (!sb || !session?.user || !online) {
     renderFriends();
+    renderFriendRequests();
     renderGroups();
     return;
   }
-  await Promise.all([loadFriends(), loadGroups()]);
+  await Promise.all([loadFriends(), loadFriendRequests(), loadGroups()]);
   renderFriends();
+  renderFriendRequests();
   renderGroups();
   renderFriendsBoard();
   renderGroupBoards();
+  renderPvpFriendsQuick();
 }
 
 async function loadFriends() {
@@ -2563,22 +2582,137 @@ async function loadFriends() {
   friendsCache = people || [];
 }
 
+async function loadFriendRequests() {
+  if (!sb || !session?.user || !online) {
+    friendRequestsIncoming = [];
+    friendRequestsOutgoing = [];
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_friend_requests_inbox");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_friend_requests_inbox", error);
+    }
+    friendRequestsIncoming = [];
+    friendRequestsOutgoing = [];
+    return;
+  }
+  friendRequestsIncoming = Array.isArray(data?.incoming) ? data.incoming : [];
+  friendRequestsOutgoing = Array.isArray(data?.outgoing) ? data.outgoing : [];
+}
+
+function renderFriendRequests() {
+  const inc = friendRequestsIncoming;
+  const out = friendRequestsOutgoing;
+  if (els.friendRequestsIncoming) {
+    if (!inc.length) {
+      els.friendRequestsIncoming.innerHTML = "";
+      if (els.friendRequestsIncomingEmpty) els.friendRequestsIncomingEmpty.hidden = false;
+    } else {
+      if (els.friendRequestsIncomingEmpty) els.friendRequestsIncomingEmpty.hidden = true;
+      els.friendRequestsIncoming.innerHTML = inc
+        .map(
+          (r) => `
+        <li data-request-id="${r.id}">
+          <div class="avatar" style="width:36px;height:36px;font-size:0.8rem">${initials(r.display_name || "?")}</div>
+          <div class="person-info">
+            <div class="name">${escapeHtml(r.display_name || "Player")}</div>
+            <div class="meta">Code ${escapeHtml(r.friend_code || "—")} · wants to be friends</div>
+          </div>
+          <div class="friend-req-actions">
+            <button type="button" class="solid-btn" data-friend-accept="${r.id}">Accept</button>
+            <button type="button" class="ghost-btn" data-friend-decline="${r.id}">Decline</button>
+          </div>
+        </li>`
+        )
+        .join("");
+    }
+  }
+  if (els.friendRequestsOutgoing) {
+    if (!out.length) {
+      els.friendRequestsOutgoing.innerHTML = "";
+      if (els.friendRequestsOutgoingEmpty) els.friendRequestsOutgoingEmpty.hidden = false;
+    } else {
+      if (els.friendRequestsOutgoingEmpty) els.friendRequestsOutgoingEmpty.hidden = true;
+      els.friendRequestsOutgoing.innerHTML = out
+        .map(
+          (r) => `
+        <li data-request-id="${r.id}">
+          <div class="avatar" style="width:36px;height:36px;font-size:0.8rem">${initials(r.display_name || "?")}</div>
+          <div class="person-info">
+            <div class="name">${escapeHtml(r.display_name || "Player")}</div>
+            <div class="meta">Code ${escapeHtml(r.friend_code || "—")} · waiting for accept</div>
+          </div>
+          <div class="friend-req-actions">
+            <button type="button" class="ghost-btn" data-friend-cancel="${r.id}">Cancel</button>
+          </div>
+        </li>`
+        )
+        .join("");
+    }
+  }
+}
+
+/** Online: send request (or auto-accept if they already requested you). Returns status message. */
 async function addFriendOnline(codeRaw) {
-  const code = codeRaw.trim().toUpperCase();
+  const code = extractFriendCode(codeRaw);
+  if (!code) throw new Error("Enter a friend code");
   if (code.startsWith("JP1.")) {
     throw new Error("Use their short online code (6 characters), not the offline blob");
   }
   if (code.length < 4) throw new Error("Enter a friend code");
 
-  const { data: other, error } = await sb.rpc("jp_add_friend_by_code", { p_code: code });
+  const { data, error } = await sb.rpc("jp_add_friend_by_code", { p_code: code });
   if (error) {
-    const msg = error.message || "Could not add friend";
+    const msg = error.message || "Could not send request";
     if (/own code/i.test(msg)) throw new Error("That's your own code");
     if (/No player/i.test(msg)) throw new Error("No player with that code");
+    if (/Already friends/i.test(msg)) throw new Error(msg);
+    if (/already sent/i.test(msg)) throw new Error(msg);
     throw new Error(msg);
   }
-  await loadFriends();
-  return other?.display_name || "Friend";
+  await Promise.all([loadFriends(), loadFriendRequests()]);
+  renderFriends();
+  renderFriendRequests();
+  return data || { status: "pending", display_name: "Player", message: "Request sent" };
+}
+
+function extractFriendCode(raw) {
+  let s = String(raw || "").trim();
+  if (!s) return "";
+  // Invite links: ?add=CODE or ?friend=CODE
+  try {
+    if (/^https?:\/\//i.test(s) || s.includes("?")) {
+      const u = new URL(s, location.origin);
+      const c = u.searchParams.get("add") || u.searchParams.get("friend") || u.searchParams.get("f");
+      if (c) return c.trim().toUpperCase();
+    }
+  } catch {
+    /* not a url */
+  }
+  const m = s.match(/[A-Za-z0-9]{4,12}/);
+  return (m ? m[0] : s).toUpperCase();
+}
+
+async function respondFriendRequest(requestId, accept) {
+  const { data, error } = await sb.rpc("jp_friend_request_respond", {
+    p_request_id: requestId,
+    p_accept: !!accept,
+  });
+  if (error) throw new Error(error.message || "Could not respond");
+  await Promise.all([loadFriends(), loadFriendRequests()]);
+  renderFriends();
+  renderFriendRequests();
+  renderFriendsBoard();
+  renderPvpFriendsQuick();
+  return data;
+}
+
+async function cancelFriendRequest(requestId) {
+  const { error } = await sb.rpc("jp_friend_request_cancel", { p_request_id: requestId });
+  if (error) throw new Error(error.message || "Could not cancel");
+  await loadFriendRequests();
+  renderFriendRequests();
 }
 
 function addFriendOffline(code) {
@@ -2643,7 +2777,7 @@ function renderFriends() {
       .join("");
   }
   renderFriendsBoard();
-  fillPvpFriendSelect();
+  renderPvpFriendsQuick();
 }
 
 // ——— PVP duels ———
@@ -2660,16 +2794,31 @@ function setPvpModalMsg(text, kind = "") {
   els.pvpModalMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
-function fillPvpFriendSelect() {
-  if (!els.pvpFriendSelect) return;
-  const cur = els.pvpFriendSelect.value;
+function renderPvpFriendsQuick() {
+  if (!els.pvpFriendsQuick) return;
   const list = listFriendsForUi();
-  els.pvpFriendSelect.innerHTML =
-    `<option value="">Select friend…</option>` +
-    list
-      .map((f) => `<option value="${f.id}">${escapeHtml(f.name)}</option>`)
-      .join("");
-  if (cur && list.some((f) => f.id === cur)) els.pvpFriendSelect.value = cur;
+  if (!list.length) {
+    els.pvpFriendsQuick.innerHTML = "";
+    if (els.pvpFriendsQuickEmpty) els.pvpFriendsQuickEmpty.hidden = false;
+    return;
+  }
+  if (els.pvpFriendsQuickEmpty) els.pvpFriendsQuickEmpty.hidden = true;
+  els.pvpFriendsQuick.innerHTML = [...list]
+    .sort((a, b) => (b.highScore || 0) - (a.highScore || 0))
+    .map(
+      (f) => `
+    <li data-id="${f.id}">
+      <div class="avatar" style="width:36px;height:36px;font-size:0.8rem">${initials(f.name)}</div>
+      <div class="person-info">
+        <div class="name">${escapeHtml(f.name)}</div>
+        <div class="meta">Friend · life ${formatNum(f.lifetimeCount || 0)}</div>
+      </div>
+      <div class="friend-actions">
+        <button type="button" class="solid-btn" data-pvp-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem">Duel</button>
+      </div>
+    </li>`
+    )
+    .join("");
 }
 
 function renderPvpStats() {
@@ -2837,16 +2986,16 @@ async function loadPvpRankings() {
 }
 
 async function refreshPvpUi() {
-  fillPvpFriendSelect();
+  renderPvpFriendsQuick();
   await Promise.all([loadPvpStats(), loadPvpInbox(), loadPvpRankings()]);
 }
 
-async function pvpChallenge(friendId, duration) {
+async function pvpChallenge(opponentId, duration) {
   if (!sb || !online) throw new Error("Go online to duel");
-  if (!friendId) throw new Error("Pick a friend");
+  if (!opponentId) throw new Error("Pick someone to duel");
   const dur = Number(duration) === 25 ? 25 : 10;
   const { data, error } = await sb.rpc("jp_pvp_challenge", {
-    p_opponent_id: friendId,
+    p_opponent_id: opponentId,
     p_duration: dur,
   });
   if (error) throw new Error(error.message || "Challenge failed");
@@ -2854,6 +3003,28 @@ async function pvpChallenge(friendId, duration) {
   const matchId = data?.id || data;
   if (matchId) await openPvpMatch(matchId);
   toast(`${dur}s duel sent`);
+  return data;
+}
+
+async function pvpChallengeByCode(codeRaw, duration) {
+  if (!sb || !online) throw new Error("Go online to duel");
+  const code = extractFriendCode(codeRaw);
+  if (!code || code.length < 4) throw new Error("Enter their player code");
+  const dur = Number(duration) === 25 ? 25 : 10;
+  const { data, error } = await sb.rpc("jp_pvp_challenge_by_code", {
+    p_code: code,
+    p_duration: dur,
+  });
+  if (error) {
+    const msg = error.message || "Challenge failed";
+    if (/own code/i.test(msg)) throw new Error("That's your own code");
+    if (/No player/i.test(msg)) throw new Error("No player with that code");
+    throw new Error(msg);
+  }
+  await loadPvpInbox();
+  const matchId = data?.id || data;
+  if (matchId) await openPvpMatch(matchId);
+  toast(`${dur}s duel sent to ${code}`);
   return data;
 }
 
@@ -4089,11 +4260,14 @@ function setSocialMode(mode) {
   if (m === "friends") renderFriends();
   if (m === "groups") renderGroups();
   if (m === "pvp") {
-    fillPvpFriendSelect();
+    renderPvpFriendsQuick();
     renderPvpStats();
     renderPvpInbox();
     renderPvpRankings();
     if (online) refreshPvpUi().catch((e) => console.warn(e));
+  }
+  if (m === "friends") {
+    renderFriendRequests();
   }
 }
 
@@ -4198,14 +4372,61 @@ function bindEvents() {
       .then(() => toast("PvP refreshed"))
       .catch((e) => setPvpMsg(e.message || "Refresh failed", "err"));
   });
-  els.pvpChallengeBtn?.addEventListener("click", async () => {
+  els.pvpCodeForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
     setPvpMsg("");
     try {
-      await pvpChallenge(els.pvpFriendSelect?.value, els.pvpDurationSelect?.value);
-      setPvpMsg("Challenge sent.", "ok");
-    } catch (e) {
-      setPvpMsg(e.message || "Challenge failed", "err");
-      toast(e.message || "Challenge failed");
+      await pvpChallengeByCode(els.pvpCodeInput?.value, els.pvpDurationSelect?.value);
+      setPvpMsg("Duel request sent.", "ok");
+      if (els.pvpCodeInput) els.pvpCodeInput.value = "";
+    } catch (err) {
+      setPvpMsg(err.message || "Challenge failed", "err");
+      toast(err.message || "Challenge failed");
+    }
+  });
+  els.pvpFriendsQuick?.addEventListener("click", async (e) => {
+    const duelBtn = e.target?.closest?.("[data-pvp-friend]");
+    if (!duelBtn) return;
+    setPvpMsg("");
+    try {
+      await pvpChallenge(duelBtn.getAttribute("data-pvp-friend"), els.pvpDurationSelect?.value);
+      setPvpMsg("Duel request sent.", "ok");
+    } catch (err) {
+      setPvpMsg(err.message || "Challenge failed", "err");
+      toast(err.message || "Challenge failed");
+    }
+  });
+  els.friendRequestsRefresh?.addEventListener("click", () => {
+    loadFriendRequests()
+      .then(() => {
+        renderFriendRequests();
+        toast("Requests refreshed");
+      })
+      .catch((err) => toast(err.message || "Refresh failed"));
+  });
+  els.friendRequestsIncoming?.addEventListener("click", async (e) => {
+    const acc = e.target?.closest?.("[data-friend-accept]");
+    const dec = e.target?.closest?.("[data-friend-decline]");
+    try {
+      if (acc) {
+        const data = await respondFriendRequest(acc.getAttribute("data-friend-accept"), true);
+        toast(`Friends with ${data?.display_name || "player"}`);
+      } else if (dec) {
+        await respondFriendRequest(dec.getAttribute("data-friend-decline"), false);
+        toast("Request declined");
+      }
+    } catch (err) {
+      toast(err.message || "Failed");
+    }
+  });
+  els.friendRequestsOutgoing?.addEventListener("click", async (e) => {
+    const cancel = e.target?.closest?.("[data-friend-cancel]");
+    if (!cancel) return;
+    try {
+      await cancelFriendRequest(cancel.getAttribute("data-friend-cancel"));
+      toast("Request cancelled");
+    } catch (err) {
+      toast(err.message || "Cancel failed");
     }
   });
   els.pvpMatchList?.addEventListener("click", async (e) => {
@@ -4359,32 +4580,38 @@ function bindEvents() {
   els.addFriendForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     els.friendMsg.className = "form-msg";
-    const raw = extractCodeFromInput(els.friendCodeInput.value, "friend");
+    const raw = extractCodeFromInput
+      ? extractCodeFromInput(els.friendCodeInput.value, "friend")
+      : extractFriendCode(els.friendCodeInput.value);
     try {
-      if (online && !raw.startsWith("JP1.")) {
-        const name = await addFriendOnline(raw);
-        els.friendCodeInput.value = "";
-        els.friendMsg.textContent = `Added ${name}!`;
-        els.friendMsg.classList.add("ok");
-        renderFriends();
-        toast("Friend added");
-      } else if (raw.startsWith("JP1.")) {
-        const result = addFriendOffline(raw);
-        els.friendCodeInput.value = "";
-        els.friendMsg.textContent = result === "updated" ? "Friend score updated!" : "Friend added (offline)!";
-        els.friendMsg.classList.add("ok");
-        renderFriends();
-        toast(result === "updated" ? "Friend updated" : "Friend added");
-      } else if (!online) {
-        throw new Error("Need to be online to add friends by code/link");
-      } else {
-        const name = await addFriendOnline(raw);
-        els.friendCodeInput.value = "";
-        els.friendMsg.textContent = `Added ${name}!`;
-        els.friendMsg.classList.add("ok");
-        renderFriends();
-        toast("Friend added");
+      if (!online) {
+        if (String(raw).startsWith("JP1.")) {
+          const result = addFriendOffline(raw);
+          els.friendCodeInput.value = "";
+          els.friendMsg.textContent =
+            result === "updated" ? "Friend updated (offline)" : "Friend saved offline (no accept step)";
+          els.friendMsg.classList.add("ok");
+          renderFriends();
+          return;
+        }
+        throw new Error("Go online to send a friend request");
       }
+      if (String(raw).startsWith("JP1.")) {
+        throw new Error("Use their short online code (6 characters), not the offline blob");
+      }
+      const data = await addFriendOnline(raw);
+      els.friendCodeInput.value = "";
+      const name = data?.display_name || "Player";
+      if (data?.status === "accepted") {
+        els.friendMsg.textContent = `You're now friends with ${name}!`;
+        toast(`Friends with ${name}`);
+      } else {
+        els.friendMsg.textContent = `Request sent to ${name} — waiting for accept.`;
+        toast("Friend request sent");
+      }
+      els.friendMsg.classList.add("ok");
+      renderFriends();
+      renderFriendRequests();
     } catch (err) {
       els.friendMsg.textContent = err.message || "Invalid code";
       els.friendMsg.classList.add("err");
@@ -4395,12 +4622,12 @@ function bindEvents() {
     const duelBtn = e.target.closest("[data-pvp-friend]");
     if (duelBtn) {
       const fid = duelBtn.getAttribute("data-pvp-friend");
-      if (els.pvpFriendSelect) els.pvpFriendSelect.value = fid;
       setPvpMsg("");
       try {
-        const dur = Number(els.pvpDurationSelect?.value) === 25 ? 25 : 10;
-        await pvpChallenge(fid, dur);
-        setPvpMsg("Challenge sent.", "ok");
+        await pvpChallenge(fid, els.pvpDurationSelect?.value || 10);
+        setSocialMode("pvp");
+        setPvpMsg("Duel request sent.", "ok");
+        toast("Duel request sent");
       } catch (err) {
         setPvpMsg(err.message || "Challenge failed", "err");
         toast(err.message || "Challenge failed");
