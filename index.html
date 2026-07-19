@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719c" />
+  <link rel="stylesheet" href="styles.css?v=20260719d" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -337,6 +337,60 @@
           <ul class="people-list" id="friends-list"></ul>
           <p class="empty" id="friends-empty">No friends yet — share your code.</p>
         </div>
+
+        <!-- PVP duels (friends only) -->
+        <div class="card pvp-card">
+          <div class="card-head">
+            <h3>PvP duels</h3>
+            <button type="button" class="ghost-btn tiny" id="pvp-refresh">Refresh</button>
+          </div>
+          <p class="muted pvp-intro">
+            Head-to-head tap battles with friends. 10s or 25s — both ready up, then mash.
+            Separate from global boards.
+          </p>
+
+          <div class="pvp-stats-grid" id="pvp-stats-grid">
+            <div class="pvp-stat">
+              <span class="pvp-stat-val" id="pvp-wins">0</span>
+              <span class="pvp-stat-label">Wins</span>
+            </div>
+            <div class="pvp-stat">
+              <span class="pvp-stat-val" id="pvp-losses">0</span>
+              <span class="pvp-stat-label">Losses</span>
+            </div>
+            <div class="pvp-stat">
+              <span class="pvp-stat-val" id="pvp-draws">0</span>
+              <span class="pvp-stat-label">Draws</span>
+            </div>
+            <div class="pvp-stat pvp-stat-kd">
+              <span class="pvp-stat-val" id="pvp-kd">0</span>
+              <span class="pvp-stat-label">K/D</span>
+            </div>
+          </div>
+
+          <div class="pvp-challenge-box">
+            <p class="pvp-challenge-label">Challenge a friend</p>
+            <div class="pvp-challenge-row">
+              <select id="pvp-friend-select" aria-label="Friend to duel">
+                <option value="">Select friend…</option>
+              </select>
+              <select id="pvp-duration-select" aria-label="Duel length">
+                <option value="10">10 sec</option>
+                <option value="25">25 sec</option>
+              </select>
+              <button type="button" class="solid-btn" id="pvp-challenge-btn">Duel</button>
+            </div>
+            <p class="form-msg" id="pvp-msg" role="status"></p>
+          </div>
+
+          <h3 class="board-subhead">Open &amp; recent</h3>
+          <ul class="pvp-match-list" id="pvp-match-list"></ul>
+          <p class="empty" id="pvp-match-empty">No duels yet — challenge a friend above.</p>
+
+          <h3 class="board-subhead" style="margin-top:16px">PvP rankings</h3>
+          <ol class="leaderboard" id="pvp-rankings"></ol>
+          <p class="empty" id="pvp-rankings-empty">Play a duel to appear on the board.</p>
+        </div>
       </section>
 
       <!-- GROUPS -->
@@ -597,6 +651,35 @@
     </nav>
   </div>
 
+  <!-- PVP duel arena -->
+  <dialog id="pvp-modal" class="modal pvp-modal">
+    <div class="modal-card pvp-modal-card">
+      <div class="pvp-modal-head">
+        <h2 id="pvp-modal-title">Duel</h2>
+        <button type="button" class="ghost-btn tiny" id="pvp-modal-close" aria-label="Close">✕</button>
+      </div>
+      <p class="muted" id="pvp-modal-vs">vs —</p>
+      <p class="pvp-modal-status" id="pvp-modal-status">Waiting…</p>
+
+      <div class="pvp-arena" id="pvp-arena">
+        <div class="pvp-arena-timer" id="pvp-arena-timer">—</div>
+        <div class="pvp-arena-score" id="pvp-arena-score">0</div>
+        <button type="button" class="push-btn pvp-push-btn" id="pvp-push-btn" disabled>
+          <span class="push-label">PUSH</span>
+          <span class="push-hint" id="pvp-push-hint">Wait for go</span>
+        </button>
+      </div>
+
+      <div class="pvp-modal-actions" id="pvp-modal-actions">
+        <button type="button" class="solid-btn" id="pvp-ready-btn" hidden>I'm ready</button>
+        <button type="button" class="ghost-btn" id="pvp-accept-btn" hidden>Accept</button>
+        <button type="button" class="ghost-btn danger-btn" id="pvp-decline-btn" hidden>Decline</button>
+        <button type="button" class="ghost-btn" id="pvp-cancel-btn" hidden>Cancel</button>
+      </div>
+      <p class="form-msg" id="pvp-modal-msg" role="status"></p>
+    </div>
+  </dialog>
+
   <!-- Age gate (App Store / COPPA hygiene) -->
   <dialog id="age-modal" class="modal">
     <form method="dialog" id="age-form" class="modal-card">
@@ -705,7 +788,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719c"></script>
-  <script src="app.js?v=20260719c"></script>
+  <script src="config.js?v=20260719d"></script>
+  <script src="app.js?v=20260719d"></script>
 </body>
 </html>

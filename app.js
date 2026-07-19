@@ -506,6 +506,34 @@ const els = {
   territoryBoard10s: $("#territory-board-10s"),
   territoryBoard10sEmpty: $("#territory-board-10s-empty"),
   territoryPickHint: $("#territory-pick-hint"),
+  // PVP
+  pvpRefresh: $("#pvp-refresh"),
+  pvpWins: $("#pvp-wins"),
+  pvpLosses: $("#pvp-losses"),
+  pvpDraws: $("#pvp-draws"),
+  pvpKd: $("#pvp-kd"),
+  pvpFriendSelect: $("#pvp-friend-select"),
+  pvpDurationSelect: $("#pvp-duration-select"),
+  pvpChallengeBtn: $("#pvp-challenge-btn"),
+  pvpMsg: $("#pvp-msg"),
+  pvpMatchList: $("#pvp-match-list"),
+  pvpMatchEmpty: $("#pvp-match-empty"),
+  pvpRankings: $("#pvp-rankings"),
+  pvpRankingsEmpty: $("#pvp-rankings-empty"),
+  pvpModal: $("#pvp-modal"),
+  pvpModalTitle: $("#pvp-modal-title"),
+  pvpModalClose: $("#pvp-modal-close"),
+  pvpModalVs: $("#pvp-modal-vs"),
+  pvpModalStatus: $("#pvp-modal-status"),
+  pvpArenaTimer: $("#pvp-arena-timer"),
+  pvpArenaScore: $("#pvp-arena-score"),
+  pvpPushBtn: $("#pvp-push-btn"),
+  pvpPushHint: $("#pvp-push-hint"),
+  pvpReadyBtn: $("#pvp-ready-btn"),
+  pvpAcceptBtn: $("#pvp-accept-btn"),
+  pvpDeclineBtn: $("#pvp-decline-btn"),
+  pvpCancelBtn: $("#pvp-cancel-btn"),
+  pvpModalMsg: $("#pvp-modal-msg"),
 };
 
 // Deep-link invite waiting to process after online
@@ -569,6 +597,17 @@ let territoryLifeBoard = [];
 let territoryChalBoard = [];
 let territoryPushTimer = null;
 let pendingTerritoryPushes = 0;
+
+// PVP duel state
+let pvpStats = { wins: 0, losses: 0, draws: 0, matches_played: 0, kd: 0 };
+let pvpInbox = [];
+let pvpRankings = [];
+let pvpActiveMatch = null; // match object currently in modal
+let pvpLocalScore = 0;
+let pvpPhase = "idle"; // idle | countdown | running | done | wait
+let pvpRaf = 0;
+let pvpPollTimer = null;
+let pvpSubmitted = false;
 
 let toastTimer = null;
 let recordTimer = null;
@@ -1846,6 +1885,7 @@ async function initBackend() {
     await loadGlobalBoard();
     await loadBoardPosts();
     await refreshTerritoriesUi().catch(() => {});
+    await refreshPvpUi().catch(() => {});
     await processPendingDeepLink();
   } catch (err) {
     console.warn("Push Thru online init failed:", err);
@@ -2572,6 +2612,7 @@ function renderFriends() {
           <div class="meta">10s best ${formatNum(f.challengeBest || 0)} · life ${formatNum(f.lifetimeCount || 0)} XP</div>
         </div>
         <div class="friend-actions">
+          <button type="button" class="solid-btn" data-pvp-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem" title="Duel">Duel</button>
           ${
             featureChatEnabled()
               ? `<button type="button" class="solid-btn" data-msg-friend="${f.id}" data-name="${escapeHtml(f.name)}" style="padding:6px 10px;font-size:0.72rem" title="Message">Msg</button>`
@@ -2584,6 +2625,482 @@ function renderFriends() {
       .join("");
   }
   renderFriendsBoard();
+  fillPvpFriendSelect();
+}
+
+// ——— PVP duels ———
+
+function setPvpMsg(text, kind = "") {
+  if (!els.pvpMsg) return;
+  els.pvpMsg.textContent = text || "";
+  els.pvpMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function setPvpModalMsg(text, kind = "") {
+  if (!els.pvpModalMsg) return;
+  els.pvpModalMsg.textContent = text || "";
+  els.pvpModalMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function fillPvpFriendSelect() {
+  if (!els.pvpFriendSelect) return;
+  const cur = els.pvpFriendSelect.value;
+  const list = listFriendsForUi();
+  els.pvpFriendSelect.innerHTML =
+    `<option value="">Select friend…</option>` +
+    list
+      .map((f) => `<option value="${f.id}">${escapeHtml(f.name)}</option>`)
+      .join("");
+  if (cur && list.some((f) => f.id === cur)) els.pvpFriendSelect.value = cur;
+}
+
+function renderPvpStats() {
+  if (els.pvpWins) els.pvpWins.textContent = formatNum(pvpStats.wins || 0);
+  if (els.pvpLosses) els.pvpLosses.textContent = formatNum(pvpStats.losses || 0);
+  if (els.pvpDraws) els.pvpDraws.textContent = formatNum(pvpStats.draws || 0);
+  if (els.pvpKd) els.pvpKd.textContent = String(pvpStats.kd ?? 0);
+}
+
+function pvpOpponentName(m) {
+  const uid = myId();
+  if (!m) return "—";
+  if (m.challenger_id === uid) return m.opponent_name || "Friend";
+  return m.challenger_name || "Friend";
+}
+
+function pvpIsChallenger(m) {
+  return m && m.challenger_id === myId();
+}
+
+function pvpMyReady(m) {
+  if (!m) return false;
+  return pvpIsChallenger(m) ? !!m.challenger_ready : !!m.opponent_ready;
+}
+
+function pvpTheirReady(m) {
+  if (!m) return false;
+  return pvpIsChallenger(m) ? !!m.opponent_ready : !!m.challenger_ready;
+}
+
+function pvpMyScore(m) {
+  if (!m) return null;
+  return pvpIsChallenger(m) ? m.challenger_score : m.opponent_score;
+}
+
+function pvpTheirScore(m) {
+  if (!m) return null;
+  return pvpIsChallenger(m) ? m.opponent_score : m.challenger_score;
+}
+
+function renderPvpInbox() {
+  if (!els.pvpMatchList) return;
+  if (!pvpInbox.length) {
+    els.pvpMatchList.innerHTML = "";
+    if (els.pvpMatchEmpty) els.pvpMatchEmpty.hidden = false;
+    return;
+  }
+  if (els.pvpMatchEmpty) els.pvpMatchEmpty.hidden = true;
+  const uid = myId();
+  els.pvpMatchList.innerHTML = pvpInbox
+    .map((m) => {
+      const vs = pvpOpponentName(m);
+      const badge = escapeHtml(m.status || "");
+      const dur = m.duration_sec || 10;
+      let resultLine = `${dur}s duel`;
+      if (m.status === "complete") {
+        const mine = pvpMyScore(m);
+        const theirs = pvpTheirScore(m);
+        let outcome = "Draw";
+        if (m.winner_id === uid) outcome = "Win";
+        else if (m.winner_id) outcome = "Loss";
+        resultLine = `${outcome} · you ${mine ?? "—"} vs ${theirs ?? "—"}`;
+      } else if (m.status === "running") {
+        resultLine = `${dur}s · live`;
+      } else if (m.status === "accepted") {
+        resultLine = `${dur}s · ready up`;
+      } else if (m.status === "pending") {
+        resultLine =
+          m.opponent_id === uid
+            ? `${dur}s · incoming challenge`
+            : `${dur}s · waiting for accept`;
+      }
+      const openable = ["pending", "accepted", "running", "complete"].includes(m.status);
+      return `
+        <li class="pvp-match-item" data-match-id="${m.id}">
+          <div class="pvp-match-top">
+            <div>
+              <div class="pvp-match-title">vs ${escapeHtml(vs)}</div>
+              <div class="pvp-match-meta">${escapeHtml(resultLine)}</div>
+            </div>
+            <span class="pvp-match-badge ${escapeHtml(m.status)}">${badge}</span>
+          </div>
+          <div class="pvp-match-actions">
+            ${
+              openable
+                ? `<button type="button" class="solid-btn" data-pvp-open="${m.id}">Open</button>`
+                : ""
+            }
+          </div>
+        </li>`;
+    })
+    .join("");
+}
+
+function renderPvpRankings() {
+  if (!els.pvpRankings) return;
+  if (!pvpRankings.length) {
+    els.pvpRankings.innerHTML = "";
+    if (els.pvpRankingsEmpty) els.pvpRankingsEmpty.hidden = false;
+    return;
+  }
+  if (els.pvpRankingsEmpty) els.pvpRankingsEmpty.hidden = true;
+  els.pvpRankings.innerHTML = pvpRankings
+    .map((r, i) => {
+      const you = r.id === myId();
+      const rec = `${r.wins || 0}-${r.losses || 0}-${r.draws || 0}`;
+      return `
+      <li class="board-row ${rankPlaceClass(i)}">
+        ${rankEmblemHtml(i)}
+        <div class="person-info">
+          <div class="name">${escapeHtml(r.display_name || "Player")}${you ? '<span class="you-tag">You</span>' : ""}</div>
+          <div class="meta">${rec} · K/D ${r.kd ?? 0}</div>
+        </div>
+        ${scoreEmblemHtml(r.wins || 0, 0)}
+      </li>`;
+    })
+    .join("");
+}
+
+async function loadPvpStats() {
+  if (!sb || !online) return;
+  const { data, error } = await sb.rpc("jp_pvp_my_stats");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_pvp_my_stats", error);
+    }
+    return;
+  }
+  pvpStats = data && typeof data === "object" ? data : pvpStats;
+  renderPvpStats();
+}
+
+async function loadPvpInbox() {
+  if (!sb || !online) {
+    pvpInbox = [];
+    renderPvpInbox();
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_pvp_inbox");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_pvp_inbox", error);
+    }
+    return;
+  }
+  pvpInbox = Array.isArray(data) ? data : [];
+  renderPvpInbox();
+}
+
+async function loadPvpRankings() {
+  if (!sb || !online) {
+    pvpRankings = [];
+    renderPvpRankings();
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_pvp_rankings", { p_limit: 15 });
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_pvp_rankings", error);
+    }
+    return;
+  }
+  pvpRankings = Array.isArray(data) ? data : [];
+  renderPvpRankings();
+}
+
+async function refreshPvpUi() {
+  fillPvpFriendSelect();
+  await Promise.all([loadPvpStats(), loadPvpInbox(), loadPvpRankings()]);
+}
+
+async function pvpChallenge(friendId, duration) {
+  if (!sb || !online) throw new Error("Go online to duel");
+  if (!friendId) throw new Error("Pick a friend");
+  const dur = Number(duration) === 25 ? 25 : 10;
+  const { data, error } = await sb.rpc("jp_pvp_challenge", {
+    p_opponent_id: friendId,
+    p_duration: dur,
+  });
+  if (error) throw new Error(error.message || "Challenge failed");
+  await loadPvpInbox();
+  const matchId = data?.id || data;
+  if (matchId) await openPvpMatch(matchId);
+  toast(`${dur}s duel sent`);
+  return data;
+}
+
+async function pvpRespond(matchId, accept) {
+  const { data, error } = await sb.rpc("jp_pvp_respond", {
+    p_match_id: matchId,
+    p_accept: !!accept,
+  });
+  if (error) throw new Error(error.message || "Respond failed");
+  await loadPvpInbox();
+  if (data) syncPvpModalFromMatch(data);
+  return data;
+}
+
+async function pvpReady(matchId) {
+  const { data, error } = await sb.rpc("jp_pvp_ready", { p_match_id: matchId });
+  if (error) throw new Error(error.message || "Ready failed");
+  if (data) syncPvpModalFromMatch(data);
+  await loadPvpInbox();
+  return data;
+}
+
+async function pvpSubmit(matchId, score) {
+  const { data, error } = await sb.rpc("jp_pvp_submit", {
+    p_match_id: matchId,
+    p_score: Math.floor(Number(score) || 0),
+  });
+  if (error) throw new Error(error.message || "Submit failed");
+  if (data) syncPvpModalFromMatch(data);
+  await Promise.all([loadPvpInbox(), loadPvpStats(), loadPvpRankings()]);
+  return data;
+}
+
+async function pvpCancel(matchId) {
+  const { data, error } = await sb.rpc("jp_pvp_cancel", { p_match_id: matchId });
+  if (error) throw new Error(error.message || "Cancel failed");
+  await loadPvpInbox();
+  closePvpModal();
+  return data;
+}
+
+async function fetchPvpMatch(matchId) {
+  const { data, error } = await sb.rpc("jp_pvp_get_match", { p_match_id: matchId });
+  if (error) throw new Error(error.message || "Could not load match");
+  return data;
+}
+
+function stopPvpLoop() {
+  cancelAnimationFrame(pvpRaf);
+  pvpRaf = 0;
+  clearInterval(pvpPollTimer);
+  pvpPollTimer = null;
+}
+
+function closePvpModal() {
+  stopPvpLoop();
+  pvpActiveMatch = null;
+  pvpPhase = "idle";
+  pvpLocalScore = 0;
+  pvpSubmitted = false;
+  if (els.pvpModal?.open) els.pvpModal.close();
+}
+
+function startPvpPolling() {
+  clearInterval(pvpPollTimer);
+  pvpPollTimer = setInterval(async () => {
+    if (!pvpActiveMatch?.id || !online) return;
+    try {
+      const m = await fetchPvpMatch(pvpActiveMatch.id);
+      if (m) syncPvpModalFromMatch(m);
+    } catch (e) {
+      console.warn("pvp poll", e);
+    }
+  }, 1500);
+}
+
+function syncPvpModalFromMatch(m) {
+  if (!m) return;
+  const prev = pvpActiveMatch || {};
+  // RPCs may return raw row without display names — keep previous labels
+  pvpActiveMatch = {
+    ...prev,
+    ...m,
+    challenger_name: m.challenger_name || prev.challenger_name,
+    opponent_name: m.opponent_name || prev.opponent_name,
+  };
+  renderPvpModal();
+  maybeStartPvpCountdown();
+}
+
+async function openPvpMatch(matchIdOrObj) {
+  const id =
+    typeof matchIdOrObj === "string"
+      ? matchIdOrObj
+      : matchIdOrObj?.id || matchIdOrObj;
+  if (!id) throw new Error("Match not found");
+  const m = await fetchPvpMatch(id);
+  if (!m?.id) throw new Error("Match not found");
+  pvpActiveMatch = m;
+  pvpLocalScore = 0;
+  pvpSubmitted = false;
+  pvpPhase = "idle";
+  setPvpModalMsg("");
+  if (els.pvpModal && !els.pvpModal.open) els.pvpModal.showModal();
+  renderPvpModal();
+  startPvpPolling();
+  maybeStartPvpCountdown();
+}
+
+function renderPvpModal() {
+  const m = pvpActiveMatch;
+  if (!m || !els.pvpModal) return;
+  const vs = pvpOpponentName(m);
+  const dur = m.duration_sec || 10;
+  if (els.pvpModalTitle) els.pvpModalTitle.textContent = `${dur}s duel`;
+  if (els.pvpModalVs) els.pvpModalVs.textContent = `You vs ${vs}`;
+
+  const isOpp = m.opponent_id === myId();
+  const isCh = pvpIsChallenger(m);
+
+  if (els.pvpAcceptBtn) els.pvpAcceptBtn.hidden = !(m.status === "pending" && isOpp);
+  if (els.pvpDeclineBtn) els.pvpDeclineBtn.hidden = !(m.status === "pending" && isOpp);
+  if (els.pvpCancelBtn) {
+    els.pvpCancelBtn.hidden = !(
+      (m.status === "pending" && isCh) ||
+      m.status === "accepted"
+    );
+  }
+  if (els.pvpReadyBtn) {
+    els.pvpReadyBtn.hidden = !(m.status === "accepted" && !pvpMyReady(m));
+    els.pvpReadyBtn.disabled = false;
+    els.pvpReadyBtn.textContent = "I'm ready";
+  }
+
+  let status = "";
+  if (m.status === "pending") {
+    status = isOpp ? "Challenge received — accept to duel" : "Waiting for them to accept…";
+  } else if (m.status === "accepted") {
+    if (pvpMyReady(m) && pvpTheirReady(m)) status = "Both ready — starting…";
+    else if (pvpMyReady(m)) status = "Ready — waiting for opponent…";
+    else status = "Accepted — tap I'm ready when you're set";
+  } else if (m.status === "running") {
+    if (pvpPhase === "countdown") status = "Get ready…";
+    else if (pvpPhase === "running") status = "GO! Mash the button!";
+    else if (pvpPhase === "done" || pvpSubmitted) status = "Submitted — waiting for opponent…";
+    else status = "Match live";
+  } else if (m.status === "complete") {
+    const mine = pvpMyScore(m);
+    const theirs = pvpTheirScore(m);
+    if (m.winner_id === myId()) status = `You win! ${mine} – ${theirs}`;
+    else if (m.winner_id) status = `You lose. ${mine} – ${theirs}`;
+    else status = `Draw ${mine} – ${theirs}`;
+  } else {
+    status = m.status || "—";
+  }
+  if (els.pvpModalStatus) els.pvpModalStatus.textContent = status;
+
+  if (els.pvpArenaScore) {
+    if (m.status === "complete") els.pvpArenaScore.textContent = formatNum(pvpMyScore(m) ?? pvpLocalScore);
+    else els.pvpArenaScore.textContent = formatNum(pvpLocalScore);
+  }
+
+  const canPush = pvpPhase === "running" && !pvpSubmitted;
+  if (els.pvpPushBtn) els.pvpPushBtn.disabled = !canPush;
+  if (els.pvpPushHint) {
+    els.pvpPushHint.textContent = canPush
+      ? "TAP!"
+      : pvpSubmitted
+        ? "Submitted"
+        : m.status === "complete"
+          ? "Finished"
+          : "Wait for go";
+  }
+}
+
+function maybeStartPvpCountdown() {
+  const m = pvpActiveMatch;
+  if (!m || m.status !== "running" || !m.starts_at) return;
+  if (pvpPhase === "running" || pvpPhase === "done" || pvpSubmitted) return;
+
+  const startMs = new Date(m.starts_at).getTime();
+  const endMs = m.ends_at
+    ? new Date(m.ends_at).getTime()
+    : startMs + (m.duration_sec || 10) * 1000;
+  const now = Date.now();
+
+  if (now >= endMs) {
+    // Missed window — still try submit if we have a score and not submitted
+    if (!pvpSubmitted && pvpLocalScore > 0) {
+      finishPvpRun();
+    } else if (!pvpSubmitted) {
+      pvpPhase = "done";
+      if (els.pvpArenaTimer) els.pvpArenaTimer.textContent = "0.0";
+      renderPvpModal();
+    }
+    return;
+  }
+
+  if (now < startMs) {
+    pvpPhase = "countdown";
+    cancelAnimationFrame(pvpRaf);
+    const tick = () => {
+      if (!pvpActiveMatch || pvpActiveMatch.id !== m.id) return;
+      const left = Math.max(0, startMs - Date.now());
+      if (els.pvpArenaTimer) {
+        els.pvpArenaTimer.textContent = left > 0 ? `Start in ${(left / 1000).toFixed(1)}` : "GO!";
+      }
+      if (left <= 0) {
+        beginPvpRun(startMs, endMs);
+        return;
+      }
+      pvpRaf = requestAnimationFrame(tick);
+      renderPvpModal();
+    };
+    tick();
+    return;
+  }
+
+  // Already in run window
+  beginPvpRun(startMs, endMs);
+}
+
+function beginPvpRun(startMs, endMs) {
+  if (pvpPhase === "running" || pvpSubmitted) return;
+  pvpPhase = "running";
+  pvpLocalScore = 0;
+  if (els.pvpArenaScore) els.pvpArenaScore.textContent = "0";
+  cancelAnimationFrame(pvpRaf);
+  const tick = () => {
+    if (pvpPhase !== "running") return;
+    const left = Math.max(0, endMs - Date.now());
+    if (els.pvpArenaTimer) els.pvpArenaTimer.textContent = (left / 1000).toFixed(1);
+    if (left <= 0) {
+      finishPvpRun();
+      return;
+    }
+    pvpRaf = requestAnimationFrame(tick);
+  };
+  tick();
+  renderPvpModal();
+}
+
+async function finishPvpRun() {
+  if (pvpSubmitted || !pvpActiveMatch) return;
+  pvpPhase = "done";
+  pvpSubmitted = true;
+  cancelAnimationFrame(pvpRaf);
+  if (els.pvpArenaTimer) els.pvpArenaTimer.textContent = "0.0";
+  if (els.pvpPushBtn) els.pvpPushBtn.disabled = true;
+  renderPvpModal();
+  try {
+    await pvpSubmit(pvpActiveMatch.id, pvpLocalScore);
+    setPvpModalMsg(`Score submitted: ${pvpLocalScore}`, "ok");
+    toast(`Duel score: ${pvpLocalScore}`);
+  } catch (e) {
+    pvpSubmitted = false;
+    setPvpModalMsg(e.message || "Submit failed", "err");
+  }
+  renderPvpModal();
+}
+
+function pvpPush() {
+  if (pvpPhase !== "running" || pvpSubmitted) return;
+  pvpLocalScore += 1;
+  if (els.pvpArenaScore) els.pvpArenaScore.textContent = formatNum(pvpLocalScore);
 }
 
 function renderFriendsBoard() {
@@ -3550,7 +4067,13 @@ function setTab(tab) {
   $$(".panel").forEach((p) => {
     p.hidden = p.dataset.panel !== tab;
   });
-  if (tab === "friends") renderFriends();
+  if (tab === "friends") {
+    renderFriends();
+    renderPvpStats();
+    renderPvpInbox();
+    renderPvpRankings();
+    if (online) refreshPvpUi().catch((e) => console.warn(e));
+  }
   if (tab === "groups") renderGroups();
   if (tab === "scores") {
     renderScores();
@@ -3606,6 +4129,84 @@ function bindEvents() {
     setActiveTerritory(selectedTerritoryId, "challenge");
   });
   els.territoryBannerExit?.addEventListener("click", () => clearActiveTerritory());
+
+  // PVP
+  els.pvpRefresh?.addEventListener("click", () => {
+    refreshPvpUi()
+      .then(() => toast("PvP refreshed"))
+      .catch((e) => setPvpMsg(e.message || "Refresh failed", "err"));
+  });
+  els.pvpChallengeBtn?.addEventListener("click", async () => {
+    setPvpMsg("");
+    try {
+      await pvpChallenge(els.pvpFriendSelect?.value, els.pvpDurationSelect?.value);
+      setPvpMsg("Challenge sent.", "ok");
+    } catch (e) {
+      setPvpMsg(e.message || "Challenge failed", "err");
+      toast(e.message || "Challenge failed");
+    }
+  });
+  els.pvpMatchList?.addEventListener("click", async (e) => {
+    const openBtn = e.target?.closest?.("[data-pvp-open]");
+    if (!openBtn) return;
+    try {
+      await openPvpMatch(openBtn.getAttribute("data-pvp-open"));
+    } catch (err) {
+      toast(err.message || "Could not open duel");
+    }
+  });
+  els.pvpModalClose?.addEventListener("click", () => closePvpModal());
+  els.pvpModal?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closePvpModal();
+  });
+  els.pvpAcceptBtn?.addEventListener("click", async () => {
+    if (!pvpActiveMatch) return;
+    try {
+      await pvpRespond(pvpActiveMatch.id, true);
+      setPvpModalMsg("Accepted — ready up!", "ok");
+    } catch (e) {
+      setPvpModalMsg(e.message || "Accept failed", "err");
+    }
+  });
+  els.pvpDeclineBtn?.addEventListener("click", async () => {
+    if (!pvpActiveMatch) return;
+    try {
+      await pvpRespond(pvpActiveMatch.id, false);
+      closePvpModal();
+      toast("Declined");
+    } catch (e) {
+      setPvpModalMsg(e.message || "Decline failed", "err");
+    }
+  });
+  els.pvpCancelBtn?.addEventListener("click", async () => {
+    if (!pvpActiveMatch) return;
+    try {
+      await pvpCancel(pvpActiveMatch.id);
+      toast("Duel cancelled");
+    } catch (e) {
+      setPvpModalMsg(e.message || "Cancel failed", "err");
+    }
+  });
+  els.pvpReadyBtn?.addEventListener("click", async () => {
+    if (!pvpActiveMatch) return;
+    try {
+      els.pvpReadyBtn.disabled = true;
+      await pvpReady(pvpActiveMatch.id);
+      setPvpModalMsg("You're ready.", "ok");
+    } catch (e) {
+      els.pvpReadyBtn.disabled = false;
+      setPvpModalMsg(e.message || "Ready failed", "err");
+    }
+  });
+  els.pvpPushBtn?.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    pvpPush();
+  });
+  els.pvpPushBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    pvpPush();
+  });
 
   const press = () => els.pushBtn.classList.add("pressed");
   const release = () => els.pushBtn.classList.remove("pressed");
@@ -3728,7 +4329,22 @@ function bindEvents() {
     }
   });
 
-  els.friendsList.addEventListener("click", (e) => {
+  els.friendsList.addEventListener("click", async (e) => {
+    const duelBtn = e.target.closest("[data-pvp-friend]");
+    if (duelBtn) {
+      const fid = duelBtn.getAttribute("data-pvp-friend");
+      if (els.pvpFriendSelect) els.pvpFriendSelect.value = fid;
+      setPvpMsg("");
+      try {
+        const dur = Number(els.pvpDurationSelect?.value) === 25 ? 25 : 10;
+        await pvpChallenge(fid, dur);
+        setPvpMsg("Challenge sent.", "ok");
+      } catch (err) {
+        setPvpMsg(err.message || "Challenge failed", "err");
+        toast(err.message || "Challenge failed");
+      }
+      return;
+    }
     const msgBtn = e.target.closest("[data-msg-friend]");
     if (msgBtn) {
       const f = listFriendsForUi().find((x) => x.id === msgBtn.dataset.msgFriend);
