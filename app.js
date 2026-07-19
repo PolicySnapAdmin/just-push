@@ -2295,10 +2295,11 @@ async function ensureProfile() {
   state.sessionsPlayed = Math.max(state.sessionsPlayed, data.sessions_played || 0);
   applyChallengeBestFromServer(data.challenge_best || 0, { save: false });
 
-  if (data.display_name && data.display_name !== "Player") {
-    if (!state.name || state.name === "Player") state.name = data.display_name;
-  } else if (state.name) {
-    /* keep local name */
+  // Server name is source of truth when set (prevents local spoof / merge confusion)
+  if (data.display_name) {
+    if (data.display_name !== "Player" || !state.name || state.name === "Player") {
+      state.name = data.display_name;
+    }
   }
   if (data.theme_button) state.theme.button = data.theme_button;
   if (data.theme_bg) state.theme.background = data.theme_bg;
@@ -2314,8 +2315,28 @@ async function ensureProfile() {
     );
   }
 
-  // Name/theme only via table update; scores only via RPCs
+  // Theme only via table update; names via RPC; scores via RPCs
   await pushProfileMeta();
+
+  // If guest just picked a real name offline, claim it uniquely once online
+  if (
+    state.name &&
+    state.name !== "Player" &&
+    data.display_name &&
+    data.display_name !== state.name
+  ) {
+    try {
+      await setDisplayNameOnline(state.name);
+    } catch (e) {
+      // Revert local to server name if claim failed (taken / limit)
+      state.name = data.display_name;
+      saveState();
+      renderProfile();
+      console.warn("name claim", e);
+      toast(e.message || "Could not claim that name");
+    }
+  }
+
   if (localAhead) {
     await reconcileLocalScoresToServer();
   }
@@ -2447,12 +2468,11 @@ async function reconcileLocalScoresToServer() {
   // That prevents glitch/local inflated bests from overwriting admin or legitimate server values.
 }
 
-/** Name + theme only — score columns are ignored by DB trigger if sent. */
+/** Theme only via table update. Display names go through jp_set_display_name (unique + daily limit). */
 async function pushProfileMeta() {
   if (!sb || !session?.user) return;
 
   const payload = {
-    display_name: (state.name || "Player").slice(0, 16),
     theme_button: state.theme.button,
     theme_bg: state.theme.background,
   };
@@ -2468,12 +2488,40 @@ async function pushProfileMeta() {
     console.warn("profile meta sync", error);
     return;
   }
-  // Keep server scores; don't overwrite local mid-tap with stale zeros
   if (data) {
     profile = data;
     online = true;
     setOnlineUi();
   }
+}
+
+/**
+ * Authoritative rename. Server enforces uniqueness, 3/day, vacated-name hold.
+ * Identity (wallet/scores/friends) is always user id — never the display name.
+ */
+async function setDisplayNameOnline(rawName) {
+  if (!sb || !session?.user || !online) throw new Error("Go online to set your name");
+  const name = String(rawName || "").trim().slice(0, 16);
+  if (!name) throw new Error("Enter a name");
+
+  const { data, error } = await sb.rpc("jp_set_display_name", { p_name: name });
+  if (error) {
+    const msg = error.message || "Could not set name";
+    if (/taken or temporarily reserved/i.test(msg)) {
+      throw new Error("That name is taken or reserved (recently used by someone else)");
+    }
+    if (/limit reached/i.test(msg)) {
+      throw new Error("Name change limit: 3 per day (resets UTC midnight)");
+    }
+    throw new Error(msg);
+  }
+
+  const finalName = data?.display_name || name;
+  state.name = finalName;
+  if (profile) profile.display_name = finalName;
+  saveState();
+  renderProfile();
+  return data;
 }
 
 async function pushProfile() {
@@ -5151,12 +5199,26 @@ function bindEvents() {
     e.preventDefault();
     const name = els.nameInput.value.trim().slice(0, 16);
     if (!name) return;
-    state.name = name;
-    saveState();
-    renderProfile();
-    scheduleMetaSync();
-    els.nameModal.close();
-    toast(`Hey, ${name}!`);
+    try {
+      if (online && sb && session?.user) {
+        const res = await setDisplayNameOnline(name);
+        els.nameModal.close();
+        const left = res?.changes_limit != null && res?.changes_today != null
+          ? ` (${Math.max(0, res.changes_limit - res.changes_today)} renames left today)`
+          : "";
+        toast(`Hey, ${state.name}!${left}`);
+      } else {
+        // Offline: local only until online claim
+        state.name = name;
+        saveState();
+        renderProfile();
+        scheduleMetaSync();
+        els.nameModal.close();
+        toast(`Hey, ${name}! (will claim online)`);
+      }
+    } catch (err) {
+      toast(err.message || "Could not set name");
+    }
   });
 
   els.nameShowRegister?.addEventListener("click", () => showNamePanel());
