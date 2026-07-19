@@ -2,8 +2,8 @@
  * Public Supabase config (safe in the browser — same idea as Firebase).
  * Never put the service role key here.
  *
- * Shared project: PumpQuest / PolicySnap / Push Thru (jpnaotxkcpnwgqkzxdue)
- * Tables are namespaced jp_* so nothing clashes.
+ * Supabase project ref: jpnaotxkcpnwgqkzxdue
+ * All Push Thru tables/RPCs use the jp_* prefix.
  *
  * Set enabled: false to force pure offline localStorage-only mode.
  *

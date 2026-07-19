@@ -68,10 +68,10 @@ Requires Supabase CLI logged in + linked (`supabase link`).
 
 Or paste each file under `supabase/migrations/` into the SQL Editor **in filename order**.
 
-## Shared project note
+## Project isolation
 
-This Supabase project is shared (PumpQuest / PolicySnap / Push Thru).  
-Push Thru only uses **`jp_*`** names. Do not drop unrelated tables.
+Push Thru only uses **`jp_*`** tables and functions.  
+Other products must not share this schema. See [SEPARATION.md](./SEPARATION.md) if you still have legacy tables from older apps on the same Supabase project.
 
 ## Automated cleanup (hygiene)
 

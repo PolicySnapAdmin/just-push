@@ -1,5 +1,4 @@
--- Just Push — namespaced tables (jp_*) for shared Supabase projects
--- Project-safe: does not touch PumpQuest / PolicySnap tables.
+-- Push Thru — namespaced tables (jp_*)
 
 -- Profiles (1:1 with auth.users)
 create table if not exists public.jp_profiles (

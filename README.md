@@ -74,7 +74,7 @@ publicBaseUrl: "https://www.pushthrugames.com/",
 ## Backend
 
 - **Supabase** project `jpnaotxkcpnwgqkzxdue`  
-- Tables / RPCs namespaced **`jp_*`** (safe on shared project)  
+- Tables / RPCs namespaced **`jp_*`** (Push Thru only)  
 - Scores only via RPCs (not free-form REST score edits)  
 
 ```powershell
