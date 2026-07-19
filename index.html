@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719d" />
+  <link rel="stylesheet" href="styles.css?v=20260719e" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -304,121 +304,137 @@
         </div>
       </section>
 
-      <!-- FRIENDS -->
-      <section class="panel" data-panel="friends" hidden aria-label="Friends">
-        <h2>Friends</h2>
-        <p class="panel-sub">Send a link. They open it on their phone, get added, and you’re competing.</p>
+      <!-- SOCIAL: friends · groups · pvp -->
+      <section class="panel" data-panel="friends" hidden aria-label="Social">
+        <h2>Social</h2>
+        <p class="panel-sub">Friends, groups, and head-to-head duels — all in one place.</p>
 
-        <div class="card invite-card">
-          <h3>Invite a friend</h3>
-          <p class="muted" id="friend-code-hint">Best for group chats: one tap opens the game and adds you.</p>
-          <div class="stack-form">
-            <button type="button" class="solid-btn share-main" id="share-friend-link">Share invite link</button>
-            <button type="button" class="ghost-btn" id="copy-friend-link">Copy invite link</button>
-          </div>
-          <div class="code-row" style="margin-top:12px">
-            <code id="my-friend-code">…</code>
-            <button type="button" class="solid-btn" id="copy-friend-code">Code</button>
-          </div>
-          <p class="muted" style="margin-top:10px;margin-bottom:0">Or they can type your code manually.</p>
+        <div class="mode-toggle social-mode-toggle" role="tablist" aria-label="Social section">
+          <button type="button" class="mode-btn active" data-social-mode="friends" role="tab" aria-selected="true">Friends</button>
+          <button type="button" class="mode-btn" data-social-mode="groups" role="tab" aria-selected="false">Groups</button>
+          <button type="button" class="mode-btn" data-social-mode="pvp" role="tab" aria-selected="false">PvP</button>
         </div>
 
-        <div class="card">
-          <h3>Add a friend</h3>
-          <form id="add-friend-form" class="stack-form">
-            <input type="text" id="friend-code-input" placeholder="Their code or paste invite link" autocomplete="off" spellcheck="false" />
-            <button type="submit" class="solid-btn">Add friend</button>
-          </form>
-          <p class="form-msg" id="friend-msg" role="status"></p>
-        </div>
-
-        <div class="card">
-          <h3>Your friends <span class="count-badge" id="friend-count">0</span></h3>
-          <ul class="people-list" id="friends-list"></ul>
-          <p class="empty" id="friends-empty">No friends yet — share your code.</p>
-        </div>
-
-        <!-- PVP duels (friends only) -->
-        <div class="card pvp-card">
-          <div class="card-head">
-            <h3>PvP duels</h3>
-            <button type="button" class="ghost-btn tiny" id="pvp-refresh">Refresh</button>
-          </div>
-          <p class="muted pvp-intro">
-            Head-to-head tap battles with friends. 10s or 25s — both ready up, then mash.
-            Separate from global boards.
-          </p>
-
-          <div class="pvp-stats-grid" id="pvp-stats-grid">
-            <div class="pvp-stat">
-              <span class="pvp-stat-val" id="pvp-wins">0</span>
-              <span class="pvp-stat-label">Wins</span>
+        <!-- Friends sub-view -->
+        <div id="social-friends-view">
+          <div class="card invite-card">
+            <h3>Invite a friend</h3>
+            <p class="muted" id="friend-code-hint">Best for group chats: one tap opens the game and adds you.</p>
+            <div class="stack-form">
+              <button type="button" class="solid-btn share-main" id="share-friend-link">Share invite link</button>
+              <button type="button" class="ghost-btn" id="copy-friend-link">Copy invite link</button>
             </div>
-            <div class="pvp-stat">
-              <span class="pvp-stat-val" id="pvp-losses">0</span>
-              <span class="pvp-stat-label">Losses</span>
+            <div class="code-row" style="margin-top:12px">
+              <code id="my-friend-code">…</code>
+              <button type="button" class="solid-btn" id="copy-friend-code">Code</button>
             </div>
-            <div class="pvp-stat">
-              <span class="pvp-stat-val" id="pvp-draws">0</span>
-              <span class="pvp-stat-label">Draws</span>
-            </div>
-            <div class="pvp-stat pvp-stat-kd">
-              <span class="pvp-stat-val" id="pvp-kd">0</span>
-              <span class="pvp-stat-label">K/D</span>
-            </div>
+            <p class="muted" style="margin-top:10px;margin-bottom:0">Or they can type your code manually.</p>
           </div>
 
-          <div class="pvp-challenge-box">
-            <p class="pvp-challenge-label">Challenge a friend</p>
-            <div class="pvp-challenge-row">
-              <select id="pvp-friend-select" aria-label="Friend to duel">
-                <option value="">Select friend…</option>
-              </select>
-              <select id="pvp-duration-select" aria-label="Duel length">
-                <option value="10">10 sec</option>
-                <option value="25">25 sec</option>
-              </select>
-              <button type="button" class="solid-btn" id="pvp-challenge-btn">Duel</button>
-            </div>
-            <p class="form-msg" id="pvp-msg" role="status"></p>
+          <div class="card">
+            <h3>Add a friend</h3>
+            <form id="add-friend-form" class="stack-form">
+              <input type="text" id="friend-code-input" placeholder="Their code or paste invite link" autocomplete="off" spellcheck="false" />
+              <button type="submit" class="solid-btn">Add friend</button>
+            </form>
+            <p class="form-msg" id="friend-msg" role="status"></p>
           </div>
 
-          <h3 class="board-subhead">Open &amp; recent</h3>
-          <ul class="pvp-match-list" id="pvp-match-list"></ul>
-          <p class="empty" id="pvp-match-empty">No duels yet — challenge a friend above.</p>
-
-          <h3 class="board-subhead" style="margin-top:16px">PvP rankings</h3>
-          <ol class="leaderboard" id="pvp-rankings"></ol>
-          <p class="empty" id="pvp-rankings-empty">Play a duel to appear on the board.</p>
-        </div>
-      </section>
-
-      <!-- GROUPS -->
-      <section class="panel" data-panel="groups" hidden aria-label="Groups">
-        <h2>Groups</h2>
-        <p class="panel-sub">Create a crew, share one link, everyone climbs the same board.</p>
-
-        <div class="card">
-          <h3>Create a group</h3>
-          <form id="create-group-form" class="stack-form">
-            <input type="text" id="group-name-input" placeholder="Group name" maxlength="24" autocomplete="off" />
-            <button type="submit" class="solid-btn">Create &amp; share link</button>
-          </form>
+          <div class="card">
+            <h3>Your friends <span class="count-badge" id="friend-count">0</span></h3>
+            <ul class="people-list" id="friends-list"></ul>
+            <p class="empty" id="friends-empty">No friends yet — share your code.</p>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>Join a group</h3>
-          <form id="join-group-form" class="stack-form">
-            <input type="text" id="group-code-input" placeholder="Invite code or paste group link" autocomplete="off" spellcheck="false" />
-            <button type="submit" class="solid-btn">Join group</button>
-          </form>
-          <p class="form-msg" id="group-msg" role="status"></p>
+        <!-- Groups sub-view (was its own tab) -->
+        <div id="social-groups-view" hidden>
+          <div class="card">
+            <h3>Create a group</h3>
+            <p class="muted" style="margin-top:0">Crew up, share one link, climb the same board. Clan wars later.</p>
+            <form id="create-group-form" class="stack-form">
+              <input type="text" id="group-name-input" placeholder="Group name" maxlength="24" autocomplete="off" />
+              <button type="submit" class="solid-btn">Create &amp; share link</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Join a group</h3>
+            <form id="join-group-form" class="stack-form">
+              <input type="text" id="group-code-input" placeholder="Invite code or paste group link" autocomplete="off" spellcheck="false" />
+              <button type="submit" class="solid-btn">Join group</button>
+            </form>
+            <p class="form-msg" id="group-msg" role="status"></p>
+          </div>
+
+          <div class="card">
+            <h3>Your groups <span class="count-badge" id="group-count">0</span></h3>
+            <ul class="group-list" id="groups-list"></ul>
+            <p class="empty" id="groups-empty">No groups yet — create one or join a friend.</p>
+          </div>
+
+          <div class="card social-future-note">
+            <p class="muted" style="margin:0">
+              <strong>Coming later:</strong> group clan wars — multi-player matches between crews.
+              For now, group boards live under <strong>Scores</strong>.
+            </p>
+          </div>
         </div>
 
-        <div class="card">
-          <h3>Your groups <span class="count-badge" id="group-count">0</span></h3>
-          <ul class="group-list" id="groups-list"></ul>
-          <p class="empty" id="groups-empty">No groups yet — create one or join a friend.</p>
+        <!-- PvP sub-view -->
+        <div id="social-pvp-view" hidden>
+          <div class="card pvp-card">
+            <div class="card-head">
+              <h3>PvP duels</h3>
+              <button type="button" class="ghost-btn tiny" id="pvp-refresh">Refresh</button>
+            </div>
+            <p class="muted pvp-intro">
+              Head-to-head tap battles with friends. 10s or 25s — both ready up, then mash.
+              Separate from global boards.
+            </p>
+
+            <div class="pvp-stats-grid" id="pvp-stats-grid">
+              <div class="pvp-stat">
+                <span class="pvp-stat-val" id="pvp-wins">0</span>
+                <span class="pvp-stat-label">Wins</span>
+              </div>
+              <div class="pvp-stat">
+                <span class="pvp-stat-val" id="pvp-losses">0</span>
+                <span class="pvp-stat-label">Losses</span>
+              </div>
+              <div class="pvp-stat">
+                <span class="pvp-stat-val" id="pvp-draws">0</span>
+                <span class="pvp-stat-label">Draws</span>
+              </div>
+              <div class="pvp-stat pvp-stat-kd">
+                <span class="pvp-stat-val" id="pvp-kd">0</span>
+                <span class="pvp-stat-label">K/D</span>
+              </div>
+            </div>
+
+            <div class="pvp-challenge-box">
+              <p class="pvp-challenge-label">Challenge a friend</p>
+              <div class="pvp-challenge-row">
+                <select id="pvp-friend-select" aria-label="Friend to duel">
+                  <option value="">Select friend…</option>
+                </select>
+                <select id="pvp-duration-select" aria-label="Duel length">
+                  <option value="10">10 sec</option>
+                  <option value="25">25 sec</option>
+                </select>
+                <button type="button" class="solid-btn" id="pvp-challenge-btn">Duel</button>
+              </div>
+              <p class="form-msg" id="pvp-msg" role="status"></p>
+            </div>
+
+            <h3 class="board-subhead">Open &amp; recent</h3>
+            <ul class="pvp-match-list" id="pvp-match-list"></ul>
+            <p class="empty" id="pvp-match-empty">No duels yet — challenge a friend above.</p>
+
+            <h3 class="board-subhead" style="margin-top:16px">PvP rankings</h3>
+            <ol class="leaderboard" id="pvp-rankings"></ol>
+            <p class="empty" id="pvp-rankings-empty">Play a duel to appear on the board.</p>
+          </div>
         </div>
       </section>
 
@@ -634,11 +650,7 @@
       </button>
       <button type="button" class="tab" data-tab="friends">
         <span class="tab-icon">◎</span>
-        <span>Friends</span>
-      </button>
-      <button type="button" class="tab" data-tab="groups">
-        <span class="tab-icon">▣</span>
-        <span>Groups</span>
+        <span>Social</span>
       </button>
       <button type="button" class="tab" data-tab="chat" id="chat-tab">
         <span class="tab-icon">✉</span>
@@ -788,7 +800,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719d"></script>
-  <script src="app.js?v=20260719d"></script>
+  <script src="config.js?v=20260719e"></script>
+  <script src="app.js?v=20260719e"></script>
 </body>
 </html>

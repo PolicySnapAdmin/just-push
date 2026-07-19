@@ -1541,7 +1541,8 @@ textarea#dm-input:focus {
   transform: translateX(-50%);
   width: min(480px, 100%);
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  /* play · map · scores · social · chat · settings */
+  grid-template-columns: repeat(6, 1fr);
   gap: 1px;
   padding: 8px 4px calc(8px + var(--safe-bottom));
   background: color-mix(in srgb, var(--bg) 88%, transparent);
@@ -1757,8 +1758,18 @@ textarea#dm-input:focus {
 }
 
 #app[data-chat="0"] .tabbar {
-  /* play · map · scores · friends · groups · settings */
-  grid-template-columns: repeat(6, 1fr);
+  /* play · map · scores · social · settings */
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.social-mode-toggle {
+  margin-bottom: 14px;
+}
+
+.social-future-note {
+  border-style: dashed;
+  border-color: color-mix(in srgb, #7eb6d9 35%, var(--border));
+  background: color-mix(in srgb, #7eb6d9 6%, transparent);
 }
 
 #app[data-github="0"] #github-btn,

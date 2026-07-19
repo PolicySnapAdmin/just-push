@@ -534,6 +534,9 @@ const els = {
   pvpDeclineBtn: $("#pvp-decline-btn"),
   pvpCancelBtn: $("#pvp-cancel-btn"),
   pvpModalMsg: $("#pvp-modal-msg"),
+  socialFriendsView: $("#social-friends-view"),
+  socialGroupsView: $("#social-groups-view"),
+  socialPvpView: $("#social-pvp-view"),
 };
 
 // Deep-link invite waiting to process after online
@@ -608,6 +611,9 @@ let pvpPhase = "idle"; // idle | countdown | running | done | wait
 let pvpRaf = 0;
 let pvpPollTimer = null;
 let pvpSubmitted = false;
+
+/** Social hub sub-tab: friends | groups | pvp */
+let socialMode = "friends";
 
 let toastTimer = null;
 let recordTimer = null;
@@ -2366,7 +2372,14 @@ function parseDeepLink() {
   if (tab === "style" || tab === "settings" || params.has("settings")) {
     return { type: "tab", tab: "style" };
   }
-  if (tab === "scores" || tab === "friends" || tab === "groups" || tab === "play" || tab === "chat") {
+  if (tab === "groups") {
+    // Groups live under Social now
+    return { type: "tab", tab: "friends", social: "groups" };
+  }
+  if (tab === "pvp") {
+    return { type: "tab", tab: "friends", social: "pvp" };
+  }
+  if (tab === "scores" || tab === "friends" || tab === "play" || tab === "chat" || tab === "territories") {
     return { type: "tab", tab };
   }
   return null;
@@ -2467,7 +2480,8 @@ async function processPendingDeepLink() {
 
   if (type === "group") {
     showPendingBanner(`Joining group ${code.toUpperCase()}…`);
-    setTab("groups");
+    setSocialMode("groups");
+    setTab("friends");
     if (!online) {
       showPendingBanner("Connecting… then we’ll join the group.");
       return;
@@ -2477,15 +2491,19 @@ async function processPendingDeepLink() {
       pendingDeepLink = null;
       clearDeepLinkFromUrl();
       showPendingBanner("");
-      els.groupMsg.className = "form-msg ok";
-      els.groupMsg.textContent = `Joined ${name}!`;
+      if (els.groupMsg) {
+        els.groupMsg.className = "form-msg ok";
+        els.groupMsg.textContent = `Joined ${name}!`;
+      }
       renderGroups();
       toast(`Joined ${name}`);
       setTab("scores");
     } catch (err) {
       showPendingBanner("");
-      els.groupMsg.className = "form-msg err";
-      els.groupMsg.textContent = err.message || "Could not join group";
+      if (els.groupMsg) {
+        els.groupMsg.className = "form-msg err";
+        els.groupMsg.textContent = err.message || "Could not join group";
+      }
       toast(err.message || "Could not join group");
       if (!/online|network|fetch/i.test(err.message || "")) {
         pendingDeepLink = null;
@@ -4055,9 +4073,42 @@ async function refreshTerritoriesUi() {
   paintTerritoryMap();
 }
 
+// ——— Social hub (Friends / Groups / PvP) ———
+
+function setSocialMode(mode) {
+  const m = mode === "groups" || mode === "pvp" ? mode : "friends";
+  socialMode = m;
+  $$("[data-social-mode]").forEach((btn) => {
+    const on = btn.dataset.socialMode === m;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  if (els.socialFriendsView) els.socialFriendsView.hidden = m !== "friends";
+  if (els.socialGroupsView) els.socialGroupsView.hidden = m !== "groups";
+  if (els.socialPvpView) els.socialPvpView.hidden = m !== "pvp";
+  if (m === "friends") renderFriends();
+  if (m === "groups") renderGroups();
+  if (m === "pvp") {
+    fillPvpFriendSelect();
+    renderPvpStats();
+    renderPvpInbox();
+    renderPvpRankings();
+    if (online) refreshPvpUi().catch((e) => console.warn(e));
+  }
+}
+
 // ——— Tabs ———
 
 function setTab(tab) {
+  // Legacy: old Groups tab → Social · Groups
+  if (tab === "groups") {
+    socialMode = "groups";
+    tab = "friends";
+  }
+  if (tab === "pvp") {
+    socialMode = "pvp";
+    tab = "friends";
+  }
   els.app.dataset.tab = tab;
   $$(".tab").forEach((t) => {
     const on = t.dataset.tab === tab;
@@ -4068,13 +4119,17 @@ function setTab(tab) {
     p.hidden = p.dataset.panel !== tab;
   });
   if (tab === "friends") {
+    setSocialMode(socialMode);
     renderFriends();
+    renderGroups();
     renderPvpStats();
     renderPvpInbox();
     renderPvpRankings();
-    if (online) refreshPvpUi().catch((e) => console.warn(e));
+    if (online) {
+      refreshSocial().catch((e) => console.warn(e));
+      refreshPvpUi().catch((e) => console.warn(e));
+    }
   }
-  if (tab === "groups") renderGroups();
   if (tab === "scores") {
     renderScores();
     renderFriendsBoard();
@@ -4104,7 +4159,14 @@ function bindEvents() {
   $$(".tab").forEach((tab) => tab.addEventListener("click", () => setTab(tab.dataset.tab)));
 
   $$(".mode-btn").forEach((btn) => {
-    btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    // Play free/challenge only — social + chat use their own handlers
+    if (btn.dataset.mode) {
+      btn.addEventListener("click", () => setMode(btn.dataset.mode));
+    }
+  });
+
+  $$("[data-social-mode]").forEach((btn) => {
+    btn.addEventListener("click", () => setSocialMode(btn.dataset.socialMode));
   });
 
   // Territory map: click regions
@@ -4664,9 +4726,15 @@ async function init() {
   renderGlobalBoard();
   setMode(state.mode === "challenge" ? "challenge" : "free");
   bindEvents();
+  if (pendingDeepLink?.type === "tab" && pendingDeepLink.social) {
+    socialMode = pendingDeepLink.social;
+  }
+  if (pendingDeepLink?.type === "group") {
+    socialMode = "groups";
+  }
   const bootTab =
     pendingDeepLink?.type === "group"
-      ? "groups"
+      ? "friends"
       : pendingDeepLink?.type === "friend"
         ? "friends"
         : pendingDeepLink?.type === "tab"
