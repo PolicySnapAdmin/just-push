@@ -8,7 +8,7 @@ Push a button. Count the pushes. Beat the clock. Beat your friends.
 | **Store / landing** | https://www.pushthrugames.com/store.html |
 | **Privacy** | https://www.pushthrugames.com/privacy.html |
 | **Terms** | https://www.pushthrugames.com/terms.html |
-| **Support** | calvin.money@gmail.com |
+| **Support** | https://www.pushthrugames.com/store.html#contact |
 | **Repo path** | `just-push` (GitHub Pages URL stable) |
 
 ## Features

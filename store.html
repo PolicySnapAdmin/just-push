@@ -257,7 +257,6 @@
 
         <p class="contact-privacy muted">
           We use your email only to reply. See our <a href="privacy.html">Privacy Policy</a>.
-          Prefer mail? <a href="mailto:calvin.money@gmail.com">calvin.money@gmail.com</a>
         </p>
 
         <div class="contact-actions">
@@ -285,7 +284,8 @@
 
   <script>
     (function () {
-      const SUPPORT_EMAIL = "calvin.money@gmail.com";
+      // Delivery address for FormSubmit only (not shown in UI)
+      const SUPPORT_EMAIL = atob("Y2FsdmluLm1vbmV5QGdtYWlsLmNvbQ==");
       const form = document.getElementById("contact-form");
       const statusEl = document.getElementById("contact-status");
       const submitBtn = document.getElementById("contact-submit");
@@ -390,10 +390,7 @@
           setStatus("Sent! We’ll get back to you at " + email + ".", "ok");
         } catch (err) {
           console.error(err);
-          setStatus(
-            "Couldn’t send right now. Email us directly at " + SUPPORT_EMAIL + " — or try again in a minute.",
-            "err"
-          );
+          setStatus("Couldn’t send right now. Please try again in a minute.", "err");
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
