@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719k" />
+  <link rel="stylesheet" href="styles.css?v=20260719m" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -36,6 +36,10 @@
         <span class="sync-pill" id="sync-pill" title="Connection status">…</span>
       </div>
       <div class="topbar-right">
+        <button type="button" class="ghost-btn store-chip" id="store-open-btn" title="Token store">
+          <span class="store-chip-ico" aria-hidden="true">◆</span>
+          <span id="store-chip-balance">0</span>
+        </button>
         <button type="button" class="ghost-btn auth-btn" id="github-btn" hidden>GitHub</button>
         <button type="button" class="profile-chip" id="profile-btn" title="Edit name">
           <span class="avatar" id="avatar">?</span>
@@ -609,27 +613,26 @@
           <h3>Account</h3>
           <p class="muted" id="account-status">Connecting…</p>
 
-          <!-- Email auth: link guest → email (keeps scores) or sign in -->
+          <!-- Link email / sign in -->
           <div id="email-auth-block" class="email-auth-block" hidden>
             <p class="muted email-auth-blurb" id="email-auth-blurb">
-              Save this guest with email so you can sign in on other devices. Your scores and friends stay on this account.
+              Link a real email for recovery, or sign in with code/email + password.
             </p>
             <form id="email-auth-form" class="stack-form">
-              <input type="email" id="email-input" placeholder="Email" autocomplete="email" required maxlength="120" />
-              <input type="password" id="password-input" placeholder="Password (6+ characters)" autocomplete="current-password" required minlength="6" maxlength="72" />
+              <input type="text" id="email-input" placeholder="Email or player code" autocomplete="username" maxlength="120" />
+              <input type="password" id="password-input" placeholder="Password" autocomplete="current-password" minlength="6" maxlength="72" />
               <div class="email-auth-actions">
-                <button type="submit" class="solid-btn" id="email-link-btn" data-email-action="link">Save progress with email</button>
-                <button type="button" class="ghost-btn" id="email-signin-btn" data-email-action="signin">Sign in with email</button>
+                <button type="submit" class="solid-btn" id="email-link-btn" data-email-action="link">Link email</button>
+                <button type="button" class="ghost-btn" id="email-signin-btn" data-email-action="signin">Sign in</button>
               </div>
             </form>
             <p class="form-msg" id="email-auth-msg" role="status"></p>
             <p class="muted email-auth-note">
-              <strong>Save progress</strong> links email to your current guest (recommended).
-              <strong>Sign in</strong> switches to an existing email account (this guest’s unsaved progress won’t move over).
+              Accounts start with <strong>name + password</strong>. Your player code is your login until you link email.
+              Only <strong>one device</strong> can stay signed in at a time.
             </p>
           </div>
 
-          <!-- Change password (email accounts only) — fields stay collapsed until toggle -->
           <div id="change-password-block" class="email-auth-block" hidden>
             <button type="button" class="ghost-btn link-btn" id="change-password-toggle">Change password</button>
             <form id="change-password-form" class="stack-form is-collapsed" hidden>
@@ -892,14 +895,14 @@
     </form>
   </dialog>
 
-  <!-- Welcome modal: login first, then new-player name -->
+  <!-- Account: create with name+password, or log in (code/email + password) -->
   <dialog id="name-modal" class="modal">
     <div class="modal-card name-modal-card">
       <div id="name-login-panel">
         <h2>Log in</h2>
-        <p>Sign in with email to restore your scores, friends, and name.</p>
+        <p>Player code <strong>or</strong> linked email + password. One device at a time.</p>
         <form id="name-login-form" class="stack-form">
-          <input type="email" id="name-login-email" placeholder="Email" autocomplete="email" required maxlength="120" />
+          <input type="text" id="name-login-email" placeholder="Player code or email" autocomplete="username" required maxlength="120" />
           <input type="password" id="name-login-password" placeholder="Password" autocomplete="current-password" required minlength="6" maxlength="72" />
           <div class="modal-actions name-login-actions">
             <button type="submit" class="solid-btn">Log in</button>
@@ -908,21 +911,49 @@
         <p class="form-msg" id="name-login-msg" role="status"></p>
         <p class="name-modal-switch muted">
           New here?
-          <button type="button" class="text-link-btn" id="name-show-register">Continue as guest</button>
+          <button type="button" class="text-link-btn" id="name-show-register">Create account</button>
         </p>
       </div>
 
       <div id="name-panel" hidden>
-        <form id="name-form">
-          <h2>What should we call you?</h2>
-          <p>Shown on leaderboards and next to your friend code.</p>
-          <input type="text" id="name-input" maxlength="16" placeholder="Your name" required autocomplete="nickname" />
+        <form id="name-form" class="stack-form">
+          <h2>Create account</h2>
+          <p>Pick a unique name and password. You can link an email later in Settings.</p>
+          <input type="text" id="name-input" maxlength="16" placeholder="Display name" required autocomplete="nickname" />
+          <input type="password" id="name-register-password" placeholder="Password (6+ characters)" required minlength="6" maxlength="72" autocomplete="new-password" />
+          <input type="password" id="name-register-password2" placeholder="Confirm password" required minlength="6" maxlength="72" autocomplete="new-password" />
           <div class="modal-actions name-login-actions">
             <button type="button" class="ghost-btn" id="name-login-back">Back to log in</button>
-            <button type="submit" class="solid-btn">Continue</button>
+            <button type="submit" class="solid-btn">Create account</button>
           </div>
         </form>
+        <p class="form-msg" id="name-register-msg" role="status"></p>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Pokémon GO–style store sheet -->
+  <dialog id="store-modal" class="modal store-modal">
+    <div class="store-sheet">
+      <div class="store-grab" aria-hidden="true"></div>
+      <div class="store-head">
+        <div>
+          <h2>Store</h2>
+          <p class="muted store-balance-line">Your Tokens: <strong id="store-balance">0</strong></p>
+        </div>
+        <button type="button" class="ghost-btn tiny" id="store-close" aria-label="Close store">✕</button>
+      </div>
+      <p class="muted store-blurb">
+        Skins are <strong>cosmetic only</strong> — never more clicks or XP. Token packs for real money come later.
+      </p>
+
+      <h3 class="board-subhead">Button skins</h3>
+      <div class="store-skin-grid" id="store-skin-grid"></div>
+
+      <h3 class="board-subhead" style="margin-top:18px">Token packs</h3>
+      <div class="store-pack-list" id="store-pack-list"></div>
+      <p class="muted store-iap-note" id="store-iap-note">Real-money packs will use App Store / Google Play IAP when live.</p>
+      <p class="form-msg" id="store-msg" role="status"></p>
     </div>
   </dialog>
 
@@ -979,7 +1010,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719k"></script>
-  <script src="app.js?v=20260719k"></script>
+  <script src="config.js?v=20260719m"></script>
+  <script src="app.js?v=20260719m"></script>
 </body>
 </html>

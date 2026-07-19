@@ -99,17 +99,24 @@ function formatXp(n) {
 }
 
 const BUTTON_COLORS = [
-  { id: "rose", label: "Rose", value: "#ff4d6d" },
-  { id: "coral", label: "Coral", value: "#ff7a59" },
-  { id: "amber", label: "Amber", value: "#f5a524" },
-  { id: "lime", label: "Lime", value: "#84cc16" },
-  { id: "mint", label: "Mint", value: "#2dd4a8" },
-  { id: "sky", label: "Sky", value: "#38bdf8" },
-  { id: "blue", label: "Blue", value: "#4f7cff" },
-  { id: "violet", label: "Violet", value: "#a78bfa" },
-  { id: "pink", label: "Pink", value: "#f472b6" },
-  { id: "white", label: "White", value: "#e8e8f0" },
+  { id: "rose", label: "Rose", value: "#ff4d6d", free: true, cost: 0 },
+  { id: "coral", label: "Coral", value: "#ff7a59", free: true, cost: 0 },
+  { id: "amber", label: "Amber", value: "#f5a524", free: true, cost: 0 },
+  { id: "lime", label: "Lime", value: "#84cc16", free: false, cost: 50 },
+  { id: "mint", label: "Mint", value: "#2dd4a8", free: false, cost: 50 },
+  { id: "sky", label: "Sky", value: "#38bdf8", free: false, cost: 75 },
+  { id: "blue", label: "Blue", value: "#4f7cff", free: false, cost: 75 },
+  { id: "violet", label: "Violet", value: "#a78bfa", free: false, cost: 100 },
+  { id: "pink", label: "Pink", value: "#f472b6", free: false, cost: 100 },
+  { id: "white", label: "White", value: "#e8e8f0", free: false, cost: 125 },
+  { id: "gold", label: "Gold Rush", value: "#fbbf24", free: false, cost: 200 },
+  { id: "neon", label: "Neon Pulse", value: "#22d3ee", free: false, cost: 250 },
+  { id: "magma", label: "Magma", value: "#ef4444", free: false, cost: 250 },
+  { id: "shadow", label: "Shadow", value: "#64748b", free: false, cost: 150 },
 ];
+
+const SESSION_EPOCH_KEY = "push-thru-session-epoch";
+const ACCOUNT_OK_KEY = "push-thru-account-ready";
 
 const BACKGROUNDS = [
   { id: "midnight", label: "Midnight", value: "#0f0f14" },
@@ -382,6 +389,17 @@ const els = {
   nameLoginPassword: $("#name-login-password"),
   nameLoginBack: $("#name-login-back"),
   nameLoginMsg: $("#name-login-msg"),
+  nameRegisterPassword: $("#name-register-password"),
+  nameRegisterPassword2: $("#name-register-password2"),
+  nameRegisterMsg: $("#name-register-msg"),
+  storeOpenBtn: $("#store-open-btn"),
+  storeChipBalance: $("#store-chip-balance"),
+  storeModal: $("#store-modal"),
+  storeClose: $("#store-close"),
+  storeBalance: $("#store-balance"),
+  storeSkinGrid: $("#store-skin-grid"),
+  storePackList: $("#store-pack-list"),
+  storeMsg: $("#store-msg"),
   toast: $("#toast"),
   levelUpPopup: $("#level-up-popup"),
   levelUpCard: $("#level-up-card"),
@@ -821,17 +839,20 @@ function applyTheme() {
   document.documentElement.style.setProperty("--bg", bg.value);
   document.documentElement.style.setProperty(
     "--btn-text",
-    btn.id === "white" || btn.id === "amber" || btn.id === "lime" ? "#111118" : "#ffffff"
+    ["white", "amber", "lime", "gold", "neon"].includes(btn.id) ? "#111118" : "#ffffff"
   );
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = bg.value;
 }
 
 function renderSwatches() {
-  els.buttonSwatches.innerHTML = BUTTON_COLORS.map(
-    (c) =>
-      `<button type="button" class="swatch${c.id === state.theme.button ? " selected" : ""}" data-btn="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.button}"></button>`
-  ).join("");
+  const owned = new Set(ownedSkins.length ? ownedSkins : ["rose", "coral", "amber"]);
+  els.buttonSwatches.innerHTML = BUTTON_COLORS.filter((c) => owned.has(c.id) || c.free)
+    .map(
+      (c) =>
+        `<button type="button" class="swatch${c.id === state.theme.button ? " selected" : ""}" data-btn="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.button}"></button>`
+    )
+    .join("");
   els.bgSwatches.innerHTML = BACKGROUNDS.map(
     (c) =>
       `<button type="button" class="swatch${c.id === state.theme.background ? " selected" : ""}" data-bg="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.background}"></button>`
@@ -1332,7 +1353,8 @@ function setOnlineUi() {
   }
   if (online) {
     const code = profile?.friend_code || "…";
-    if (hasEmail) {
+    const ready = !anon && (profile?.account_ready || isAccountReady());
+    if (hasEmail && !String(user.email || "").endsWith(`@${loginEmailDomain()}`)) {
       els.syncPill.textContent = "email";
       els.syncPill.className = "sync-pill online";
       els.accountStatus.textContent = `Signed in · ${user.email} · code ${code}`;
@@ -1340,41 +1362,55 @@ function setOnlineUi() {
       els.syncPill.textContent = "github";
       els.syncPill.className = "sync-pill online";
       els.accountStatus.textContent = `Signed in with GitHub · code ${code}`;
+    } else if (ready) {
+      els.syncPill.textContent = "account";
+      els.syncPill.className = "sync-pill online";
+      els.accountStatus.textContent = `Account online · code ${code} · log in with code + password (or link email)`;
     } else {
       els.syncPill.textContent = "guest";
       els.syncPill.className = "sync-pill online";
-      els.accountStatus.textContent = emailOn
-        ? `Guest online · code ${code} · save with email below to keep this account`
-        : `Guest online · code ${code}`;
+      els.accountStatus.textContent = `Create an account (name + password) to keep progress · code ${code}`;
     }
 
     els.githubBtn.hidden = !ghOn || isGithub || hasEmail;
     els.githubBtnStyle.hidden = !ghOn || isGithub || hasEmail;
     els.githubBtnStyle.textContent = "Sign in with GitHub";
-    els.signOutBtn.hidden = false;
-    if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = false;
-    if (els.deleteAccountHint) els.deleteAccountHint.hidden = false;
-    els.friendCodeHint.textContent = "Short code works worldwide. Scores sync to Supabase.";
+    els.signOutBtn.hidden = !user;
+    if (els.deleteAccountBtn) els.deleteAccountBtn.hidden = !ready && !hasEmail;
+    if (els.deleteAccountHint) els.deleteAccountHint.hidden = !ready && !hasEmail;
+    els.friendCodeHint.textContent =
+      "Your player code + password works on web and phone (one device at a time).";
 
-    // Email form: show for guests (link) and also when we want sign-in (always if email on & not already email user)
+    // Link real email on password accounts that still use synthetic login email
     if (els.emailAuthBlock) {
-      const showEmailUi = emailOn && !hasEmail;
-      els.emailAuthBlock.hidden = !showEmailUi;
-      if (showEmailUi && els.emailAuthBlurb) {
-        els.emailAuthBlurb.textContent = anon
-          ? "Save this guest with email so you can sign in on other devices. Scores, friends, and groups stay on this same account."
-          : "Add an email and password to this account, or sign in with an existing email.";
+      const synth =
+        hasEmail && String(user.email || "").toLowerCase().endsWith(`@${loginEmailDomain()}`);
+      const showLink = emailOn && ready && (!hasEmail || synth);
+      const showSignIn = emailOn && !ready;
+      els.emailAuthBlock.hidden = !(showLink || showSignIn);
+      if (els.emailAuthBlurb) {
+        els.emailAuthBlurb.textContent = showLink
+          ? "Link a real email for recovery and easier login. Your password stays the same."
+          : "Log in with player code or email + password.";
       }
       if (els.emailLinkBtn) {
-        els.emailLinkBtn.textContent = anon ? "Save progress with email" : "Add email to this account";
+        els.emailLinkBtn.textContent = showLink ? "Link email" : "Sign in";
         els.emailLinkBtn.hidden = false;
+        els.emailLinkBtn.dataset.emailAction = showLink ? "link" : "signin";
+      }
+      if (els.emailInput) {
+        els.emailInput.placeholder = showLink ? "Email" : "Player code or email";
+        els.emailInput.type = showLink ? "email" : "text";
+      }
+      if (els.passwordInput) {
+        els.passwordInput.hidden = showLink;
+        els.passwordInput.required = !showLink;
       }
     }
     if (els.changePasswordBlock) {
-      const showPw = emailOn && hasEmail;
+      const showPw = ready || hasEmail;
       const wasHidden = els.changePasswordBlock.hidden;
       els.changePasswordBlock.hidden = !showPw;
-      // Collapse when block first appears or when leaving email session — not mid-edit
       if (!showPw || wasHidden) resetChangePasswordForm();
     }
   } else {
@@ -1444,54 +1480,89 @@ function showNameLoginPanel() {
   setTimeout(() => els.nameLoginEmail?.focus(), 50);
 }
 
+function loginEmailDomain() {
+  return String(getConfig().loginEmailDomain || "login.pushthrugames.com").replace(/^@/, "");
+}
+
+function codeToLoginEmail(code) {
+  const c = String(code || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  return `${c}@${loginEmailDomain()}`;
+}
+
+function resolveLoginIdentifier(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  if (s.includes("@")) return s.toLowerCase();
+  // player code → synthetic auth email
+  return codeToLoginEmail(s);
+}
+
+function getStoredSessionEpoch() {
+  try {
+    return Number(localStorage.getItem(SESSION_EPOCH_KEY) || 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setStoredSessionEpoch(ep) {
+  try {
+    localStorage.setItem(SESSION_EPOCH_KEY, String(ep || 0));
+  } catch {
+    /* ignore */
+  }
+}
+
+function isAccountReady() {
+  if (profile?.account_ready) return true;
+  try {
+    return localStorage.getItem(ACCOUNT_OK_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markAccountReadyLocal(ready = true) {
+  try {
+    if (ready) localStorage.setItem(ACCOUNT_OK_KEY, "1");
+    else localStorage.removeItem(ACCOUNT_OK_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function ensureName() {
-  // Already have a name (local or restored after login)
-  if (state.name) {
+  // Have a real signed-in account with a name
+  if (session?.user && !isAnonymousUser() && state.name && state.name !== "Player") {
     if (els.nameModal?.open) els.nameModal.close();
     return;
   }
-  // Prefer login first; new players use “Continue as guest”
-  if (featureEmailEnabled()) showNameLoginPanel();
-  else showNamePanel();
+  if (session?.user && profile?.account_ready && state.name) {
+    if (els.nameModal?.open) els.nameModal.close();
+    return;
+  }
+  // Need create / login
+  showNameLoginPanel();
   if (els.nameInput) els.nameInput.value = "";
   if (!els.nameModal?.open) els.nameModal?.showModal();
 }
 
-/**
- * Log in from the first-run name modal (does not require picking a guest name first).
- */
+function setNameRegisterMsg(text, kind = "") {
+  if (!els.nameRegisterMsg) return;
+  els.nameRegisterMsg.textContent = text || "";
+  els.nameRegisterMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+/** @deprecated use loginWithCodeOrEmail */
 async function loginFromNameModal() {
-  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
-  if (!sb) {
-    await initBackend();
-    if (!sb) throw new Error("Still connecting — try again in a moment");
-  }
-  const email = String(els.nameLoginEmail?.value || "")
-    .trim()
-    .toLowerCase();
+  const id = String(els.nameLoginEmail?.value || "").trim();
   const password = String(els.nameLoginPassword?.value || "");
-  if (!email || !email.includes("@")) throw new Error("Enter a valid email");
-  if (password.length < 6) throw new Error("Password must be at least 6 characters");
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  session = data.session;
-  online = true;
-  await ensureProfile();
-  setOnlineUi();
-  await refreshSocial().catch(() => {});
-  await loadGlobalBoard().catch(() => {});
-
+  await loginWithCodeOrEmail(id, password);
   if (els.nameLoginPassword) els.nameLoginPassword.value = "";
   if (els.nameModal?.open) els.nameModal.close();
-  // If profile has no display name, ask once after login
-  if (!state.name) {
-    showNamePanel();
-    els.nameModal?.showModal();
-    toast("Signed in — pick a display name");
-    return;
-  }
-  toast("Welcome back");
 }
 
 /** Phrase user must type to enable permanent delete. */
@@ -2172,6 +2243,74 @@ function getConfig() {
   return window.JUST_PUSH_CONFIG || { enabled: false };
 }
 
+async function afterAuthReady() {
+  await ensureProfile();
+  online = true;
+  setOnlineUi();
+  await validateSessionEpoch();
+  await refreshSocial().catch(() => {});
+  await loadGlobalBoard().catch(() => {});
+  await loadBoardPosts().catch(() => {});
+  await refreshTerritoriesUi().catch(() => {});
+  await refreshPvpUi().catch(() => {});
+  await loadWallet()
+    .then(() => claimLevelRewards())
+    .catch(() => {});
+  await loadCosmetics().catch(() => {});
+  await processPendingDeepLink().catch(() => {});
+  renderWallet();
+  if (state.name && state.name !== "Player") {
+    if (els.nameModal?.open) els.nameModal.close();
+  } else {
+    ensureName();
+  }
+}
+
+async function beginSessionEpoch() {
+  if (!sb || !session?.user) return 0;
+  const { data, error } = await sb.rpc("jp_session_begin");
+  if (error) {
+    console.warn("jp_session_begin", error);
+    return getStoredSessionEpoch();
+  }
+  const ep = Number(data?.session_epoch) || 0;
+  setStoredSessionEpoch(ep);
+  return ep;
+}
+
+async function validateSessionEpoch() {
+  if (!sb || !session?.user) return true;
+  const local = getStoredSessionEpoch();
+  if (!local) {
+    // First load after login on this device — claim session
+    await beginSessionEpoch();
+    return true;
+  }
+  const { data, error } = await sb.rpc("jp_session_ping", { p_epoch: local });
+  if (error) {
+    console.warn("jp_session_ping", error);
+    return true;
+  }
+  if (data?.ok) return true;
+  // Another device logged in
+  toast("Signed out — account opened on another device");
+  await sb.auth.signOut();
+  session = null;
+  profile = null;
+  online = false;
+  setOnlineUi();
+  ensureName();
+  return false;
+}
+
+let sessionPingTimer = null;
+function startSessionWatch() {
+  clearInterval(sessionPingTimer);
+  sessionPingTimer = setInterval(() => {
+    if (online && session?.user) validateSessionEpoch().catch(() => {});
+  }, 20000);
+}
+
 async function initBackend() {
   const cfg = getConfig();
   if (!cfg.enabled || !cfg.supabaseUrl || !cfg.supabaseAnonKey) {
@@ -2197,27 +2336,25 @@ async function initBackend() {
   try {
     const { data } = await sb.auth.getSession();
     session = data.session;
-    if (!session) {
-      const { data: anon, error } = await sb.auth.signInAnonymously();
-      if (error) throw error;
-      session = anon.session;
+    if (session && !isAnonymousUser(session.user)) {
+      await afterAuthReady();
+      startSessionWatch();
+    } else if (session && isAnonymousUser(session.user)) {
+      // Legacy guest — ask to create real account (keep session for optional migrate)
+      await ensureProfile().catch(() => {});
+      online = true;
+      setOnlineUi();
+      ensureName();
+    } else {
+      online = false;
+      setOnlineUi();
+      ensureName();
     }
-    await ensureProfile();
-    online = true;
-    setOnlineUi();
-    await refreshSocial();
-    await loadGlobalBoard();
-    await loadBoardPosts();
-    await refreshTerritoriesUi().catch(() => {});
-    await refreshPvpUi().catch(() => {});
-    await loadWallet()
-      .then(() => claimLevelRewards())
-      .catch(() => {});
-    await processPendingDeepLink();
   } catch (err) {
     console.warn("Push Thru online init failed:", err);
     online = false;
     setOnlineUi();
+    ensureName();
   }
 
   sb.auth.onAuthStateChange(async (event, s) => {
@@ -2228,35 +2365,98 @@ async function initBackend() {
       friendsCache = [];
       groupsCache = [];
       setOnlineUi();
-      // re-anon
-      try {
-        const { data: anon, error } = await sb.auth.signInAnonymously();
-        if (!error) {
-          session = anon.session;
-          await ensureProfile();
-          online = true;
-          setOnlineUi();
-          await refreshSocial();
-        }
-      } catch {
-        /* stay offline */
-      }
+      ensureName();
       return;
     }
-    if (s) {
+    if (s && !isAnonymousUser(s.user)) {
       try {
-        await ensureProfile();
-        online = true;
-        setOnlineUi();
-        await refreshSocial();
-        await loadGlobalBoard();
-        await refreshTerritoriesUi().catch(() => {});
-        await processPendingDeepLink();
+        // Epoch is set only in login/createAccount — not on token refresh SIGNED_IN
+        await afterAuthReady();
+        startSessionWatch();
       } catch (e) {
         console.warn(e);
       }
     }
   });
+}
+
+/** Create password account: name + password → code@login domain auth. */
+async function createAccountWithPassword(name, password) {
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Not connected");
+  }
+  const display = String(name || "").trim().slice(0, 16);
+  if (!display || display.toLowerCase() === "player") {
+    throw new Error("Pick a unique display name (not “Player”)");
+  }
+  if (password.length < 6) throw new Error("Password must be at least 6 characters");
+
+  let lastErr = null;
+  for (let i = 0; i < 6; i++) {
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const email = codeToLoginEmail(code);
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: display, friend_code: code },
+      },
+    });
+    if (error) {
+      lastErr = error;
+      if (/rate|limit/i.test(error.message || "")) throw error;
+      continue;
+    }
+    // Ensure session (confirm-email off → session present; else sign in)
+    if (data.session) {
+      session = data.session;
+    } else {
+      const signed = await sb.auth.signInWithPassword({ email, password });
+      if (signed.error) throw signed.error;
+      session = signed.data.session;
+    }
+    await ensureProfile();
+    online = true;
+    const bound = await sb.rpc("jp_bind_login_code", { p_code: code });
+    if (bound.error) throw bound.error;
+    await setDisplayNameOnline(display);
+    await sb.rpc("jp_mark_account_ready");
+    markAccountReadyLocal(true);
+    await beginSessionEpoch();
+    online = true;
+    setOnlineUi();
+    await afterAuthReady();
+    startSessionWatch();
+    toast(`Account ready · code ${bound.data?.friend_code || code}`);
+    return { code: bound.data?.friend_code || code, email };
+  }
+  throw lastErr || new Error("Could not create account — try again");
+}
+
+/** Log in with player code OR email + password. */
+async function loginWithCodeOrEmail(identifier, password) {
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Not connected");
+  }
+  const email = resolveLoginIdentifier(identifier);
+  if (!email) throw new Error("Enter your player code or email");
+  if (password.length < 6) throw new Error("Enter your password");
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    if (/invalid/i.test(error.message || "")) {
+      throw new Error("Wrong code/email or password");
+    }
+    throw error;
+  }
+  session = data.session;
+  markAccountReadyLocal(true);
+  await beginSessionEpoch();
+  await afterAuthReady();
+  startSessionWatch();
+  toast("Signed in");
 }
 
 async function ensureProfile() {
@@ -2551,33 +2751,35 @@ async function signInWithGithub() {
 }
 
 function readEmailPassword() {
-  const email = String(els.emailInput?.value || "")
-    .trim()
-    .toLowerCase();
+  const email = String(els.emailInput?.value || "").trim();
   const password = String(els.passwordInput?.value || "");
-  if (!email || !email.includes("@")) throw new Error("Enter a valid email");
+  if (!email) throw new Error("Enter player code or email");
   if (password.length < 6) throw new Error("Password must be at least 6 characters");
   return { email, password };
 }
 
 /**
- * Link email+password to the CURRENT session (guest → permanent).
- * Same user id → scores / friends / groups stay.
+ * Link a real email for recovery / email login (password stays the same).
  */
 async function linkEmailToCurrentAccount() {
-  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
+  if (!featureEmailEnabled()) throw new Error("Email is disabled in config");
   if (!sb) {
     await initBackend();
     if (!sb) throw new Error("Not connected");
   }
-  if (!session?.user) throw new Error("No session — go online first");
-  if (isEmailUser()) throw new Error("This account already has an email");
+  if (!session?.user) throw new Error("Sign in first");
+  if (isAnonymousUser()) throw new Error("Create a password account first");
 
-  const { email, password } = readEmailPassword();
-  // Flush name/theme before converting
+  const email = String(els.emailInput?.value || "")
+    .trim()
+    .toLowerCase();
+  if (!email || !email.includes("@")) throw new Error("Enter a valid email");
+  if (email.endsWith(`@${loginEmailDomain()}`)) {
+    throw new Error("Use a real inbox email, not a player-code address");
+  }
+
   await pushProfileMeta().catch(() => {});
-
-  const { data, error } = await sb.auth.updateUser({ email, password });
+  const { data, error } = await sb.auth.updateUser({ email });
   if (error) throw error;
 
   const { data: sessData } = await sb.auth.getSession();
@@ -2586,8 +2788,6 @@ async function linkEmailToCurrentAccount() {
   online = true;
   setOnlineUi();
 
-  const confirmed = !!(data?.user?.email && !data.user.email_confirmed_at === false);
-  // If project requires email confirm, identities may still be pending
   const needsConfirm =
     data?.user &&
     data.user.email &&
@@ -2595,53 +2795,30 @@ async function linkEmailToCurrentAccount() {
     data.user.confirmation_sent_at;
 
   if (needsConfirm) {
-    setEmailAuthMsg(
-      `Check ${email} to confirm. After that, sign in with this email on any device — same scores & friends.`,
-      "ok"
-    );
+    setEmailAuthMsg(`Check ${email} to confirm, then log in with email + password.`, "ok");
     toast("Confirmation email sent");
   } else {
-    setEmailAuthMsg(`Saved! Signed in as ${email}. Use this on other devices.`, "ok");
-    toast("Account saved with email");
+    setEmailAuthMsg(`Email linked: ${email}. You can log in with email + password.`, "ok");
+    toast("Email linked");
   }
-  if (els.passwordInput) els.passwordInput.value = "";
+  if (els.emailInput) els.emailInput.value = "";
 }
 
-/**
- * Sign in with an existing email account (replaces current guest session).
- */
 async function signInWithEmailPassword() {
-  if (!featureEmailEnabled()) throw new Error("Email sign-in is disabled");
   if (!sb) {
     await initBackend();
     if (!sb) throw new Error("Not connected");
   }
-  const { email, password } = readEmailPassword();
-
-  if (isAnonymousUser() && online) {
-    const ok = window.confirm(
-      "Sign in with email will switch accounts.\n\nYour current guest progress will NOT move to the email account (use “Save progress with email” for that).\n\nContinue signing in?"
-    );
-    if (!ok) return;
-  }
-
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  session = data.session;
-  await ensureProfile();
-  online = true;
-  setOnlineUi();
-  setEmailAuthMsg(`Signed in as ${email}`, "ok");
-  toast("Signed in");
+  const id = String(els.emailInput?.value || "").trim();
+  const password = String(els.passwordInput?.value || "");
+  await loginWithCodeOrEmail(id, password);
+  setEmailAuthMsg("Signed in", "ok");
   if (els.passwordInput) els.passwordInput.value = "";
-  await refreshSocial();
-  await loadGlobalBoard();
 }
 
 async function changePassword() {
-  if (!featureEmailEnabled()) throw new Error("Email accounts are disabled");
   if (!sb || !session?.user) throw new Error("Not signed in");
-  if (!isEmailUser()) throw new Error("Change password is only for email accounts");
+  if (isAnonymousUser()) throw new Error("Create an account first");
 
   const next = String(els.newPasswordInput?.value || "");
   const confirm = String(els.confirmPasswordInput?.value || "");
@@ -2659,22 +2836,14 @@ async function changePassword() {
 async function signOut() {
   if (!sb) return;
   await sb.auth.signOut();
-  // New guest so play keeps working online
-  try {
-    const { data: anon, error } = await sb.auth.signInAnonymously();
-    if (!error) {
-      session = anon.session;
-      await ensureProfile();
-      online = true;
-      setOnlineUi();
-      toast("Signed out — back to guest");
-      return;
-    }
-  } catch {
-    /* fall through */
-  }
-  toast("Signed out");
+  session = null;
+  profile = null;
+  online = false;
+  setStoredSessionEpoch(0);
+  markAccountReadyLocal(false);
   setOnlineUi();
+  ensureName();
+  toast("Signed out");
 }
 
 // ——— Share links (phone-friendly) ———
@@ -3425,6 +3594,8 @@ function setTokenMsg(text, kind = "") {
 
 function renderWallet() {
   if (els.tokenBalance) els.tokenBalance.textContent = formatNum(wallet.balance || 0);
+  if (els.storeChipBalance) els.storeChipBalance.textContent = formatNum(wallet.balance || 0);
+  if (els.storeBalance) els.storeBalance.textContent = formatNum(wallet.balance || 0);
   if (els.tokenSub) {
     els.tokenSub.textContent = wallet.daily_claimed
       ? `Daily claimed · ${formatNum(wallet.lifetime_earned || 0)} earned all-time`
@@ -3442,6 +3613,147 @@ function renderWallet() {
     els.tokenLevelBtn.textContent =
       pending > 0 ? `Claim ${pending} level reward${pending === 1 ? "" : "s"}` : "Claim levels";
   }
+}
+
+// ——— Store (cosmetic skins + future IAP token packs) ———
+let storeCatalog = null;
+let ownedSkins = ["rose"];
+
+async function loadCosmetics() {
+  if (!sb || !session?.user || !online) return;
+  const { data, error } = await sb.rpc("jp_my_cosmetics");
+  if (error) {
+    console.warn("jp_my_cosmetics", error);
+    return;
+  }
+  if (Array.isArray(data?.owned_skins)) {
+    ownedSkins = data.owned_skins.map(String);
+  }
+  if (data?.equipped) {
+    state.theme.button = data.equipped;
+    saveState();
+    applyTheme();
+  }
+  if (data?.account_ready) markAccountReadyLocal(true);
+  renderSwatches();
+}
+
+async function loadStoreCatalog() {
+  if (!sb || !online) {
+    storeCatalog = {
+      skins: BUTTON_COLORS.map((c) => ({
+        id: c.id,
+        label: c.label,
+        value: c.value,
+        cost: c.cost || 0,
+        free: !!c.free,
+      })),
+      token_packs: [],
+      note: "Go online to buy skins.",
+    };
+    return storeCatalog;
+  }
+  const { data, error } = await sb.rpc("jp_store_catalog");
+  if (error) throw error;
+  storeCatalog = data;
+  return data;
+}
+
+function setStoreMsg(text, kind = "") {
+  if (!els.storeMsg) return;
+  els.storeMsg.textContent = text || "";
+  els.storeMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function renderStore() {
+  renderWallet();
+  const skins = storeCatalog?.skins || BUTTON_COLORS;
+  if (els.storeSkinGrid) {
+    els.storeSkinGrid.innerHTML = skins
+      .map((s) => {
+        const id = s.id;
+        const owned = ownedSkins.includes(id) || s.free;
+        const eq = state.theme.button === id;
+        const cost = Number(s.cost) || 0;
+        const label = owned ? (eq ? "Equipped" : "Equip") : cost ? `◆ ${cost}` : "Free";
+        return `
+        <button type="button" class="store-skin${eq ? " is-equipped" : ""}${owned ? " is-owned" : ""}" data-store-skin="${id}" style="--skin:${s.value || "#ff4d6d"}">
+          <span class="store-skin-swatch"></span>
+          <span class="store-skin-name">${escapeHtml(s.label || id)}</span>
+          <span class="store-skin-action">${label}</span>
+        </button>`;
+      })
+      .join("");
+  }
+  const packs = storeCatalog?.token_packs || [];
+  if (els.storePackList) {
+    if (!packs.length) {
+      els.storePackList.innerHTML = `<p class="muted">Token packs coming soon.</p>`;
+    } else {
+      els.storePackList.innerHTML = packs
+        .map((p) => {
+          const on = p.enabled === true;
+          return `
+          <div class="store-pack">
+            <div>
+              <strong>${escapeHtml(p.label || p.id)}</strong>
+              <div class="muted">◆ ${formatNum(p.tokens || 0)} Tokens</div>
+            </div>
+            <button type="button" class="solid-btn tiny-pad" data-store-pack="${p.id}" ${on ? "" : "disabled"}>
+              ${on ? escapeHtml(p.price_label || "Buy") : "Soon"}
+            </button>
+          </div>`;
+        })
+        .join("");
+    }
+  }
+}
+
+async function openStore() {
+  if (!session?.user || isAnonymousUser()) {
+    toast("Create or log in to open the store");
+    ensureName();
+    return;
+  }
+  setStoreMsg("");
+  try {
+    await loadWallet();
+    await loadCosmetics();
+    await loadStoreCatalog();
+  } catch (e) {
+    console.warn(e);
+  }
+  renderStore();
+  els.storeModal?.showModal();
+}
+
+function closeStore() {
+  els.storeModal?.close();
+}
+
+async function buyOrEquipSkin(skinId) {
+  if (!sb || !online) throw new Error("Go online");
+  const { data, error } = await sb.rpc("jp_store_buy_skin", { p_skin_id: skinId });
+  if (error) throw new Error(error.message || "Store error");
+  if (Array.isArray(data?.owned_skins)) ownedSkins = data.owned_skins.map(String);
+  else if (!ownedSkins.includes(skinId)) ownedSkins.push(skinId);
+  if (data?.equipped) {
+    state.theme.button = data.equipped;
+    saveState();
+    applyTheme();
+  }
+  if (typeof data?.balance === "number") {
+    wallet.balance = data.balance;
+  } else {
+    await loadWallet();
+  }
+  renderStore();
+  renderSwatches();
+  setStoreMsg(
+    data?.spent > 0 ? `Unlocked ${skinId} for ◆${data.spent}` : `Equipped ${skinId}`,
+    "ok"
+  );
+  toast(data?.spent > 0 ? `Skin unlocked (−◆${data.spent})` : "Skin equipped");
 }
 
 async function loadWallet() {
@@ -5197,27 +5509,26 @@ function bindEvents() {
 
   els.nameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    setNameRegisterMsg("");
     const name = els.nameInput.value.trim().slice(0, 16);
+    const pw = String(els.nameRegisterPassword?.value || "");
+    const pw2 = String(els.nameRegisterPassword2?.value || "");
     if (!name) return;
+    if (pw.length < 6) {
+      setNameRegisterMsg("Password must be at least 6 characters", "err");
+      return;
+    }
+    if (pw !== pw2) {
+      setNameRegisterMsg("Passwords do not match", "err");
+      return;
+    }
     try {
-      if (online && sb && session?.user) {
-        const res = await setDisplayNameOnline(name);
-        els.nameModal.close();
-        const left = res?.changes_limit != null && res?.changes_today != null
-          ? ` (${Math.max(0, res.changes_limit - res.changes_today)} renames left today)`
-          : "";
-        toast(`Hey, ${state.name}!${left}`);
-      } else {
-        // Offline: local only until online claim
-        state.name = name;
-        saveState();
-        renderProfile();
-        scheduleMetaSync();
-        els.nameModal.close();
-        toast(`Hey, ${name}! (will claim online)`);
-      }
+      await createAccountWithPassword(name, pw);
+      els.nameModal?.close();
+      toast(`Welcome, ${state.name}! Save your player code.`);
     } catch (err) {
-      toast(err.message || "Could not set name");
+      setNameRegisterMsg(err.message || "Could not create account", "err");
+      toast(err.message || "Sign-up failed");
     }
   });
 
@@ -5227,10 +5538,30 @@ function bindEvents() {
     e.preventDefault();
     setNameLoginMsg("");
     try {
-      await loginFromNameModal();
+      const id = String(els.nameLoginEmail?.value || "").trim();
+      const pw = String(els.nameLoginPassword?.value || "");
+      await loginWithCodeOrEmail(id, pw);
+      els.nameModal?.close();
     } catch (err) {
       setNameLoginMsg(err.message || "Could not log in", "err");
       toast(err.message || "Login failed");
+    }
+  });
+
+  els.storeOpenBtn?.addEventListener("click", () => openStore());
+  els.storeClose?.addEventListener("click", () => closeStore());
+  els.storeModal?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeStore();
+  });
+  els.storeSkinGrid?.addEventListener("click", async (e) => {
+    const btn = e.target?.closest?.("[data-store-skin]");
+    if (!btn) return;
+    try {
+      await buyOrEquipSkin(btn.getAttribute("data-store-skin"));
+    } catch (err) {
+      setStoreMsg(err.message || "Could not buy skin", "err");
+      toast(err.message || "Store error");
     }
   });
 
@@ -5593,10 +5924,12 @@ function bindEvents() {
     e.preventDefault();
     setEmailAuthMsg("");
     try {
-      await linkEmailToCurrentAccount();
+      const action = els.emailLinkBtn?.dataset?.emailAction || "link";
+      if (action === "signin") await signInWithEmailPassword();
+      else await linkEmailToCurrentAccount();
     } catch (err) {
-      setEmailAuthMsg(err.message || "Could not save email account", "err");
-      toast(err.message || "Email save failed");
+      setEmailAuthMsg(err.message || "Could not update account", "err");
+      toast(err.message || "Account error");
     }
   });
   els.emailSigninBtn?.addEventListener("click", async () => {

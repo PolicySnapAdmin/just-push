@@ -3093,3 +3093,154 @@ body.focus-lock-open {
     grid-column: 1 / -1;
   }
 }
+
+/* Store chip in topbar */
+.store-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px !important;
+  font-weight: 700;
+  border-color: color-mix(in srgb, #fbbf24 40%, var(--border)) !important;
+  color: #fbbf24 !important;
+}
+
+.store-chip-ico {
+  font-size: 0.75rem;
+}
+
+/* Pokémon GO–style store sheet */
+.store-modal {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  align-items: end;
+}
+
+.store-modal::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.store-sheet {
+  width: min(480px, 100%);
+  margin: 0 auto;
+  max-height: min(88dvh, 720px);
+  overflow: auto;
+  padding: 10px 16px calc(20px + var(--safe-bottom, 0px));
+  border-radius: 20px 20px 0 0;
+  background: var(--bg-card, #16161e);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  overscroll-behavior: contain;
+  animation: store-up 0.28s ease;
+}
+
+@keyframes store-up {
+  from { transform: translateY(40%); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.store-grab {
+  width: 42px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  margin: 4px auto 12px;
+}
+
+.store-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.store-head h2 {
+  margin: 0;
+}
+
+.store-balance-line {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+.store-blurb {
+  margin: 10px 0 14px;
+  font-size: 0.8rem;
+}
+
+.store-skin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.store-skin {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.store-skin.is-equipped {
+  border-color: color-mix(in srgb, var(--btn) 55%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--btn) 30%, transparent);
+}
+
+.store-skin-swatch {
+  width: 100%;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--skin, #ff4d6d);
+}
+
+.store-skin-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.store-skin-action {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.store-skin.is-owned .store-skin-action {
+  color: #86efac;
+}
+
+.store-pack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.store-pack {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.store-iap-note {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+}

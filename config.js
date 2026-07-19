@@ -51,4 +51,12 @@ window.JUST_PUSH_CONFIG = {
   /** Legal pages (relative to the app root) */
   privacyUrl: "privacy.html",
   termsUrl: "terms.html",
+
+  /**
+   * Synthetic login emails for code+password accounts:
+   *   {FRIEND_CODE}@login.pushthrugames.com
+   * After linking a real email, sign in with that email + password instead.
+   * Enable Email provider in Supabase (see docs/AUTH_EMAIL.md).
+   */
+  loginEmailDomain: "login.pushthrugames.com",
 };
