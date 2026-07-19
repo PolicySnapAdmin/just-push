@@ -44,8 +44,11 @@ just-push/
 ├── package.json        # Capacitor tooling
 ├── capacitor.config.json
 ├── scripts/
-│   ├── build-www.mjs       # Web assets → www/ for iOS
-│   └── deploy_backend.ps1  # Apply all SQL migrations
+│   ├── build-www.mjs                 # Web assets → www/ for iOS
+│   ├── deploy_backend.ps1            # Apply all SQL migrations
+│   └── set_github_hygiene_secrets.ps1  # Wire Actions secrets for daily cleanup
+├── .github/workflows/
+│   └── hygiene-cleanup.yml           # Daily jp_run_hygiene (needs secrets)
 ├── supabase/migrations/    # jp_* schema (ordered)
 ├── ios/                    # Capacitor Xcode project
 └── docs/                   # Architecture, security, App Store

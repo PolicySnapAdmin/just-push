@@ -82,17 +82,54 @@ You do **not** need to push for each cleanup once this is live.
 |-----------|----------------|
 | **`jp_run_hygiene()`** | DB function: deletes empty guest `Player`s (0 scores, &gt;30 min old) and anonymous **name+score clones** (Billy/Cleetis pattern) |
 | **pg_cron** (if enabled on project) | Runs `jp_run_hygiene` hourly at :15 |
-| **GitHub Action** `.github/workflows/hygiene-cleanup.yml` | Daily backup; needs repo secrets `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` |
-| **Manual** | `select public.jp_run_hygiene();` in SQL Editor, or `.\scripts\cleanup_empty_guests.ps1` |
+| **GitHub Action** `.github/workflows/hygiene-cleanup.yml` | Daily backup at 08:15 UTC + manual dispatch |
+| **Manual** | `select public.jp_run_hygiene();` in SQL Editor, or admin Dev tools → Cleanup |
 
 Safe rules: never deletes email users; never deletes anyone with real progress unless they are a clear anon clone of an older same-name same-score profile.
 
-### Enable GitHub Action secrets (optional)
+### Wire GitHub Action secrets (one-time)
 
-Repo → **Settings → Secrets and variables → Actions**:
+Needs **`SUPABASE_URL`** + **`SUPABASE_SERVICE_ROLE_KEY`** on the repo. Prefer the script (pulls the key via Supabase CLI; never commits it):
 
-- `SUPABASE_URL` = `https://jpnaotxkcpnwgqkzxdue.supabase.co`
-- `SUPABASE_SERVICE_ROLE_KEY` = service_role key (Dashboard → Settings → API) — **never** put this in client code
+```powershell
+cd C:\Users\conor\just-push
+# Requires: gh auth login  +  supabase login
+.\scripts\set_github_hygiene_secrets.ps1 -TriggerRun
+```
+
+What the script does:
+
+1. Reads `service_role` from `supabase projects api-keys`
+2. Sets repo secrets via `gh secret set` (values never written to disk in the repo)
+3. Optionally dispatches `hygiene-cleanup.yml` so you can confirm green
+
+Manual UI alternative — Repo → **Settings → Secrets and variables → Actions**:
+
+| Secret | Value |
+|--------|--------|
+| `SUPABASE_URL` | `https://jpnaotxkcpnwgqkzxdue.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Dashboard → **Settings → API → service_role** (**never** put this in client code or git) |
+
+### Verify the Action is alive
+
+```powershell
+gh workflow run hygiene-cleanup.yml
+gh run list --workflow=hygiene-cleanup.yml --limit 5
+gh run view --log   # after it finishes: look for JSON counts from jp_run_hygiene
+```
+
+Expected log snippet: HTTP 200 + JSON like  
+`{"empty_guests_deleted":N,"anon_clones_deleted":N,...,"ran_at":"..."}`.
+
+If secrets are missing the job **warns and skips** (exit 0) so Pages deploys stay green; once secrets exist, HTTP non-2xx **fails** the run so you notice.
+
+### Low-touch ops (what you still do by hand)
+
+| Cadence | Check |
+|---------|--------|
+| **Never, if Action green** | Guest / clone cleanup — automated daily |
+| **Monthly (~5 min)** | [GitHub Actions](https://github.com/PolicySnapAdmin/just-push/actions) last hygiene run green; Supabase free-tier disk/auth usage |
+| **As needed** | Admin Dev tools for password resets / one-off name dupes; rotate `service_role` → re-run `set_github_hygiene_secrets.ps1` |
 
 ## Optional later
 

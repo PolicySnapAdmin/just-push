@@ -1,9 +1,9 @@
-# Optional backup scheduler if pg_cron is unavailable.
-# Requires repo secrets:
+# Daily (and on-demand) Push Thru guest/clone hygiene.
+# Requires repo secrets (set once via scripts/set_github_hygiene_secrets.ps1):
 #   SUPABASE_URL
 #   SUPABASE_SERVICE_ROLE_KEY
 #
-# Does NOT run until those secrets are set (job will fail closed otherwise).
+# Never put service_role in client code or commit it.
 
 name: Push Thru hygiene cleanup
 
@@ -16,18 +16,45 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Run jp_run_hygiene via PostgREST
+      - name: Check secrets configured
+        id: check
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "Secrets not configured — skip. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in repo secrets."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secrets not configured. Run scripts/set_github_hygiene_secrets.ps1 (or set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY in repo Actions secrets)."
             exit 0
           fi
-          curl -sS -X POST "${SUPABASE_URL}/rest/v1/rpc/jp_run_hygiene" \
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run jp_run_hygiene via PostgREST
+        if: steps.check.outputs.configured == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          URL="${SUPABASE_URL%/}/rest/v1/rpc/jp_run_hygiene"
+          echo "POST $URL"
+          HTTP_CODE=$(curl -sS -o /tmp/hygiene-result.json -w "%{http_code}" \
+            -X POST "$URL" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{}'
+            -H "Prefer: return=representation" \
+            -d '{}')
+          echo "HTTP $HTTP_CODE"
+          if [ -f /tmp/hygiene-result.json ]; then
+            echo "Result:"
+            cat /tmp/hygiene-result.json
+            echo
+          fi
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::jp_run_hygiene failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "Hygiene completed successfully."
