@@ -17,14 +17,80 @@ Open: [Authentication](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxd
 - For launch smoke tests you can leave **“Confirm email” OFF** so link-email works immediately.  
 - For production, turn **Confirm email ON** so linked addresses are verified.
 
-### 2. URL configuration
-**Auth → URL configuration**
-- **Site URL:** `https://www.pushthrugames.com/`
-- **Redirect URLs** (add all you use):
-  - `https://www.pushthrugames.com/**`
-  - `https://www.pushthrugames.com/?tab=style`
-  - `http://localhost:5500/**` (local dev if needed)
-  - Capacitor / custom scheme later if you ship native
+### 2. URL configuration (Site URL + Redirects)
+
+Open: **[Authentication → URL configuration](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue/auth/url-configuration)**  
+(Older UI: **Authentication → Settings → URL configuration**)
+
+#### Site URL (primary app)
+Paste **exactly** (with trailing slash):
+
+```
+https://www.pushthrugames.com/
+```
+
+This is where Supabase sends users by default after email confirm / password reset if no other redirect is specified.
+
+#### Redirect URLs (allow-list — add each line)
+
+Supabase only allows redirects that match this list. Add **all** of these (one per line in the dashboard). Wildcards use `**` for path suffixes.
+
+**Production (required)**
+
+```
+https://www.pushthrugames.com/**
+https://www.pushthrugames.com/
+https://www.pushthrugames.com/?tab=style
+https://www.pushthrugames.com/?tab=friends
+https://www.pushthrugames.com/store.html
+https://www.pushthrugames.com/privacy.html
+https://www.pushthrugames.com/terms.html
+```
+
+**Apex domain (if you ever open bare domain without www)**
+
+```
+https://pushthrugames.com/**
+https://pushthrugames.com/
+```
+
+**Legacy GitHub Pages host (optional, if anyone still uses the .github.io URL)**
+
+```
+https://policysnapadmin.github.io/**
+https://policysnapadmin.github.io/just-push/**
+https://policysnapadmin.github.io/just-push/
+```
+
+**Local development (optional)**
+
+```
+http://localhost:5500/**
+http://localhost:5500/
+http://127.0.0.1:5500/**
+http://127.0.0.1:3000/**
+http://localhost:3000/**
+```
+
+**Capacitor / iOS later (when you ship native)**
+
+```
+capacitor://localhost/**
+ionic://localhost/**
+com.calvinmoney.pushthru://**
+```
+
+#### What the app actually uses today
+| Flow | Redirect target in code |
+|------|-------------------------|
+| Password reset (admin / user) | `https://www.pushthrugames.com/?tab=style` |
+| GitHub OAuth (if re-enabled) | Current page origin + path (`redirectTo` in config) |
+| Email confirm / change email | Usually Site URL, or the link’s `redirect_to` if set |
+
+#### Checklist after saving
+1. Click **Save** on the URL configuration page.  
+2. Test **password reset** from Settings (or Admin tools) → open the email → link should land on the game, not an error page.  
+3. If you see `redirect_uri_mismatch` / “redirect not allowed”, the exact URL in the email is missing from the list — copy it from the failed link and add it.
 
 ### 3. Email templates (notifications)
 **Auth → Email templates**
