@@ -2065,40 +2065,10 @@ textarea#dm-input:focus {
   }
 }
 
-/* Admin / dev tools */
-#admin-card {
-  border-color: color-mix(in srgb, #f5a524 35%, var(--border));
-}
-
-.admin-out {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  max-height: 220px;
-  overflow: auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.35);
-  color: #c8e6c9;
-  font-size: 0.72rem;
-  line-height: 1.35;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-#admin-reset-email {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
-  color: var(--text);
-  font: inherit;
-}
-
-/* Admin / dev tools card */
+/* Admin / support tools (Settings) */
 #admin-card {
   border-color: color-mix(in srgb, #f5a524 45%, var(--border));
-  background: linear-gradient(165deg, color-mix(in srgb, #f5a524 8%, transparent), var(--bg-card));
+  background: linear-gradient(165deg, color-mix(in srgb, #f5a524 10%, transparent), var(--bg-card));
 }
 
 .admin-card-head {
@@ -2136,9 +2106,9 @@ textarea#dm-input:focus {
 
 .admin-action {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   text-align: left;
   padding: 12px 14px;
@@ -2148,21 +2118,50 @@ textarea#dm-input:focus {
   color: var(--text);
   font: inherit;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
-.admin-action:hover {
+.admin-action:hover:not(:disabled) {
   border-color: color-mix(in srgb, #f5a524 40%, var(--border));
-  background: color-mix(in srgb, #f5a524 8%, transparent);
+  background: color-mix(in srgb, #f5a524 10%, transparent);
+}
+
+.admin-action:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.admin-action:disabled {
+  opacity: 0.55;
+  cursor: wait;
 }
 
 .admin-action-warn {
-  border-color: color-mix(in srgb, #ff4d6d 30%, var(--border));
+  border-color: color-mix(in srgb, #ff4d6d 35%, var(--border));
 }
 
-.admin-action-warn:hover {
-  border-color: color-mix(in srgb, #ff4d6d 50%, var(--border));
-  background: color-mix(in srgb, #ff4d6d 8%, transparent);
+.admin-action-warn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #ff4d6d 55%, var(--border));
+  background: color-mix(in srgb, #ff4d6d 10%, transparent);
+}
+
+.admin-action-ico {
+  flex-shrink: 0;
+  width: 1.6rem;
+  text-align: center;
+  font-size: 1.15rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.admin-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  pointer-events: none;
 }
 
 .admin-action-title {
@@ -2194,9 +2193,11 @@ textarea#dm-input:focus {
   align-items: stretch;
 }
 
-.admin-reset-row input {
+.admin-reset-row input,
+#admin-reset-email {
   flex: 1;
   min-width: 0;
+  width: 100%;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
@@ -2211,17 +2212,48 @@ textarea#dm-input:focus {
   padding-right: 16px;
 }
 
-.admin-out {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  max-height: 240px;
-  overflow: auto;
+.admin-reset-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.admin-out-wrap {
+  margin-top: 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.admin-out-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-out {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 280px;
+  overflow: auto;
   color: #c8e6c9;
   font-size: 0.72rem;
-  line-height: 1.35;
+  line-height: 1.4;
   white-space: pre-wrap;
   word-break: break-word;
+  background: transparent;
+  border: 0;
+}
+
+#admin-msg {
+  margin-top: 10px;
+  min-height: 1.2em;
 }

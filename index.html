@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718y" />
+  <link rel="stylesheet" href="styles.css?v=20260719a" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -390,38 +390,55 @@
           </p>
         </div>
 
-        <!-- Admin / dev tools (server-gated; only jp_admins) -->
+        <!-- Admin / support tools (server-gated; only jp_admins) -->
         <div class="card" id="admin-card" hidden>
           <div class="admin-card-head">
-            <h3>Dev tools</h3>
+            <h3>Admin tools</h3>
             <span class="admin-pill">ADMIN</span>
           </div>
-          <p class="muted admin-intro">Hygiene &amp; support only — cannot change scores or game integrity.</p>
+          <p class="muted admin-intro">
+            Support &amp; hygiene only. Never changes scores. Email accounts are never deleted.
+          </p>
 
-          <div class="admin-actions">
-            <button type="button" class="admin-action" id="admin-debug-btn">
-              <span class="admin-action-title">Debug stats</span>
-              <span class="admin-action-sub">Counts, top players, empty guests</span>
+          <div class="admin-actions" id="admin-actions">
+            <button type="button" class="admin-action" id="admin-debug-btn" data-admin-action="debug">
+              <span class="admin-action-ico" aria-hidden="true">📊</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Debug stats</span>
+                <span class="admin-action-sub">Players, empty guests, name groups</span>
+              </span>
             </button>
-            <button type="button" class="admin-action" id="admin-dupes-btn">
-              <span class="admin-action-title">Scan duplicate names</span>
-              <span class="admin-action-sub">List same-name rows before cleanup</span>
+            <button type="button" class="admin-action" id="admin-dupes-btn" data-admin-action="dupes">
+              <span class="admin-action-ico" aria-hidden="true">🔍</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Scan duplicate names</span>
+                <span class="admin-action-sub">Preview who shares a display name</span>
+              </span>
             </button>
-            <button type="button" class="admin-action admin-action-warn" id="admin-hygiene-btn">
-              <span class="admin-action-title">Clean up clones &amp; empty guests</span>
-              <span class="admin-action-sub">Removes anon dupes + zero-score Players</span>
+            <button type="button" class="admin-action admin-action-warn" id="admin-hygiene-btn" data-admin-action="cleanup">
+              <span class="admin-action-ico" aria-hidden="true">🧹</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Clean up clones</span>
+                <span class="admin-action-sub">Anon name dupes + empty “Player” guests</span>
+              </span>
             </button>
           </div>
 
           <div class="admin-reset-box">
-            <p class="admin-reset-label">Password reset email</p>
+            <p class="admin-reset-label">Send password reset</p>
             <form id="admin-reset-form" class="admin-reset-row">
               <input type="email" id="admin-reset-email" placeholder="player@email.com" autocomplete="off" maxlength="120" />
               <button type="submit" class="solid-btn admin-reset-btn">Send</button>
             </form>
           </div>
 
-          <pre class="admin-out" id="admin-out" hidden></pre>
+          <div class="admin-out-wrap" id="admin-out-wrap" hidden>
+            <div class="admin-out-head">
+              <span id="admin-out-label">Result</span>
+              <button type="button" class="ghost-btn tiny" id="admin-out-clear">Clear</button>
+            </div>
+            <pre class="admin-out" id="admin-out"></pre>
+          </div>
           <p class="form-msg" id="admin-msg" role="status"></p>
         </div>
 
@@ -572,7 +589,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260718r"></script>
-  <script src="app.js?v=20260718y"></script>
+  <script src="config.js?v=20260719a"></script>
+  <script src="app.js?v=20260719a"></script>
 </body>
 </html>

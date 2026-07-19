@@ -404,12 +404,16 @@ const els = {
   deleteFinalBtn: $("#delete-final-btn"),
   deleteCountdown: $("#delete-countdown"),
   adminCard: $("#admin-card"),
+  adminActions: $("#admin-actions"),
   adminDebugBtn: $("#admin-debug-btn"),
   adminHygieneBtn: $("#admin-hygiene-btn"),
   adminDupesBtn: $("#admin-dupes-btn"),
   adminResetForm: $("#admin-reset-form"),
   adminResetEmail: $("#admin-reset-email"),
+  adminOutWrap: $("#admin-out-wrap"),
+  adminOutLabel: $("#admin-out-label"),
   adminOut: $("#admin-out"),
+  adminOutClear: $("#admin-out-clear"),
   adminMsg: $("#admin-msg"),
   privacyLink: $("#privacy-link"),
   termsLink: $("#terms-link"),
@@ -621,6 +625,7 @@ function featureEmailEnabled() {
 }
 
 let isAdminUser = false;
+let adminBusy = false;
 
 function setAdminMsg(text, kind = "") {
   if (!els.adminMsg) return;
@@ -628,21 +633,112 @@ function setAdminMsg(text, kind = "") {
   els.adminMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
-function setAdminOut(obj) {
+function setAdminBusy(busy) {
+  adminBusy = !!busy;
+  const btns = [
+    els.adminDebugBtn,
+    els.adminDupesBtn,
+    els.adminHygieneBtn,
+    els.adminResetForm?.querySelector("button[type='submit']"),
+  ];
+  for (const b of btns) {
+    if (b) b.disabled = adminBusy;
+  }
+}
+
+function setAdminOut(obj, label = "Result") {
   if (!els.adminOut) return;
-  if (obj == null) {
-    els.adminOut.hidden = true;
+  if (obj == null || obj === "") {
+    if (els.adminOutWrap) els.adminOutWrap.hidden = true;
     els.adminOut.textContent = "";
     return;
   }
-  els.adminOut.hidden = false;
+  if (els.adminOutLabel) els.adminOutLabel.textContent = label;
+  if (els.adminOutWrap) els.adminOutWrap.hidden = false;
   els.adminOut.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
 }
 
 function formatAdminError(error) {
   if (!error) return "Unknown error";
+  if (typeof error === "string") return error;
   const parts = [error.message, error.details, error.hint, error.code].filter(Boolean);
   return parts.join(" — ") || String(error);
+}
+
+function formatDupeList(rows) {
+  if (!Array.isArray(rows) || !rows.length) {
+    return "No duplicate display names found.\nBoard names are unique.";
+  }
+  const byName = new Map();
+  for (const r of rows) {
+    const name = r.display_name || "(blank)";
+    if (!byName.has(name)) byName.set(name, []);
+    byName.get(name).push(r);
+  }
+  const lines = [`${byName.size} name group(s), ${rows.length} row(s):\n`];
+  for (const [name, list] of byName) {
+    lines.push(`• ${name}  (×${list.length})`);
+    for (const r of list) {
+      const kind = r.account_type || (r.email ? "email" : r.is_anonymous ? "anon" : "guest");
+      const code = r.friend_code || "——";
+      const life = r.lifetime_count ?? 0;
+      const high = r.high_score ?? 0;
+      const c10 = r.challenge_best ?? 0;
+      const mail = r.email ? `  ${r.email}` : "";
+      lines.push(
+        `    [${kind}] ${code}  life=${life}  high=${high}  10s=${c10}${mail}`
+      );
+    }
+    lines.push("");
+  }
+  lines.push("Tip: Clean up clones removes anon extras. Email accounts stay.");
+  return lines.join("\n");
+}
+
+function formatDebugStats(data) {
+  if (!data || typeof data !== "object") return String(data);
+  const dupes = Array.isArray(data.duplicate_names) ? data.duplicate_names : [];
+  const top = Array.isArray(data.top_players) ? data.top_players : [];
+  const lines = [
+    `Profiles: ${data.profiles ?? "?"}   Auth users: ${data.auth_users ?? "?"}`,
+    `Email: ${data.email_users ?? "?"}   Anon/guest: ${data.anon_users ?? "?"}`,
+    `Empty “Player” guests: ${data.empty_players ?? "?"}`,
+    `Friendships: ${data.friendships ?? "?"}   Groups: ${data.groups ?? "?"}`,
+    "",
+  ];
+  if (dupes.length) {
+    lines.push("Duplicate names:");
+    for (const d of dupes) lines.push(`  • ${d.name} ×${d.count}`);
+  } else {
+    lines.push("Duplicate names: none ✓");
+  }
+  lines.push("", "Top by lifetime:");
+  for (const t of top) {
+    lines.push(
+      `  ${t.name} (${t.code})  life=${t.life}  high=${t.high}  10s=${t.best10s}`
+    );
+  }
+  if (data.ran_at) lines.push("", `As of ${data.ran_at}`);
+  return lines.join("\n");
+}
+
+function formatHygieneResult(data) {
+  if (!data || typeof data !== "object") return String(data);
+  const empty = data.empty_guests_deleted ?? 0;
+  const clones = data.anon_clones_deleted ?? 0;
+  const shadows = data.anon_shadows_deleted ?? 0;
+  const groups = data.anon_group_extras_deleted ?? 0;
+  const total = empty + clones + shadows + groups;
+  return [
+    `Cleanup finished${total ? "" : " — nothing to remove"}`,
+    "",
+    `Empty guests deleted:     ${empty}`,
+    `Anon name clones:         ${clones}`,
+    `Anon shadows of email:    ${shadows}`,
+    `Extra pure-anon names:    ${groups}`,
+    `Total removed:            ${total}`,
+    data.ran_at ? `\nRan at ${data.ran_at}` : "",
+  ].join("\n");
 }
 
 async function refreshAdminAccess() {
@@ -660,62 +756,86 @@ async function refreshAdminAccess() {
   try {
     const { data, error } = await sb.rpc("jp_is_admin");
     if (error) {
-      setAdminMsg(`Admin check: ${formatAdminError(error)}`, isAdminUser ? "" : "err");
+      // Keep fast-path card visible; surface the check error so buttons aren't silent
+      if (isAdminUser) {
+        setAdminMsg(`Admin tools ready (server check: ${formatAdminError(error)})`, "");
+      } else {
+        setAdminMsg(`Admin check: ${formatAdminError(error)}`, "err");
+      }
       console.warn("jp_is_admin", error);
       return;
     }
     isAdminUser = !!data;
     if (els.adminCard) els.adminCard.hidden = !isAdminUser;
-    if (isAdminUser) setAdminMsg("Admin tools ready.", "ok");
+    if (isAdminUser) setAdminMsg("Admin tools ready — scan first, then clean up if needed.", "ok");
   } catch (e) {
     console.warn("admin check", e);
-    if (!isAdminUser) setAdminMsg(e.message || "Admin check failed", "err");
+    if (isAdminUser) {
+      setAdminMsg("Admin tools ready (offline check failed — try a button).", "");
+    } else {
+      setAdminMsg(e.message || "Admin check failed", "err");
+    }
   }
 }
 
 async function adminRunDebug() {
-  if (!sb || !online) throw new Error("Go online first");
+  if (!sb || !online) throw new Error("Go online first (Settings → Account must be connected)");
+  if (!isAdminUser) throw new Error("Admin only — sign in as your admin account");
   setAdminMsg("Loading stats…");
   setAdminOut(null);
   const { data, error } = await sb.rpc("jp_admin_debug_stats");
   if (error) throw new Error(formatAdminError(error));
-  setAdminOut(data);
+  setAdminOut(formatDebugStats(data), "Debug stats");
   setAdminMsg("Debug stats loaded.", "ok");
   toast("Debug stats loaded");
 }
 
 async function adminRunHygiene() {
-  if (!sb || !online) throw new Error("Go online first");
+  if (!sb || !online) throw new Error("Go online first (Settings → Account must be connected)");
+  if (!isAdminUser) throw new Error("Admin only — sign in as your admin account");
   const ok = window.confirm(
-    "Run cleanup?\n\n• Empty guest “Player” accounts (0 scores)\n• Anonymous name clones (Billy/Cleetis/ImBetter duplicates)\n\nEmail accounts are never deleted."
+    "Run cleanup?\n\n• Empty guest “Player” accounts (0 scores, 30m+)\n• Anonymous clones of the same display name\n• Anon shadows of email accounts (Billy, Cleetis, etc.)\n\nEmail accounts are NEVER deleted."
   );
-  if (!ok) return;
+  if (!ok) {
+    setAdminMsg("Cleanup cancelled.", "");
+    return;
+  }
   setAdminMsg("Running cleanup…");
   setAdminOut(null);
   const { data, error } = await sb.rpc("jp_admin_run_hygiene");
   if (error) throw new Error(formatAdminError(error));
-  setAdminOut(data);
+  setAdminOut(formatHygieneResult(data), "Cleanup result");
   const empty = data?.empty_guests_deleted ?? 0;
   const clones = data?.anon_clones_deleted ?? 0;
   const shadows = data?.anon_shadows_deleted ?? 0;
-  setAdminMsg(`Cleanup done — empty: ${empty} · clones: ${clones} · shadows: ${shadows}`, "ok");
-  toast(`Cleanup: ${empty + clones + shadows} removed`);
-  // Refresh board data if on scores
-  if (els.app?.dataset?.tab === "scores") {
-    loadGlobalBoard().catch(() => {});
-  }
+  const groups = data?.anon_group_extras_deleted ?? 0;
+  const total = empty + clones + shadows + groups;
+  setAdminMsg(
+    total
+      ? `Cleanup done — removed ${total} (empty ${empty}, clones ${clones}, shadows ${shadows}, groups ${groups}).`
+      : "Cleanup done — no clones or empty guests to remove.",
+    "ok"
+  );
+  toast(total ? `Cleanup: ${total} removed` : "Already clean");
+  loadGlobalBoard().catch(() => {});
 }
 
 async function adminListDupes() {
-  if (!sb || !online) throw new Error("Go online first");
-  setAdminMsg("Scanning…");
+  if (!sb || !online) throw new Error("Go online first (Settings → Account must be connected)");
+  if (!isAdminUser) throw new Error("Admin only — sign in as your admin account");
+  setAdminMsg("Scanning for duplicate names…");
   setAdminOut(null);
   const { data, error } = await sb.rpc("jp_admin_list_name_dupes");
   if (error) throw new Error(formatAdminError(error));
-  setAdminOut(data);
-  const n = Array.isArray(data) ? data.length : 0;
-  setAdminMsg(n ? `Found ${n} rows in duplicate-name groups.` : "No duplicate display names.", "ok");
-  toast(n ? `${n} dupe rows` : "No dupes");
+  const rows = Array.isArray(data) ? data : [];
+  setAdminOut(formatDupeList(rows), "Duplicate names");
+  setAdminMsg(
+    rows.length
+      ? `Found ${rows.length} row(s) in duplicate-name groups. Use Clean up clones to remove anons.`
+      : "No duplicate display names — board is clean.",
+    "ok"
+  );
+  toast(rows.length ? `${rows.length} dupe row(s)` : "No dupes");
 }
 
 async function adminSendPasswordReset(email) {
@@ -729,8 +849,27 @@ async function adminSendPasswordReset(email) {
     redirectTo: `${base}?tab=style`,
   });
   if (error) throw new Error(formatAdminError(error));
+  setAdminOut(`Password reset requested for:\n${addr}\n\nThey should check inbox (and spam).`, "Password reset");
   setAdminMsg(`Password reset email requested for ${addr}.`, "ok");
   toast("Reset email requested");
+}
+
+async function runAdminAction(action) {
+  if (adminBusy) return;
+  setAdminBusy(true);
+  try {
+    if (action === "debug") await adminRunDebug();
+    else if (action === "dupes") await adminListDupes();
+    else if (action === "cleanup") await adminRunHygiene();
+    else throw new Error(`Unknown admin action: ${action}`);
+  } catch (err) {
+    const msg = formatAdminError(err);
+    setAdminMsg(msg, "err");
+    setAdminOut(msg, "Error");
+    console.warn("admin action", action, err);
+  } finally {
+    setAdminBusy(false);
+  }
 }
 
 function isAnonymousUser(user = session?.user) {
@@ -3309,33 +3448,32 @@ function bindEvents() {
   // Card itself doesn't close on accidental mis-tap of content — only × or timeout.
   els.deleteAccountBtn?.addEventListener("click", () => openDeleteModal());
 
-  els.adminDebugBtn?.addEventListener("click", async () => {
-    try {
-      await adminRunDebug();
-    } catch (err) {
-      setAdminMsg(err.message || "Debug failed", "err");
+  // Admin tools — single delegated handler (works even if nested spans are the click target)
+  els.adminCard?.addEventListener("click", (e) => {
+    const clearBtn = e.target?.closest?.("#admin-out-clear");
+    if (clearBtn) {
+      e.preventDefault();
+      setAdminOut(null);
+      setAdminMsg(isAdminUser ? "Admin tools ready." : "", isAdminUser ? "ok" : "");
+      return;
     }
-  });
-  els.adminHygieneBtn?.addEventListener("click", async () => {
-    try {
-      await adminRunHygiene();
-    } catch (err) {
-      setAdminMsg(err.message || "Cleanup failed", "err");
-    }
-  });
-  els.adminDupesBtn?.addEventListener("click", async () => {
-    try {
-      await adminListDupes();
-    } catch (err) {
-      setAdminMsg(err.message || "Dupe list failed", "err");
-    }
+    const btn = e.target?.closest?.("[data-admin-action]");
+    if (!btn || !els.adminCard.contains(btn)) return;
+    e.preventDefault();
+    runAdminAction(btn.getAttribute("data-admin-action"));
   });
   els.adminResetForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (adminBusy) return;
+    setAdminBusy(true);
     try {
       await adminSendPasswordReset(els.adminResetEmail?.value);
     } catch (err) {
-      setAdminMsg(err.message || "Reset failed", "err");
+      const msg = formatAdminError(err);
+      setAdminMsg(msg, "err");
+      setAdminOut(msg, "Error");
+    } finally {
+      setAdminBusy(false);
     }
   });
   els.deleteCancelBtn?.addEventListener("click", () => closeDeleteModal());
