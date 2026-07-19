@@ -71,7 +71,8 @@ Or paste each file under `supabase/migrations/` into the SQL Editor **in filenam
 ## Project isolation
 
 Push Thru only uses **`jp_*`** tables and functions.  
-Other products must not share this schema. See [SEPARATION.md](./SEPARATION.md) if you still have legacy tables from older apps on the same Supabase project.
+This Supabase project may still hold **PolicySnap** (`policysnap_*`) metering tables for the live Chrome extension.  
+PumpQuest legacy tables were removed. See [SEPARATION.md](./SEPARATION.md).
 
 ## Automated cleanup (hygiene)
 
