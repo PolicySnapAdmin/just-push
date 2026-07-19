@@ -98,22 +98,64 @@ function formatXp(n) {
   return String(x);
 }
 
-const BUTTON_COLORS = [
-  { id: "rose", label: "Rose", value: "#ff4d6d", free: true, cost: 0 },
-  { id: "coral", label: "Coral", value: "#ff7a59", free: true, cost: 0 },
-  { id: "amber", label: "Amber", value: "#f5a524", free: true, cost: 0 },
-  { id: "lime", label: "Lime", value: "#84cc16", free: false, cost: 50 },
-  { id: "mint", label: "Mint", value: "#2dd4a8", free: false, cost: 50 },
-  { id: "sky", label: "Sky", value: "#38bdf8", free: false, cost: 75 },
-  { id: "blue", label: "Blue", value: "#4f7cff", free: false, cost: 75 },
-  { id: "violet", label: "Violet", value: "#a78bfa", free: false, cost: 100 },
-  { id: "pink", label: "Pink", value: "#f472b6", free: false, cost: 100 },
-  { id: "white", label: "White", value: "#e8e8f0", free: false, cost: 125 },
-  { id: "gold", label: "Gold Rush", value: "#fbbf24", free: false, cost: 200 },
-  { id: "neon", label: "Neon Pulse", value: "#22d3ee", free: false, cost: 250 },
-  { id: "magma", label: "Magma", value: "#ef4444", free: false, cost: 250 },
-  { id: "shadow", label: "Shadow", value: "#64748b", free: false, cost: 150 },
+/** Premium button skins — cosmetic only (never XP/clicks). */
+const BUTTON_SKINS = [
+  // Classic (free)
+  { id: "rose", label: "Rose", value: "#ff4d6d", free: true, cost: 0, cat: "classic", rarity: "common", darkText: false },
+  { id: "coral", label: "Coral", value: "#ff7a59", free: true, cost: 0, cat: "classic", rarity: "common", darkText: false },
+  { id: "amber", label: "Amber", value: "#f5a524", free: true, cost: 0, cat: "classic", rarity: "common", darkText: true },
+  // Classic paid
+  { id: "lime", label: "Lime", value: "#84cc16", free: false, cost: 50, cat: "classic", rarity: "common", darkText: true },
+  { id: "mint", label: "Mint", value: "#2dd4a8", free: false, cost: 50, cat: "classic", rarity: "common", darkText: true },
+  { id: "sky", label: "Sky", value: "#38bdf8", free: false, cost: 75, cat: "classic", rarity: "common", darkText: false },
+  { id: "blue", label: "Azure", value: "#4f7cff", free: false, cost: 75, cat: "classic", rarity: "common", darkText: false },
+  { id: "violet", label: "Violet", value: "#a78bfa", free: false, cost: 100, cat: "classic", rarity: "uncommon", darkText: false },
+  { id: "pink", label: "Blush", value: "#f472b6", free: false, cost: 100, cat: "classic", rarity: "uncommon", darkText: false },
+  { id: "white", label: "Pearl", value: "#e8e8f0", free: false, cost: 125, cat: "classic", rarity: "uncommon", darkText: true },
+  // Metals
+  { id: "iron", label: "Iron", value: "#94a3b8", free: false, cost: 100, cat: "metal", rarity: "common", darkText: true },
+  { id: "copper", label: "Copper", value: "#d97706", free: false, cost: 125, cat: "metal", rarity: "common", darkText: true },
+  { id: "gold", label: "Gold Rush", value: "#fbbf24", free: false, cost: 200, cat: "metal", rarity: "rare", darkText: true },
+  { id: "platinum", label: "Platinum", value: "#e2e8f0", free: false, cost: 300, cat: "metal", rarity: "epic", darkText: true },
+  { id: "obsidian", label: "Obsidian", value: "#1e1b2e", free: false, cost: 275, cat: "metal", rarity: "rare", darkText: false },
+  // Armor
+  { id: "knight", label: "Knight Plate", value: "#64748b", free: false, cost: 250, cat: "armor", rarity: "rare", darkText: false },
+  { id: "dragonscale", label: "Dragonscale", value: "#15803d", free: false, cost: 350, cat: "armor", rarity: "epic", darkText: false },
+  { id: "runic", label: "Runic Guard", value: "#7c3aed", free: false, cost: 400, cat: "armor", rarity: "legendary", darkText: false },
+  { id: "crimson", label: "Crimson Mail", value: "#991b1b", free: false, cost: 325, cat: "armor", rarity: "epic", darkText: false },
+  // Space
+  { id: "nebula", label: "Nebula", value: "#7c3aed", free: false, cost: 300, cat: "space", rarity: "epic", darkText: false },
+  { id: "void", label: "Void", value: "#0f172a", free: false, cost: 350, cat: "space", rarity: "epic", darkText: false },
+  { id: "comet", label: "Comet Trail", value: "#22d3ee", free: false, cost: 275, cat: "space", rarity: "rare", darkText: true },
+  { id: "solar", label: "Solar Flare", value: "#f97316", free: false, cost: 300, cat: "space", rarity: "rare", darkText: true },
+  { id: "neon", label: "Neon Pulse", value: "#22d3ee", free: false, cost: 250, cat: "space", rarity: "rare", darkText: true },
+  // Worlds / planets
+  { id: "earth", label: "Terra", value: "#2563eb", free: false, cost: 200, cat: "world", rarity: "uncommon", darkText: false },
+  { id: "mars", label: "Mars", value: "#dc2626", free: false, cost: 225, cat: "world", rarity: "uncommon", darkText: false },
+  { id: "jupiter", label: "Jupiter", value: "#d97706", free: false, cost: 275, cat: "world", rarity: "rare", darkText: true },
+  { id: "moon", label: "Lunar", value: "#cbd5e1", free: false, cost: 200, cat: "world", rarity: "uncommon", darkText: true },
+  // Elemental
+  { id: "magma", label: "Magma", value: "#ef4444", free: false, cost: 250, cat: "element", rarity: "rare", darkText: false },
+  { id: "frost", label: "Frostbite", value: "#7dd3fc", free: false, cost: 250, cat: "element", rarity: "rare", darkText: true },
+  { id: "storm", label: "Storm", value: "#6366f1", free: false, cost: 275, cat: "element", rarity: "rare", darkText: false },
+  { id: "toxic", label: "Toxic", value: "#a3e635", free: false, cost: 225, cat: "element", rarity: "uncommon", darkText: true },
+  { id: "shadow", label: "Shadow", value: "#475569", free: false, cost: 150, cat: "element", rarity: "common", darkText: false },
 ];
+
+/** @deprecated alias — skins are the source of truth */
+const BUTTON_COLORS = BUTTON_SKINS;
+
+const SKIN_CATS = [
+  { id: "all", label: "All" },
+  { id: "classic", label: "Classic" },
+  { id: "metal", label: "Metals" },
+  { id: "armor", label: "Armor" },
+  { id: "space", label: "Space" },
+  { id: "world", label: "Worlds" },
+  { id: "element", label: "Elements" },
+];
+
+let storeSkinCat = "all";
 
 const SESSION_EPOCH_KEY = "push-thru-session-epoch";
 const ACCOUNT_OK_KEY = "push-thru-account-ready";
@@ -398,8 +440,10 @@ const els = {
   storeClose: $("#store-close"),
   storeBalance: $("#store-balance"),
   storeSkinGrid: $("#store-skin-grid"),
+  storeCatTabs: $("#store-cat-tabs"),
   storePackList: $("#store-pack-list"),
   storeMsg: $("#store-msg"),
+  buttonStage: $("#button-stage"),
   toast: $("#toast"),
   levelUpPopup: $("#level-up-popup"),
   levelUpCard: $("#level-up-card"),
@@ -832,25 +876,34 @@ function myId() {
 
 // ——— Theme ———
 
+function getSkin(id) {
+  return BUTTON_SKINS.find((c) => c.id === id) || BUTTON_SKINS[0];
+}
+
 function applyTheme() {
-  const btn = BUTTON_COLORS.find((c) => c.id === state.theme.button) || BUTTON_COLORS[0];
+  const btn = getSkin(state.theme.button);
   const bg = BACKGROUNDS.find((c) => c.id === state.theme.background) || BACKGROUNDS[0];
-  document.documentElement.style.setProperty("--btn", btn.value);
-  document.documentElement.style.setProperty("--bg", bg.value);
-  document.documentElement.style.setProperty(
-    "--btn-text",
-    ["white", "amber", "lime", "gold", "neon"].includes(btn.id) ? "#111118" : "#ffffff"
-  );
+  const root = document.documentElement;
+  root.style.setProperty("--btn", btn.value);
+  root.style.setProperty("--bg", bg.value);
+  root.style.setProperty("--btn-glow", `${btn.value}99`);
+  root.style.setProperty("--btn-text", btn.darkText ? "#111118" : "#ffffff");
+  // Drive layered CSS skins
+  if (els.app) els.app.dataset.skin = btn.id;
+  if (els.buttonStage) els.buttonStage.dataset.skin = btn.id;
+  document.querySelectorAll(".push-btn").forEach((el) => {
+    el.dataset.skin = btn.id;
+  });
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = bg.value;
 }
 
 function renderSwatches() {
   const owned = new Set(ownedSkins.length ? ownedSkins : ["rose", "coral", "amber"]);
-  els.buttonSwatches.innerHTML = BUTTON_COLORS.filter((c) => owned.has(c.id) || c.free)
+  els.buttonSwatches.innerHTML = BUTTON_SKINS.filter((c) => owned.has(c.id) || c.free)
     .map(
       (c) =>
-        `<button type="button" class="swatch${c.id === state.theme.button ? " selected" : ""}" data-btn="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.button}"></button>`
+        `<button type="button" class="swatch skin-swatch${c.id === state.theme.button ? " selected" : ""}" data-btn="${c.id}" data-skin="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.button}"></button>`
     )
     .join("");
   els.bgSwatches.innerHTML = BACKGROUNDS.map(
@@ -1882,7 +1935,7 @@ function spawnFloater() {
 }
 
 function confettiBurst() {
-  const btnColor = BUTTON_COLORS.find((b) => b.id === state.theme.button)?.value || "#ff4d6d";
+  const btnColor = getSkin(state.theme.button)?.value || "#ff4d6d";
   const palette = [btnColor, "#ffffff", "#ffd700", "#7c9cff", "#3dd68c"];
   const rect = els.pushBtn.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
@@ -3665,9 +3718,46 @@ function setStoreMsg(text, kind = "") {
   els.storeMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
+function mergeStoreSkins() {
+  // Prefer server catalog prices; fall back to full client skin list (richer FX)
+  const server = Array.isArray(storeCatalog?.skins) ? storeCatalog.skins : [];
+  const byId = Object.fromEntries(server.map((s) => [s.id, s]));
+  return BUTTON_SKINS.map((s) => {
+    const srv = byId[s.id] || {};
+    return {
+      ...s,
+      cost: srv.cost != null ? Number(srv.cost) : s.cost,
+      free: srv.free != null ? !!srv.free : s.free,
+      label: srv.label || s.label,
+      value: srv.value || s.value,
+    };
+  }).concat(
+    server
+      .filter((s) => !BUTTON_SKINS.some((b) => b.id === s.id))
+      .map((s) => ({
+        id: s.id,
+        label: s.label || s.id,
+        value: s.value || "#ff4d6d",
+        free: !!s.free,
+        cost: Number(s.cost) || 0,
+        cat: s.cat || "classic",
+        rarity: s.rarity || "common",
+        darkText: !!s.darkText,
+      }))
+  );
+}
+
 function renderStore() {
   renderWallet();
-  const skins = storeCatalog?.skins || BUTTON_COLORS;
+  const allSkins = mergeStoreSkins();
+  if (els.storeCatTabs) {
+    els.storeCatTabs.innerHTML = SKIN_CATS.map(
+      (c) =>
+        `<button type="button" class="store-cat${storeSkinCat === c.id ? " active" : ""}" data-store-cat="${c.id}">${escapeHtml(c.label)}</button>`
+    ).join("");
+  }
+  const skins =
+    storeSkinCat === "all" ? allSkins : allSkins.filter((s) => s.cat === storeSkinCat);
   if (els.storeSkinGrid) {
     els.storeSkinGrid.innerHTML = skins
       .map((s) => {
@@ -3676,11 +3766,21 @@ function renderStore() {
         const eq = state.theme.button === id;
         const cost = Number(s.cost) || 0;
         const label = owned ? (eq ? "Equipped" : "Equip") : cost ? `◆ ${cost}` : "Free";
+        const rarity = s.rarity || "common";
         return `
-        <button type="button" class="store-skin${eq ? " is-equipped" : ""}${owned ? " is-owned" : ""}" data-store-skin="${id}" style="--skin:${s.value || "#ff4d6d"}">
-          <span class="store-skin-swatch"></span>
-          <span class="store-skin-name">${escapeHtml(s.label || id)}</span>
-          <span class="store-skin-action">${label}</span>
+        <button type="button" class="store-skin rarity-${escapeHtml(rarity)}${eq ? " is-equipped" : ""}${owned ? " is-owned" : ""}" data-store-skin="${id}" data-skin="${id}" style="--skin:${s.value || "#ff4d6d"}">
+          <span class="store-skin-preview">
+            <span class="store-skin-swatch push-btn mini" data-skin="${id}">
+              <span class="push-fx push-fx-a"></span>
+              <span class="push-fx push-fx-b"></span>
+              <span class="push-core"><span class="push-label">P</span></span>
+            </span>
+          </span>
+          <span class="store-skin-meta">
+            <span class="store-rarity">${escapeHtml(rarity)}</span>
+            <span class="store-skin-name">${escapeHtml(s.label || id)}</span>
+            <span class="store-skin-action">${label}</span>
+          </span>
         </button>`;
       })
       .join("");
@@ -3688,7 +3788,7 @@ function renderStore() {
   const packs = storeCatalog?.token_packs || [];
   if (els.storePackList) {
     if (!packs.length) {
-      els.storePackList.innerHTML = `<p class="muted">Token packs coming soon.</p>`;
+      els.storePackList.innerHTML = `<p class="muted">Token packs coming soon (web + App Store IAP).</p>`;
     } else {
       els.storePackList.innerHTML = packs
         .map((p) => {
@@ -5563,6 +5663,12 @@ function bindEvents() {
       setStoreMsg(err.message || "Could not buy skin", "err");
       toast(err.message || "Store error");
     }
+  });
+  els.storeCatTabs?.addEventListener("click", (e) => {
+    const tab = e.target?.closest?.("[data-store-cat]");
+    if (!tab) return;
+    storeSkinCat = tab.getAttribute("data-store-cat") || "all";
+    renderStore();
   });
 
   els.copyFriendCode.addEventListener("click", async () => {

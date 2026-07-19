@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719m" />
+  <link rel="stylesheet" href="styles.css?v=20260719n" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -105,7 +105,8 @@
           </div>
         </div>
 
-        <div class="button-stage">
+        <div class="button-stage" id="button-stage">
+          <div class="stage-aura" aria-hidden="true"></div>
           <div class="ring ring-1" aria-hidden="true"></div>
           <div class="ring ring-2" aria-hidden="true"></div>
           <div class="timer-ring" id="timer-ring" hidden aria-hidden="true">
@@ -114,9 +115,14 @@
               <circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="46" />
             </svg>
           </div>
-          <button type="button" class="push-btn" id="push-btn" aria-label="Push the button">
-            <span class="push-label" id="push-label">PUSH</span>
-            <span class="push-hint" id="push-hint">or spacebar</span>
+          <button type="button" class="push-btn" id="push-btn" aria-label="Push the button" data-skin="rose">
+            <span class="push-fx push-fx-a" aria-hidden="true"></span>
+            <span class="push-fx push-fx-b" aria-hidden="true"></span>
+            <span class="push-fx push-fx-c" aria-hidden="true"></span>
+            <span class="push-core">
+              <span class="push-label" id="push-label">PUSH</span>
+              <span class="push-hint" id="push-hint">or spacebar</span>
+            </span>
           </button>
           <div class="floaters" id="floaters" aria-hidden="true"></div>
         </div>
@@ -586,8 +592,10 @@
         <div class="card">
           <h3>Preview</h3>
           <div class="style-preview">
-            <button type="button" class="push-btn mini" id="preview-btn" tabindex="-1" aria-hidden="true">
-              <span class="push-label">PUSH</span>
+            <button type="button" class="push-btn mini" id="preview-btn" tabindex="-1" aria-hidden="true" data-skin="rose">
+              <span class="push-fx push-fx-a" aria-hidden="true"></span>
+              <span class="push-fx push-fx-b" aria-hidden="true"></span>
+              <span class="push-core"><span class="push-label">PUSH</span></span>
             </button>
           </div>
         </div>
@@ -830,9 +838,14 @@
             <circle class="timer-progress" id="focus-timer-progress" cx="50" cy="50" r="46" />
           </svg>
         </div>
-        <button type="button" class="push-btn focus-push-btn" id="focus-push-btn" aria-label="Push">
-          <span class="push-label" id="focus-push-label">PUSH</span>
-          <span class="push-hint" id="focus-push-hint">tap zone</span>
+        <button type="button" class="push-btn focus-push-btn" id="focus-push-btn" aria-label="Push" data-skin="rose">
+          <span class="push-fx push-fx-a" aria-hidden="true"></span>
+          <span class="push-fx push-fx-b" aria-hidden="true"></span>
+          <span class="push-fx push-fx-c" aria-hidden="true"></span>
+          <span class="push-core">
+            <span class="push-label" id="focus-push-label">PUSH</span>
+            <span class="push-hint" id="focus-push-hint">tap zone</span>
+          </span>
         </button>
         <div class="floaters" id="focus-floaters" aria-hidden="true"></div>
       </div>
@@ -948,6 +961,8 @@
       </p>
 
       <h3 class="board-subhead">Button skins</h3>
+      <p class="muted store-skin-intro">Metals · armor · space · worlds. Cosmetic only — same clicks, more style.</p>
+      <div class="store-cat-tabs" id="store-cat-tabs" role="tablist"></div>
       <div class="store-skin-grid" id="store-skin-grid"></div>
 
       <h3 class="board-subhead" style="margin-top:18px">Token packs</h3>
@@ -1010,7 +1025,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719m"></script>
-  <script src="app.js?v=20260719m"></script>
+  <script src="config.js?v=20260719n"></script>
+  <script src="app.js?v=20260719n"></script>
 </body>
 </html>
