@@ -36,7 +36,7 @@ https://www.pushthrugames.com/
 
 ## Backend (Supabase)
 
-Project: `jpnaotxkcpnwgqkzxdue` (shared with other apps).  
+Project: `jpnaotxkcpnwgqkzxdue` (Push Thru uses only `jp_*` objects).  
 **All Push Thru objects are namespaced `jp_*`.**
 
 ### Tables

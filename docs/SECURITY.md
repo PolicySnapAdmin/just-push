@@ -102,7 +102,7 @@ These are **not** hidden — the game needs them:
 | Unlimited anonymous signups | Medium | Spam accounts / leaderboard noise. Mitigate with rate limits / captcha later. |
 | Friend-code scraping | Low–Med | All codes readable by guests. OK for casual; could add rate limits. |
 | Group invite codes listable | Low–Med | `jp_groups` SELECT is open to authenticated. Random 6-char codes; brute force still possible. |
-| Shared Supabase project | Low | `jp_*` namespacing + RLS; other apps on same project must not weaken shared policies. |
+| Supabase project may still hold legacy non-`jp_*` tables | Low | App only uses `jp_*`; see docs/SEPARATION.md for full isolation options. |
 | Security definer RPCs | Low | `jp_delete_my_account`, `jp_add_friend_by_code` use `auth.uid()` — only act as caller. |
 | No server rate limits on posts/DMs | Low | Client cooldowns only; re-enable chat carefully. |
 | Client sets scores via REST | **Mitigated** | Score columns locked by trigger; play uses RPCs only (increment/capped). |
