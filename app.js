@@ -1593,18 +1593,16 @@ async function ensureProfile() {
 
   profile = data;
 
-  // Prefer higher of local vs server for display, then push any local-ahead via RPCs
+  // Free-run / lifetime: keep max(local, server) so offline grind isn't lost.
+  // 10s best: server is authoritative (stops stale localStorage re-inflating glitch scores).
   const localAhead =
     state.lifetimeCount > (data.lifetime_count || 0) ||
-    state.highScore > (data.high_score || 0) ||
-    state.challengeBest > (data.challenge_best || 0);
+    state.highScore > (data.high_score || 0);
 
-  if (!localAhead) {
-    state.highScore = Math.max(state.highScore, data.high_score || 0);
-    state.challengeBest = Math.max(state.challengeBest, data.challenge_best || 0);
-    state.lifetimeCount = Math.max(state.lifetimeCount, data.lifetime_count || 0);
-    state.sessionsPlayed = Math.max(state.sessionsPlayed, data.sessions_played || 0);
-  }
+  state.highScore = Math.max(state.highScore, data.high_score || 0);
+  state.lifetimeCount = Math.max(state.lifetimeCount, data.lifetime_count || 0);
+  state.sessionsPlayed = Math.max(state.sessionsPlayed, data.sessions_played || 0);
+  state.challengeBest = data.challenge_best || 0;
 
   if (data.display_name && data.display_name !== "Player") {
     if (!state.name || state.name === "Player") state.name = data.display_name;
@@ -1627,11 +1625,11 @@ async function ensureProfile() {
   const refreshed = await sb.from("jp_profiles").select("*").eq("id", uid).single();
   if (refreshed.data) {
     profile = refreshed.data;
-    // After reconcile, adopt server truth for scores
     state.highScore = Math.max(state.highScore, profile.high_score || 0);
-    state.challengeBest = Math.max(state.challengeBest, profile.challenge_best || 0);
     state.lifetimeCount = Math.max(state.lifetimeCount, profile.lifetime_count || 0);
     state.sessionsPlayed = Math.max(state.sessionsPlayed, profile.sessions_played || 0);
+    // Always re-apply server 10s best after sync
+    state.challengeBest = profile.challenge_best || 0;
     saveState();
     renderScores();
   }
@@ -1671,11 +1669,14 @@ function schedulePushRpc(sessionCount) {
 function applyServerProfile(row) {
   if (!row) return;
   profile = row;
-  // Never lower local mid-play if server is briefly behind a pending batch
+  // Never lower local mid-play if server is briefly behind a pending free-push batch
   state.highScore = Math.max(state.highScore, row.high_score || 0);
-  state.challengeBest = Math.max(state.challengeBest, row.challenge_best || 0);
   state.lifetimeCount = Math.max(state.lifetimeCount, row.lifetime_count || 0);
   state.sessionsPlayed = Math.max(state.sessionsPlayed, row.sessions_played || 0);
+  // 10s best follows server (set only via endChallenge report)
+  if (typeof row.challenge_best === "number") {
+    state.challengeBest = row.challenge_best;
+  }
   saveState();
   renderScores();
   online = true;
@@ -1747,13 +1748,8 @@ async function reconcileLocalScoresToServer() {
     serverLife = data.lifetime_count || serverLife;
     guard += 1;
   }
-  if (state.challengeBest > (profile.challenge_best || 0)) {
-    const { data, error } = await sb.rpc("jp_report_challenge", {
-      p_count: state.challengeBest,
-      p_bump_session: false,
-    });
-    if (!error && data) profile = data;
-  }
+  // Do NOT re-upload challenge_best from localStorage — only endChallenge() reports 10s runs.
+  // That prevents glitch/local inflated bests from overwriting admin or legitimate server values.
 }
 
 /** Name + theme only — score columns are ignored by DB trigger if sent. */
