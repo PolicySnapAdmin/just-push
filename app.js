@@ -486,10 +486,89 @@ const els = {
   dmBack: $("#dm-back"),
   refreshDm: $("#refresh-dm"),
   chatOfflineHint: $("#chat-offline-hint"),
+  // Territories
+  territoryBanner: $("#territory-banner"),
+  territoryBannerName: $("#territory-banner-name"),
+  territoryBannerMeta: $("#territory-banner-meta"),
+  territoryBannerExit: $("#territory-banner-exit"),
+  territoryMap: $("#territory-map"),
+  territoryRefresh: $("#territory-refresh"),
+  territoryDetail: $("#territory-detail"),
+  territoryDetailTitle: $("#territory-detail-title"),
+  territoryDetailPill: $("#territory-detail-pill"),
+  territoryDetailBlurb: $("#territory-detail-blurb"),
+  territoryMyLife: $("#territory-my-life"),
+  territoryMy10s: $("#territory-my-10s"),
+  territoryPlayFree: $("#territory-play-free"),
+  territoryPlay10s: $("#territory-play-10s"),
+  territoryBoardLife: $("#territory-board-life"),
+  territoryBoardLifeEmpty: $("#territory-board-life-empty"),
+  territoryBoard10s: $("#territory-board-10s"),
+  territoryBoard10sEmpty: $("#territory-board-10s-empty"),
+  territoryPickHint: $("#territory-pick-hint"),
 };
 
 // Deep-link invite waiting to process after online
 let pendingDeepLink = null; // { type: 'friend'|'group', code: string }
+
+// ——— Territories (make-believe map side game) ———
+const TERRITORIES = [
+  {
+    id: "frostpeak",
+    name: "Frost Peak",
+    blurb: "Icy highlands. Overall clicks dig in; 10s storms the summit.",
+  },
+  {
+    id: "ironwood",
+    name: "Ironwood",
+    blurb: "Dense forest stronghold. Slow pressure wins the trees.",
+  },
+  {
+    id: "sunbay",
+    name: "Sun Bay",
+    blurb: "Bright coastal docks. Speed runs rule the pier.",
+  },
+  {
+    id: "mistvale",
+    name: "Mistvale",
+    blurb: "Foggy lowlands. Stack overall to claim the valley.",
+  },
+  {
+    id: "dustmarch",
+    name: "Dust March",
+    blurb: "Open badlands. Central crossroads — always contested.",
+  },
+  {
+    id: "embercoast",
+    name: "Ember Coast",
+    blurb: "Volcanic shore. Fast fingers conquer the lava edge.",
+  },
+  {
+    id: "crystalmere",
+    name: "Crystal Mere",
+    blurb: "Glassy lakes. Quiet grind builds lasting hold.",
+  },
+  {
+    id: "shadowfen",
+    name: "Shadow Fen",
+    blurb: "Dark wetlands. Hardest to hold — top 10s shines.",
+  },
+];
+
+const TERRITORY_BY_ID = Object.fromEntries(TERRITORIES.map((t) => [t.id, t]));
+
+/** Selected on map (detail panel). */
+let selectedTerritoryId = null;
+/** Active campaign while pushing on Play tab. */
+let activeTerritoryId = null;
+/** { [territoryId]: { lifetime_count, challenge_best } } */
+let myTerritoryScores = {};
+/** Map overview kings: { [id]: { life_king, challenge_king } } */
+let territoryOverview = {};
+let territoryLifeBoard = [];
+let territoryChalBoard = [];
+let territoryPushTimer = null;
+let pendingTerritoryPushes = 0;
 
 let toastTimer = null;
 let recordTimer = null;
@@ -1633,12 +1712,27 @@ function endChallenge() {
     })
     .catch((e) => console.warn("challenge sync", e));
 
+  if (activeTerritoryId) {
+    const cur = myTerritoryScore(activeTerritoryId);
+    if (challenge.count > cur.challenge_best) {
+      myTerritoryScores[activeTerritoryId] = {
+        lifetime_count: cur.lifetime_count,
+        challenge_best: challenge.count,
+      };
+    }
+    updateTerritoryBanner();
+    reportTerritoryChallenge(activeTerritoryId, challenge.count).catch((e) =>
+      console.warn("territory challenge", e)
+    );
+  }
+
   els.challengeResult.hidden = false;
+  const terrName = activeTerritoryId ? territoryName(activeTerritoryId) : "";
   els.challengeResult.textContent = isRecord
-    ? `${challenge.count} pushes — new personal best!`
-    : `${challenge.count} pushes`;
+    ? `${challenge.count} pushes — new personal best!${terrName ? ` (${terrName})` : ""}`
+    : `${challenge.count} pushes${terrName ? ` · ${terrName}` : ""}`;
   els.challengeAgain.hidden = false;
-  if (isRecord) showNewRecord("New 10s best!");
+  if (isRecord) showNewRecord(terrName ? `New 10s · ${terrName}!` : "New 10s best!");
   else confettiBurst();
 }
 
@@ -1670,6 +1764,7 @@ function push() {
     spawnFloater();
     pulseRings();
     schedulePushRpc(0);
+    // 10s challenge only awards territory on run end (not per-tap)
     return;
   }
 
@@ -1681,10 +1776,15 @@ function push() {
     state.highScore = state.sessionCount;
     isRecord = true;
   }
+  if (activeTerritoryId) {
+    bumpLocalTerritoryLife(activeTerritoryId, 1);
+  }
   saveState();
   schedulePushRpc(state.sessionCount);
+  if (activeTerritoryId) scheduleTerritoryPushRpc(activeTerritoryId, 1);
   scheduleMetaSync();
   renderScores();
+  updateTerritoryBanner();
   spawnFloater();
   pulseRings();
   if (isRecord && state.sessionCount > 1) showNewRecord();
@@ -1745,6 +1845,7 @@ async function initBackend() {
     await refreshSocial();
     await loadGlobalBoard();
     await loadBoardPosts();
+    await refreshTerritoriesUi().catch(() => {});
     await processPendingDeepLink();
   } catch (err) {
     console.warn("Push Thru online init failed:", err);
@@ -1782,6 +1883,7 @@ async function initBackend() {
         setOnlineUi();
         await refreshSocial();
         await loadGlobalBoard();
+        await refreshTerritoriesUi().catch(() => {});
         await processPendingDeepLink();
       } catch (e) {
         console.warn(e);
@@ -3137,6 +3239,305 @@ async function sendDm(raw) {
   await loadDmThread(activeDmFriend.id);
 }
 
+// ——— Territories ———
+
+function territoryName(id) {
+  return TERRITORY_BY_ID[id]?.name || id || "Region";
+}
+
+function territoryBlurb(id) {
+  return TERRITORY_BY_ID[id]?.blurb || "";
+}
+
+function myTerritoryScore(id) {
+  const row = myTerritoryScores[id] || {};
+  return {
+    lifetime_count: Math.max(0, Number(row.lifetime_count) || 0),
+    challenge_best: Math.max(0, Number(row.challenge_best) || 0),
+  };
+}
+
+function bumpLocalTerritoryLife(id, n = 1) {
+  if (!id) return;
+  const cur = myTerritoryScore(id);
+  myTerritoryScores[id] = {
+    lifetime_count: cur.lifetime_count + Math.max(0, n),
+    challenge_best: cur.challenge_best,
+  };
+}
+
+function applyTerritoryRow(row) {
+  if (!row?.territory_id) return;
+  myTerritoryScores[row.territory_id] = {
+    lifetime_count: Math.max(0, Number(row.lifetime_count) || 0),
+    challenge_best: Math.max(0, Number(row.challenge_best) || 0),
+  };
+}
+
+function scheduleTerritoryPushRpc(territoryId, count = 1) {
+  if (!territoryId || !online) return;
+  pendingTerritoryPushes += Math.max(0, count);
+  clearTimeout(territoryPushTimer);
+  territoryPushTimer = setTimeout(() => {
+    const n = pendingTerritoryPushes;
+    pendingTerritoryPushes = 0;
+    const tid = activeTerritoryId || territoryId;
+    if (!tid || !n) return;
+    recordTerritoryPushesOnServer(tid, n).catch((e) => console.warn("territory push", e));
+  }, 350);
+}
+
+async function recordTerritoryPushesOnServer(territoryId, count) {
+  if (!sb || !session?.user || !online || !territoryId) return;
+  let left = Math.max(0, Math.floor(Number(count) || 0));
+  let last = null;
+  while (left > 0) {
+    const chunk = Math.min(200, left);
+    const { data, error } = await sb.rpc("jp_territory_record_pushes", {
+      p_territory_id: territoryId,
+      p_count: chunk,
+    });
+    if (error) {
+      console.warn("jp_territory_record_pushes", error);
+      return;
+    }
+    last = data;
+    left -= chunk;
+  }
+  if (last) {
+    applyTerritoryRow(last);
+    updateTerritoryBanner();
+    if (selectedTerritoryId === territoryId) renderTerritoryDetail();
+  }
+}
+
+async function reportTerritoryChallenge(territoryId, count) {
+  if (!sb || !session?.user || !online || !territoryId) return;
+  const { data, error } = await sb.rpc("jp_territory_report_challenge", {
+    p_territory_id: territoryId,
+    p_count: Math.floor(Number(count) || 0),
+  });
+  if (error) {
+    console.warn("jp_territory_report_challenge", error);
+    return;
+  }
+  if (data) {
+    applyTerritoryRow(data);
+    updateTerritoryBanner();
+    if (selectedTerritoryId === territoryId) {
+      await loadTerritoryBoards(territoryId);
+      renderTerritoryDetail();
+    }
+  }
+}
+
+async function loadMyTerritoryScores() {
+  if (!sb || !session?.user || !online) return;
+  const { data, error } = await sb.rpc("jp_territory_my_scores");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_territory_my_scores", error);
+    }
+    return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  const next = {};
+  for (const r of rows) {
+    if (!r?.territory_id) continue;
+    next[r.territory_id] = {
+      lifetime_count: Math.max(0, Number(r.lifetime_count) || 0),
+      challenge_best: Math.max(0, Number(r.challenge_best) || 0),
+    };
+  }
+  myTerritoryScores = next;
+}
+
+async function loadTerritoryOverview() {
+  if (!sb || !online) {
+    territoryOverview = {};
+    paintTerritoryMap();
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_territory_map_overview");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_territory_map_overview", error);
+    }
+    territoryOverview = {};
+    paintTerritoryMap();
+    return;
+  }
+  const rows = Array.isArray(data) ? data : [];
+  const next = {};
+  for (const r of rows) {
+    if (!r?.territory_id) continue;
+    next[r.territory_id] = {
+      life_king: r.life_king || null,
+      challenge_king: r.challenge_king || null,
+    };
+  }
+  territoryOverview = next;
+  paintTerritoryMap();
+}
+
+async function loadTerritoryBoards(territoryId) {
+  territoryLifeBoard = [];
+  territoryChalBoard = [];
+  if (!sb || !online || !territoryId) {
+    renderTerritoryBoards();
+    return;
+  }
+  const [lifeRes, chalRes] = await Promise.all([
+    sb.rpc("jp_territory_leaderboard", {
+      p_territory_id: territoryId,
+      p_metric: "lifetime",
+      p_limit: 5,
+    }),
+    sb.rpc("jp_territory_leaderboard", {
+      p_territory_id: territoryId,
+      p_metric: "challenge",
+      p_limit: 5,
+    }),
+  ]);
+  if (lifeRes.error) console.warn(lifeRes.error);
+  else territoryLifeBoard = Array.isArray(lifeRes.data) ? lifeRes.data : [];
+  if (chalRes.error) console.warn(chalRes.error);
+  else territoryChalBoard = Array.isArray(chalRes.data) ? chalRes.data : [];
+  renderTerritoryBoards();
+}
+
+function paintTerritoryMap() {
+  if (!els.territoryMap) return;
+  const uid = session?.user?.id;
+  els.territoryMap.querySelectorAll(".territory-region").forEach((path) => {
+    const id = path.dataset.territory;
+    path.classList.toggle("is-selected", id === selectedTerritoryId);
+    const ov = territoryOverview[id];
+    const iLead = !!(uid && ov?.life_king?.id === uid);
+    path.classList.toggle("is-held", iLead);
+  });
+}
+
+function renderTerritoryBoardList(el, emptyEl, rows, metric) {
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = "";
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+  el.innerHTML = rows
+    .map((r, i) => {
+      const score = metric === "challenge" ? r.challenge_best : r.lifetime_count;
+      const life = r.global_life ?? r.lifetime_count ?? 0;
+      const you = r.id === myId();
+      const name = r.display_name || "Player";
+      return `
+      <li class="board-row ${rankPlaceClass(i)}">
+        ${rankEmblemHtml(i)}
+        <div class="person-info">
+          <div class="name">${levelBadgeHtml(life, true)} ${escapeHtml(name)}${you ? '<span class="you-tag">You</span>' : ""}</div>
+        </div>
+        ${scoreEmblemHtml(score, life)}
+      </li>`;
+    })
+    .join("");
+}
+
+function renderTerritoryBoards() {
+  renderTerritoryBoardList(
+    els.territoryBoardLife,
+    els.territoryBoardLifeEmpty,
+    territoryLifeBoard,
+    "lifetime"
+  );
+  renderTerritoryBoardList(
+    els.territoryBoard10s,
+    els.territoryBoard10sEmpty,
+    territoryChalBoard,
+    "challenge"
+  );
+}
+
+function renderTerritoryDetail() {
+  if (!selectedTerritoryId) {
+    if (els.territoryDetail) els.territoryDetail.hidden = true;
+    if (els.territoryPickHint) els.territoryPickHint.hidden = false;
+    return;
+  }
+  const t = TERRITORY_BY_ID[selectedTerritoryId];
+  if (!t) return;
+  if (els.territoryDetail) els.territoryDetail.hidden = false;
+  if (els.territoryPickHint) els.territoryPickHint.hidden = true;
+  if (els.territoryDetailTitle) els.territoryDetailTitle.textContent = t.name;
+  if (els.territoryDetailBlurb) els.territoryDetailBlurb.textContent = t.blurb;
+  const mine = myTerritoryScore(selectedTerritoryId);
+  if (els.territoryMyLife) els.territoryMyLife.textContent = formatNum(mine.lifetime_count);
+  if (els.territoryMy10s) els.territoryMy10s.textContent = formatNum(mine.challenge_best);
+
+  const ov = territoryOverview[selectedTerritoryId];
+  const lifeKing = ov?.life_king?.name;
+  const chalKing = ov?.challenge_king?.name;
+  let pill = "Open";
+  if (lifeKing && chalKing && lifeKing === chalKing) pill = `Held by ${lifeKing}`;
+  else if (lifeKing || chalKing) pill = "Contested";
+  if (els.territoryDetailPill) els.territoryDetailPill.textContent = pill;
+
+  renderTerritoryBoards();
+  paintTerritoryMap();
+}
+
+async function selectTerritory(id) {
+  if (!TERRITORY_BY_ID[id]) return;
+  selectedTerritoryId = id;
+  paintTerritoryMap();
+  renderTerritoryDetail();
+  await loadTerritoryBoards(id);
+  renderTerritoryDetail();
+}
+
+function setActiveTerritory(id, mode = "free") {
+  activeTerritoryId = id || null;
+  updateTerritoryBanner();
+  if (id) {
+    setMode(mode === "challenge" ? "challenge" : "free");
+    setTab("play");
+    toast(
+      mode === "challenge"
+        ? `Conquer ${territoryName(id)} — 10s run`
+        : `Leveling up ${territoryName(id)}`
+    );
+  }
+}
+
+function clearActiveTerritory() {
+  activeTerritoryId = null;
+  updateTerritoryBanner();
+  toast("Left territory campaign");
+}
+
+function updateTerritoryBanner() {
+  if (!els.territoryBanner) return;
+  if (!activeTerritoryId) {
+    els.territoryBanner.hidden = true;
+    return;
+  }
+  els.territoryBanner.hidden = false;
+  if (els.territoryBannerName) els.territoryBannerName.textContent = territoryName(activeTerritoryId);
+  const mine = myTerritoryScore(activeTerritoryId);
+  if (els.territoryBannerMeta) {
+    els.territoryBannerMeta.textContent = `Overall ${formatNum(mine.lifetime_count)} · 10s ${formatNum(mine.challenge_best)}`;
+  }
+}
+
+async function refreshTerritoriesUi() {
+  await Promise.all([loadMyTerritoryScores(), loadTerritoryOverview()]);
+  if (selectedTerritoryId) await loadTerritoryBoards(selectedTerritoryId);
+  renderTerritoryDetail();
+  updateTerritoryBanner();
+  paintTerritoryMap();
+}
+
 // ——— Tabs ———
 
 function setTab(tab) {
@@ -3158,6 +3559,11 @@ function setTab(tab) {
     renderGlobalBoard();
     if (online) loadGlobalBoard().then(() => refreshSocial());
   }
+  if (tab === "territories") {
+    paintTerritoryMap();
+    renderTerritoryDetail();
+    if (online) refreshTerritoriesUi().catch((e) => console.warn(e));
+  }
   if (tab === "chat") {
     if (!featureChatEnabled()) {
       setTab("play");
@@ -3177,6 +3583,29 @@ function bindEvents() {
   $$(".mode-btn").forEach((btn) => {
     btn.addEventListener("click", () => setMode(btn.dataset.mode));
   });
+
+  // Territory map: click regions
+  els.territoryMap?.addEventListener("click", (e) => {
+    const path = e.target?.closest?.(".territory-region");
+    if (!path?.dataset?.territory) return;
+    selectTerritory(path.dataset.territory).catch((err) => console.warn(err));
+  });
+  els.territoryRefresh?.addEventListener("click", () => {
+    refreshTerritoriesUi()
+      .then(() => toast("Map refreshed"))
+      .catch((err) => toast(err.message || "Refresh failed"));
+  });
+  els.territoryPlayFree?.addEventListener("click", () => {
+    if (!selectedTerritoryId) return toast("Pick a region first");
+    if (!online) return toast("Go online to claim territories");
+    setActiveTerritory(selectedTerritoryId, "free");
+  });
+  els.territoryPlay10s?.addEventListener("click", () => {
+    if (!selectedTerritoryId) return toast("Pick a region first");
+    if (!online) return toast("Go online to conquer territories");
+    setActiveTerritory(selectedTerritoryId, "challenge");
+  });
+  els.territoryBannerExit?.addEventListener("click", () => clearActiveTerritory());
 
   const press = () => els.pushBtn.classList.add("pressed");
   const release = () => els.pushBtn.classList.remove("pressed");

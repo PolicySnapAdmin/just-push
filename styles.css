@@ -1541,7 +1541,7 @@ textarea#dm-input:focus {
   transform: translateX(-50%);
   width: min(480px, 100%);
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   padding: 8px 4px calc(8px + var(--safe-bottom));
   background: color-mix(in srgb, var(--bg) 88%, transparent);
@@ -1549,6 +1549,8 @@ textarea#dm-input:focus {
   backdrop-filter: blur(16px);
   z-index: 50;
 }
+
+
 
 .tab {
   display: flex;
@@ -1755,7 +1757,8 @@ textarea#dm-input:focus {
 }
 
 #app[data-chat="0"] .tabbar {
-  grid-template-columns: repeat(5, 1fr);
+  /* play · map · scores · friends · groups · settings */
+  grid-template-columns: repeat(6, 1fr);
 }
 
 #app[data-github="0"] #github-btn,
@@ -2256,4 +2259,184 @@ textarea#dm-input:focus {
 #admin-msg {
   margin-top: 10px;
   min-height: 1.2em;
+}
+
+/* ——— Territories map side game ——— */
+.territory-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, #f5a524 40%, var(--border));
+  background: linear-gradient(120deg, color-mix(in srgb, #f5a524 14%, transparent), color-mix(in srgb, var(--btn) 8%, transparent));
+}
+
+.territory-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.territory-banner-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f5a524;
+}
+
+.territory-banner-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.territory-map-card {
+  overflow: hidden;
+}
+
+.territory-map-hint {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+}
+
+.territory-map-wrap {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0a121c;
+}
+
+.territory-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+}
+
+.territory-region {
+  fill: color-mix(in srgb, #2a4a6a 70%, #1a2a3a);
+  stroke: #7eb6d9;
+  stroke-width: 1.6;
+  cursor: pointer;
+  transition: fill 0.15s, stroke 0.15s, filter 0.15s;
+}
+
+.territory-region:hover {
+  fill: color-mix(in srgb, #3d6a92 75%, #243848);
+  stroke: #b8e0ff;
+}
+
+.territory-region.is-selected {
+  fill: color-mix(in srgb, var(--btn) 45%, #2a3a50);
+  stroke: #fff;
+  stroke-width: 2.2;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--btn) 55%, transparent));
+}
+
+.territory-region.is-held {
+  fill: color-mix(in srgb, #f5a524 35%, #2a4a6a);
+  stroke: #f5a524;
+}
+
+.territory-region.is-held.is-selected {
+  fill: color-mix(in srgb, var(--btn) 40%, #f5a524);
+  stroke: #fff;
+}
+
+.territory-label {
+  fill: rgba(255, 255, 255, 0.78);
+  font-size: 9px;
+  font-weight: 700;
+  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+  text-anchor: middle;
+  pointer-events: none;
+  user-select: none;
+}
+
+.territory-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.territory-legend .leg-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: -1px;
+  border: 1px solid var(--border);
+}
+
+.territory-legend .leg-swatch.selected {
+  background: color-mix(in srgb, var(--btn) 55%, #2a3a50);
+  border-color: #fff;
+}
+
+.territory-legend .leg-swatch.held {
+  background: color-mix(in srgb, #f5a524 45%, #2a4a6a);
+  border-color: #f5a524;
+}
+
+.territory-legend .leg-swatch.contested {
+  background: color-mix(in srgb, #2a4a6a 70%, #1a2a3a);
+  border-color: #7eb6d9;
+}
+
+.territory-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #7eb6d9 18%, transparent);
+  color: #9ec9e8;
+}
+
+.territory-your-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.territory-your-stats .stat {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+}
+
+.territory-play-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.territory-play-actions .solid-btn,
+.territory-play-actions .ghost-btn {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 10px 8px;
+}
+
+@media (max-width: 360px) {
+  .territory-play-actions {
+    grid-template-columns: 1fr;
+  }
+  .tab {
+    font-size: 0.55rem;
+  }
 }

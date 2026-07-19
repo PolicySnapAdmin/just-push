@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719b" />
+  <link rel="stylesheet" href="styles.css?v=20260719c" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -122,6 +122,118 @@
           <button type="button" class="ghost-btn" id="challenge-again" hidden>Play again</button>
           <p class="new-record" id="new-record" hidden>New high score!</p>
           <p class="challenge-result" id="challenge-result" hidden></p>
+        </div>
+
+        <!-- Active territory campaign (side game) -->
+        <div class="territory-banner" id="territory-banner" hidden>
+          <div class="territory-banner-text">
+            <span class="territory-banner-label">Territory</span>
+            <strong id="territory-banner-name">—</strong>
+            <span class="territory-banner-meta" id="territory-banner-meta"></span>
+          </div>
+          <button type="button" class="ghost-btn tiny" id="territory-banner-exit">Leave</button>
+        </div>
+      </section>
+
+      <!-- TERRITORIES (regional side game) -->
+      <section class="panel" data-panel="territories" hidden aria-label="Territories">
+        <h2>Territories</h2>
+        <p class="panel-sub">
+          Claim regions on the map. Unlimited builds your overall in a zone; 10s conquers it.
+          Separate from global high scores.
+        </p>
+
+        <div class="card territory-map-card">
+          <div class="card-head">
+            <h3>The Realm</h3>
+            <button type="button" class="ghost-btn tiny" id="territory-refresh">Refresh</button>
+          </div>
+          <p class="muted territory-map-hint">Tap a region to open its boards.</p>
+          <div class="territory-map-wrap" id="territory-map-wrap">
+            <svg class="territory-map" id="territory-map" viewBox="0 0 400 320" role="img" aria-label="Territory map">
+              <!-- Stylized island with 8 bordered regions -->
+              <defs>
+                <linearGradient id="mapSea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0c1a28"/>
+                  <stop offset="100%" stop-color="#0a121c"/>
+                </linearGradient>
+                <filter id="mapGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <rect width="400" height="320" fill="url(#mapSea)" rx="16"/>
+              <!-- Water decoration -->
+              <circle cx="40" cy="50" r="3" fill="#1e3a52" opacity="0.5"/>
+              <circle cx="360" cy="280" r="4" fill="#1e3a52" opacity="0.4"/>
+              <circle cx="370" cy="40" r="2" fill="#1e3a52" opacity="0.5"/>
+
+              <!-- Regions (clickable paths) -->
+              <g class="territory-regions">
+                <path class="territory-region" data-territory="frostpeak" d="M110,28 L190,22 L210,70 L170,95 L120,85 Z" />
+                <path class="territory-region" data-territory="ironwood" d="M210,70 L280,48 L310,100 L260,125 L170,95 Z" />
+                <path class="territory-region" data-territory="sunbay" d="M280,48 L350,70 L355,140 L300,155 L260,125 L310,100 Z" />
+                <path class="territory-region" data-territory="mistvale" d="M120,85 L170,95 L200,150 L140,175 L95,140 Z" />
+                <path class="territory-region" data-territory="dustmarch" d="M170,95 L260,125 L250,180 L200,150 Z" />
+                <path class="territory-region" data-territory="embercoast" d="M260,125 L300,155 L320,210 L250,230 L220,190 L250,180 Z" />
+                <path class="territory-region" data-territory="crystalmere" d="M95,140 L140,175 L160,230 L100,250 L70,200 Z" />
+                <path class="territory-region" data-territory="shadowfen" d="M140,175 L200,150 L250,180 L220,190 L250,230 L180,260 L120,240 L160,230 Z" />
+              </g>
+
+              <!-- Labels -->
+              <g class="territory-labels" pointer-events="none">
+                <text x="155" y="58" class="territory-label">Frost Peak</text>
+                <text x="235" y="90" class="territory-label">Ironwood</text>
+                <text x="310" y="110" class="territory-label">Sun Bay</text>
+                <text x="130" y="130" class="territory-label">Mistvale</text>
+                <text x="210" y="145" class="territory-label">Dust March</text>
+                <text x="275" y="185" class="territory-label">Ember</text>
+                <text x="105" y="200" class="territory-label">Crystal</text>
+                <text x="185" y="215" class="territory-label">Shadow Fen</text>
+              </g>
+            </svg>
+          </div>
+          <div class="territory-legend">
+            <span><i class="leg-swatch selected"></i> Selected</span>
+            <span><i class="leg-swatch held"></i> You lead overall</span>
+            <span><i class="leg-swatch contested"></i> Contested</span>
+          </div>
+        </div>
+
+        <div class="card" id="territory-detail" hidden>
+          <div class="card-head">
+            <h3 id="territory-detail-title">Region</h3>
+            <span class="territory-pill" id="territory-detail-pill">—</span>
+          </div>
+          <p class="muted" id="territory-detail-blurb"></p>
+
+          <div class="territory-your-stats" id="territory-your-stats">
+            <div class="stat">
+              <span class="stat-label">Your overall</span>
+              <span class="stat-value" id="territory-my-life">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Your best 10s</span>
+              <span class="stat-value" id="territory-my-10s">0</span>
+            </div>
+          </div>
+
+          <div class="territory-play-actions">
+            <button type="button" class="solid-btn" id="territory-play-free">Level up overall</button>
+            <button type="button" class="ghost-btn" id="territory-play-10s">Conquer with 10s</button>
+          </div>
+
+          <h3 class="board-subhead">Top overall (region)</h3>
+          <ol class="leaderboard" id="territory-board-life"></ol>
+          <p class="empty" id="territory-board-life-empty">No pushes here yet — be first.</p>
+
+          <h3 class="board-subhead" style="margin-top:16px">Top 10 seconds (region)</h3>
+          <ol class="leaderboard" id="territory-board-10s"></ol>
+          <p class="empty" id="territory-board-10s-empty">No 10s runs here yet — claim it.</p>
+        </div>
+
+        <div class="card" id="territory-pick-hint">
+          <p class="muted" style="margin:0">Select a region on the map to see its leaderboards and start a campaign.</p>
         </div>
       </section>
 
@@ -458,6 +570,10 @@
         <span class="tab-icon">●</span>
         <span>Push</span>
       </button>
+      <button type="button" class="tab" data-tab="territories">
+        <span class="tab-icon">◈</span>
+        <span>Map</span>
+      </button>
       <button type="button" class="tab" data-tab="scores">
         <span class="tab-icon">▲</span>
         <span>Scores</span>
@@ -589,7 +705,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719b"></script>
-  <script src="app.js?v=20260719b"></script>
+  <script src="config.js?v=20260719c"></script>
+  <script src="app.js?v=20260719c"></script>
 </body>
 </html>
