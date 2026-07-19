@@ -2914,3 +2914,35 @@ body.focus-lock-open {
 #app[data-tab="play"] main {
   overscroll-behavior-y: contain;
 }
+
+.admin-challenge-row {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.admin-challenge-row input {
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+}
+
+#admin-lookup-code,
+#admin-challenge-code {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 400px) {
+  .admin-challenge-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .admin-challenge-row .solid-btn {
+    grid-column: 1 / -1;
+  }
+}

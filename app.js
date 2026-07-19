@@ -468,8 +468,16 @@ const els = {
   adminDebugBtn: $("#admin-debug-btn"),
   adminHygieneBtn: $("#admin-hygiene-btn"),
   adminDupesBtn: $("#admin-dupes-btn"),
+  adminSecurityBtn: $("#admin-security-btn"),
+  adminOpenPvpBtn: $("#admin-open-pvp-btn"),
+  adminExpirePvpBtn: $("#admin-expire-pvp-btn"),
   adminResetForm: $("#admin-reset-form"),
   adminResetEmail: $("#admin-reset-email"),
+  adminLookupForm: $("#admin-lookup-form"),
+  adminLookupCode: $("#admin-lookup-code"),
+  adminChallengeForm: $("#admin-challenge-form"),
+  adminChallengeCode: $("#admin-challenge-code"),
+  adminChallengeValue: $("#admin-challenge-value"),
   adminOutWrap: $("#admin-out-wrap"),
   adminOutLabel: $("#admin-out-label"),
   adminOut: $("#admin-out"),
@@ -1048,6 +1056,130 @@ async function adminSendPasswordReset(email) {
   toast("Reset email requested");
 }
 
+function formatSecuritySnapshot(data) {
+  if (!data || typeof data !== "object") return String(data);
+  const g = data.guards || {};
+  return [
+    "=== Security snapshot ===",
+    `Profiles: ${data.profiles ?? "?"}   Email: ${data.email_users ?? "?"}   Anon: ${data.anon_users ?? "?"}`,
+    `Empty guests: ${data.empty_players ?? "?"}   Dupe name groups: ${data.duplicate_name_groups ?? "?"}`,
+    `Friendships: ${data.friendships ?? "?"}   Groups: ${data.groups ?? "?"}`,
+    `Pending friend requests: ${data.pending_friend_requests ?? "?"}`,
+    `Open PvP: ${data.open_pvp_matches ?? "?"}   Stale (>30m): ${data.stale_pvp_30m ?? "?"}`,
+    `Territory rows: ${data.territory_rows ?? "?"}`,
+    `Max 10s on board: ${data.challenge_max ?? "?"}   Max lifetime: ${data.lifetime_max ?? "?"}`,
+    "",
+    `Score guard trigger: ${g.score_update_trigger ? "OK" : "MISSING"}`,
+    `Territory guard trigger: ${g.territory_guard_trigger ? "OK" : "MISSING"}`,
+    data.ran_at ? `\nAs of ${data.ran_at}` : "",
+  ].join("\n");
+}
+
+function formatPlayerLookup(data) {
+  if (!data?.found) return `No player with code ${data?.code || "—"}.`;
+  const pvp = data.pvp_stats || {};
+  return [
+    `=== ${data.display_name} (${data.friend_code}) ===`,
+    `id: ${data.id}`,
+    `email: ${data.email || "(none)"}   anon: ${data.is_anonymous ? "yes" : "no"}`,
+    `high: ${data.high_score}   10s: ${data.challenge_best}   life: ${data.lifetime_count}`,
+    `sessions: ${data.sessions_played}   friends: ${data.friends}`,
+    `friend req in/out: ${data.pending_in}/${data.pending_out}   open pvp: ${data.open_pvp}`,
+    pvp.matches != null
+      ? `pvp W-L-D: ${pvp.wins}-${pvp.losses}-${pvp.draws} (${pvp.matches} matches)`
+      : "pvp: no matches yet",
+    data.created_at ? `joined: ${data.created_at}` : "",
+  ].join("\n");
+}
+
+async function adminSecuritySnapshot() {
+  if (!sb || !online) throw new Error("Go online first");
+  if (!isAdminUser) throw new Error("Admin only");
+  setAdminMsg("Loading security snapshot…");
+  setAdminOut(null);
+  const { data, error } = await sb.rpc("jp_admin_security_snapshot");
+  if (error) throw new Error(formatAdminError(error));
+  setAdminOut(formatSecuritySnapshot(data), "Security snapshot");
+  setAdminMsg("Security snapshot loaded.", "ok");
+  toast("Security snapshot");
+}
+
+async function adminListOpenPvp() {
+  if (!sb || !online) throw new Error("Go online first");
+  if (!isAdminUser) throw new Error("Admin only");
+  setAdminMsg("Loading open PvP…");
+  setAdminOut(null);
+  const { data, error } = await sb.rpc("jp_admin_list_open_pvp");
+  if (error) throw new Error(formatAdminError(error));
+  const rows = Array.isArray(data) ? data : [];
+  if (!rows.length) {
+    setAdminOut("No open PvP matches.", "Open PvP");
+    setAdminMsg("No open duels.", "ok");
+    return;
+  }
+  const lines = rows.map((m, i) => {
+    return `${i + 1}. [${m.status}] ${m.duration_sec}s  ${m.challenger_name}(${m.challenger_code}) vs ${m.opponent_name}(${m.opponent_code})\n   ${m.id}\n   created ${m.created_at}`;
+  });
+  setAdminOut(lines.join("\n\n"), "Open PvP");
+  setAdminMsg(`${rows.length} open match(es).`, "ok");
+}
+
+async function adminExpireStalePvp() {
+  if (!sb || !online) throw new Error("Go online first");
+  if (!isAdminUser) throw new Error("Admin only");
+  const ok = window.confirm("Expire open PvP duels older than 30 minutes?");
+  if (!ok) {
+    setAdminMsg("Cancelled.", "");
+    return;
+  }
+  setAdminMsg("Expiring stale PvP…");
+  const { data, error } = await sb.rpc("jp_admin_expire_stale_pvp", { p_minutes: 30 });
+  if (error) throw new Error(formatAdminError(error));
+  setAdminOut(JSON.stringify(data, null, 2), "Expire stale PvP");
+  setAdminMsg(`Expired ${data?.expired ?? 0} match(es).`, "ok");
+  toast(`Expired ${data?.expired ?? 0} PvP`);
+}
+
+async function adminLookupCode(codeRaw) {
+  if (!sb || !online) throw new Error("Go online first");
+  if (!isAdminUser) throw new Error("Admin only");
+  const code = extractFriendCode(codeRaw);
+  if (!code) throw new Error("Enter a friend code");
+  setAdminMsg(`Looking up ${code}…`);
+  setAdminOut(null);
+  const { data, error } = await sb.rpc("jp_admin_lookup_code", { p_code: code });
+  if (error) throw new Error(formatAdminError(error));
+  setAdminOut(formatPlayerLookup(data), "Player lookup");
+  setAdminMsg(data?.found ? `Found ${data.display_name}.` : "Not found.", data?.found ? "ok" : "err");
+}
+
+async function adminSetChallengeBest(codeRaw, value) {
+  if (!sb || !online) throw new Error("Go online first");
+  if (!isAdminUser) throw new Error("Admin only");
+  const code = extractFriendCode(codeRaw);
+  const v = Math.floor(Number(value));
+  if (!code) throw new Error("Enter a friend code");
+  if (!Number.isFinite(v) || v < 0) throw new Error("Enter a valid 10s value");
+  const ok = window.confirm(`Set ${code} challenge_best to ${v}?\n\nThis overrides their 10s best on the server.`);
+  if (!ok) {
+    setAdminMsg("Override cancelled.", "");
+    return;
+  }
+  setAdminMsg("Updating 10s best…");
+  const { data, error } = await sb.rpc("jp_admin_set_challenge_best", {
+    p_code: code,
+    p_value: v,
+  });
+  if (error) throw new Error(formatAdminError(error));
+  setAdminOut(
+    `${data.name} (${data.code})\n10s was ${data.challenge_best_was} → now ${data.challenge_best_now}`,
+    "10s override"
+  );
+  setAdminMsg(`Set ${data.code} 10s to ${data.challenge_best_now}.`, "ok");
+  toast(`10s set to ${data.challenge_best_now}`);
+  loadGlobalBoard().catch(() => {});
+}
+
 async function runAdminAction(action) {
   if (adminBusy) return;
   setAdminBusy(true);
@@ -1055,6 +1187,9 @@ async function runAdminAction(action) {
     if (action === "debug") await adminRunDebug();
     else if (action === "dupes") await adminListDupes();
     else if (action === "cleanup") await adminRunHygiene();
+    else if (action === "security") await adminSecuritySnapshot();
+    else if (action === "openpvp") await adminListOpenPvp();
+    else if (action === "expirepvp") await adminExpireStalePvp();
     else throw new Error(`Unknown admin action: ${action}`);
   } catch (err) {
     const msg = formatAdminError(err);
@@ -5058,6 +5193,34 @@ function bindEvents() {
     setAdminBusy(true);
     try {
       await adminSendPasswordReset(els.adminResetEmail?.value);
+    } catch (err) {
+      const msg = formatAdminError(err);
+      setAdminMsg(msg, "err");
+      setAdminOut(msg, "Error");
+    } finally {
+      setAdminBusy(false);
+    }
+  });
+  els.adminLookupForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (adminBusy) return;
+    setAdminBusy(true);
+    try {
+      await adminLookupCode(els.adminLookupCode?.value);
+    } catch (err) {
+      const msg = formatAdminError(err);
+      setAdminMsg(msg, "err");
+      setAdminOut(msg, "Error");
+    } finally {
+      setAdminBusy(false);
+    }
+  });
+  els.adminChallengeForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (adminBusy) return;
+    setAdminBusy(true);
+    try {
+      await adminSetChallengeBest(els.adminChallengeCode?.value, els.adminChallengeValue?.value);
     } catch (err) {
       const msg = formatAdminError(err);
       setAdminMsg(msg, "err");

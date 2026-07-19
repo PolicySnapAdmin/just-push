@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719g" />
+  <link rel="stylesheet" href="styles.css?v=20260719h" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -619,10 +619,17 @@
             <span class="admin-pill">ADMIN</span>
           </div>
           <p class="muted admin-intro">
-            Support &amp; hygiene only. Never changes scores. Email accounts are never deleted.
+            Support &amp; hygiene. Email accounts are never deleted. 10s override is gated and logged.
           </p>
 
           <div class="admin-actions" id="admin-actions">
+            <button type="button" class="admin-action" id="admin-security-btn" data-admin-action="security">
+              <span class="admin-action-ico" aria-hidden="true">🛡</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Security snapshot</span>
+                <span class="admin-action-sub">Counts, open PvP, guards, stale duels</span>
+              </span>
+            </button>
             <button type="button" class="admin-action" id="admin-debug-btn" data-admin-action="debug">
               <span class="admin-action-ico" aria-hidden="true">📊</span>
               <span class="admin-action-text">
@@ -644,6 +651,37 @@
                 <span class="admin-action-sub">Anon name dupes + empty “Player” guests</span>
               </span>
             </button>
+            <button type="button" class="admin-action" id="admin-open-pvp-btn" data-admin-action="openpvp">
+              <span class="admin-action-ico" aria-hidden="true">⚔</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Open PvP matches</span>
+                <span class="admin-action-sub">List pending / live duels</span>
+              </span>
+            </button>
+            <button type="button" class="admin-action admin-action-warn" id="admin-expire-pvp-btn" data-admin-action="expirepvp">
+              <span class="admin-action-ico" aria-hidden="true">⏱</span>
+              <span class="admin-action-text">
+                <span class="admin-action-title">Expire stale PvP</span>
+                <span class="admin-action-sub">Cancel open duels older than 30m</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="admin-reset-box">
+            <p class="admin-reset-label">Lookup player by code</p>
+            <form id="admin-lookup-form" class="admin-reset-row">
+              <input type="text" id="admin-lookup-code" placeholder="AD1B7E" autocomplete="off" maxlength="16" spellcheck="false" />
+              <button type="submit" class="solid-btn admin-reset-btn">Lookup</button>
+            </form>
+          </div>
+
+          <div class="admin-reset-box">
+            <p class="admin-reset-label">Set 10s best (support override)</p>
+            <form id="admin-challenge-form" class="admin-challenge-row">
+              <input type="text" id="admin-challenge-code" placeholder="Code" autocomplete="off" maxlength="16" spellcheck="false" />
+              <input type="number" id="admin-challenge-value" placeholder="e.g. 93" min="0" max="300" inputmode="numeric" />
+              <button type="submit" class="solid-btn admin-reset-btn">Set</button>
+            </form>
           </div>
 
           <div class="admin-reset-box">
@@ -902,7 +940,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719g"></script>
-  <script src="app.js?v=20260719g"></script>
+  <script src="config.js?v=20260719h"></script>
+  <script src="app.js?v=20260719h"></script>
 </body>
 </html>
