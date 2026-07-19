@@ -545,6 +545,9 @@ const els = {
   pvpLosses: $("#pvp-losses"),
   pvpDraws: $("#pvp-draws"),
   pvpKd: $("#pvp-kd"),
+  pvpQuotaText: $("#pvp-quota-text"),
+  pvpQuotaFill: $("#pvp-quota-fill"),
+  pvpQuotaHint: $("#pvp-quota-hint"),
   pvpDurationSelect: $("#pvp-duration-select"),
   pvpChallengeBtn: $("#pvp-challenge-btn"),
   pvpMsg: $("#pvp-msg"),
@@ -644,6 +647,13 @@ let pendingTerritoryPushes = 0;
 
 // PVP duel state
 let pvpStats = { wins: 0, losses: 0, draws: 0, matches_played: 0, kd: 0 };
+let pvpQuota = {
+  base_limit: 10,
+  sent: 0,
+  wins_bonus: 0,
+  allowed: 10,
+  remaining: 10,
+};
 let pvpInbox = [];
 let pvpRankings = [];
 let pvpActiveMatch = null; // match object currently in modal
@@ -3100,6 +3110,37 @@ function renderPvpStats() {
   if (els.pvpKd) els.pvpKd.textContent = String(pvpStats.kd ?? 0);
 }
 
+function renderPvpQuota() {
+  const base = Math.max(1, Number(pvpQuota.base_limit) || 10);
+  const allowed = Math.max(0, Number(pvpQuota.allowed) || base);
+  const sent = Math.max(0, Number(pvpQuota.sent) || 0);
+  const remaining = Math.max(0, Number(pvpQuota.remaining) || 0);
+  const winsBonus = Math.max(0, Number(pvpQuota.wins_bonus) || 0);
+  if (els.pvpQuotaText) {
+    els.pvpQuotaText.textContent = `${sent} / ${allowed} used · ${remaining} left`;
+  }
+  if (els.pvpQuotaFill) {
+    const pct = Math.min(100, Math.round((sent / Math.max(allowed, 1)) * 100));
+    els.pvpQuotaFill.style.width = `${pct}%`;
+    els.pvpQuotaFill.classList.toggle("is-full", remaining <= 0);
+    els.pvpQuotaFill.classList.toggle("is-low", remaining > 0 && remaining <= 2);
+  }
+  if (els.pvpQuotaHint) {
+    if (remaining <= 0) {
+      els.pvpQuotaHint.textContent =
+        winsBonus > 0
+          ? "Limit reached for today. Win more (as opponent) or wait for UTC reset."
+          : "Limit reached (10). Win a duel today to unlock +1, or wait for UTC reset.";
+    } else if (winsBonus > 0) {
+      els.pvpQuotaHint.textContent = `Base 10 + ${winsBonus} win bonus. Each win unlocks another request today.`;
+    } else {
+      els.pvpQuotaHint.textContent = "Win a duel to unlock another request today.";
+    }
+  }
+  // Dim challenge UI when empty
+  if (els.pvpChallengeBtn) els.pvpChallengeBtn.disabled = remaining <= 0 && online;
+}
+
 function pvpOpponentName(m) {
   const uid = myId();
   if (!m) return "—";
@@ -3223,6 +3264,33 @@ async function loadPvpStats() {
   renderPvpStats();
 }
 
+async function loadPvpQuota() {
+  if (!sb || !online) {
+    pvpQuota = { base_limit: 10, sent: 0, wins_bonus: 0, allowed: 10, remaining: 10 };
+    renderPvpQuota();
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_pvp_quota");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_pvp_quota", error);
+    }
+    return;
+  }
+  if (data && typeof data === "object") {
+    pvpQuota = {
+      base_limit: Number(data.base_limit) || 10,
+      sent: Number(data.sent) || 0,
+      wins_bonus: Number(data.wins_bonus) || 0,
+      allowed: Number(data.allowed) || 10,
+      remaining: Number(data.remaining) || 0,
+      day_start: data.day_start,
+      resets_at: data.resets_at,
+    };
+  }
+  renderPvpQuota();
+}
+
 async function loadPvpInbox() {
   if (!sb || !online) {
     pvpInbox = [];
@@ -3259,22 +3327,35 @@ async function loadPvpRankings() {
 
 async function refreshPvpUi() {
   renderPvpFriendsQuick();
-  await Promise.all([loadPvpStats(), loadPvpInbox(), loadPvpRankings()]);
+  await Promise.all([loadPvpStats(), loadPvpQuota(), loadPvpInbox(), loadPvpRankings()]);
+}
+
+function formatPvpQuotaError(msg) {
+  if (/Daily PvP limit|limit reached/i.test(msg || "")) {
+    return "Daily PvP limit reached. Win a duel for +1, or wait for UTC reset.";
+  }
+  return msg || "Challenge failed";
 }
 
 async function pvpChallenge(opponentId, duration) {
   if (!sb || !online) throw new Error("Go online to duel");
   if (!opponentId) throw new Error("Pick someone to duel");
+  if (online && (pvpQuota.remaining ?? 0) <= 0) {
+    await loadPvpQuota();
+    if ((pvpQuota.remaining ?? 0) <= 0) {
+      throw new Error("Daily PvP limit reached. Win a duel for +1, or wait for UTC reset.");
+    }
+  }
   const dur = Number(duration) === 25 ? 25 : 10;
   const { data, error } = await sb.rpc("jp_pvp_challenge", {
     p_opponent_id: opponentId,
     p_duration: dur,
   });
-  if (error) throw new Error(error.message || "Challenge failed");
-  await loadPvpInbox();
+  if (error) throw new Error(formatPvpQuotaError(error.message));
+  await Promise.all([loadPvpInbox(), loadPvpQuota()]);
   const matchId = data?.id || data;
   if (matchId) await openPvpMatch(matchId);
-  toast(`${dur}s duel sent`);
+  toast(`${dur}s duel sent · ${pvpQuota.remaining ?? "?"} left today`);
   return data;
 }
 
@@ -3282,21 +3363,27 @@ async function pvpChallengeByCode(codeRaw, duration) {
   if (!sb || !online) throw new Error("Go online to duel");
   const code = extractFriendCode(codeRaw);
   if (!code || code.length < 4) throw new Error("Enter their player code");
+  if (online && (pvpQuota.remaining ?? 0) <= 0) {
+    await loadPvpQuota();
+    if ((pvpQuota.remaining ?? 0) <= 0) {
+      throw new Error("Daily PvP limit reached. Win a duel for +1, or wait for UTC reset.");
+    }
+  }
   const dur = Number(duration) === 25 ? 25 : 10;
   const { data, error } = await sb.rpc("jp_pvp_challenge_by_code", {
     p_code: code,
     p_duration: dur,
   });
   if (error) {
-    const msg = error.message || "Challenge failed";
-    if (/own code/i.test(msg)) throw new Error("That's your own code");
-    if (/No player/i.test(msg)) throw new Error("No player with that code");
+    const msg = formatPvpQuotaError(error.message);
+    if (/own code/i.test(error.message || "")) throw new Error("That's your own code");
+    if (/No player/i.test(error.message || "")) throw new Error("No player with that code");
     throw new Error(msg);
   }
-  await loadPvpInbox();
+  await Promise.all([loadPvpInbox(), loadPvpQuota()]);
   const matchId = data?.id || data;
   if (matchId) await openPvpMatch(matchId);
-  toast(`${dur}s duel sent to ${code}`);
+  toast(`${dur}s duel sent to ${code} · ${pvpQuota.remaining ?? "?"} left`);
   return data;
 }
 
@@ -3326,7 +3413,8 @@ async function pvpSubmit(matchId, score) {
   });
   if (error) throw new Error(error.message || "Submit failed");
   if (data) syncPvpModalFromMatch(data);
-  await Promise.all([loadPvpInbox(), loadPvpStats(), loadPvpRankings()]);
+  // Wins unlock +1 daily challenge — refresh quota after results settle
+  await Promise.all([loadPvpInbox(), loadPvpStats(), loadPvpQuota(), loadPvpRankings()]);
   return data;
 }
 
@@ -3376,6 +3464,7 @@ function startPvpPolling() {
 function syncPvpModalFromMatch(m) {
   if (!m) return;
   const prev = pvpActiveMatch || {};
+  const wasComplete = prev.status === "complete";
   // RPCs may return raw row without display names — keep previous labels
   pvpActiveMatch = {
     ...prev,
@@ -3385,6 +3474,10 @@ function syncPvpModalFromMatch(m) {
   };
   renderPvpModal();
   maybeStartPvpCountdown();
+  // Win bonus unlocks +1 daily request
+  if (m.status === "complete" && !wasComplete) {
+    Promise.all([loadPvpQuota(), loadPvpStats()]).catch(() => {});
+  }
 }
 
 async function openPvpMatch(matchIdOrObj) {

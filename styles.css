@@ -2946,3 +2946,61 @@ body.focus-lock-open {
     grid-column: 1 / -1;
   }
 }
+
+.pvp-quota-bar {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+.pvp-quota-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pvp-quota-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pvp-quota-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pvp-quota-track {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  overflow: hidden;
+}
+
+.pvp-quota-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #22c55e);
+  transition: width 0.25s ease, background 0.2s;
+}
+
+.pvp-quota-fill.is-low {
+  background: linear-gradient(90deg, #f5a524, #f97316);
+}
+
+.pvp-quota-fill.is-full {
+  background: linear-gradient(90deg, #ff4d6d, #f43f5e);
+}
+
+.pvp-quota-hint {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+}

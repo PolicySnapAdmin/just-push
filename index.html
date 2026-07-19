@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719h" />
+  <link rel="stylesheet" href="styles.css?v=20260719i" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -408,7 +408,7 @@
             </div>
             <p class="muted pvp-intro">
               Duel <strong>anyone</strong> with their player code — no friendship required.
-              Friends still get a quick Duel button. 10s or 25s, both ready up, then mash.
+              <strong>10 challenge requests per day</strong> (UTC); each win unlocks +1 more for that day.
             </p>
 
             <div class="pvp-stats-grid" id="pvp-stats-grid">
@@ -428,6 +428,17 @@
                 <span class="pvp-stat-val" id="pvp-kd">0</span>
                 <span class="pvp-stat-label">K/D</span>
               </div>
+            </div>
+
+            <div class="pvp-quota-bar" id="pvp-quota-bar" title="Daily PvP challenge requests">
+              <div class="pvp-quota-meta">
+                <span class="pvp-quota-label">Today’s challenges</span>
+                <span class="pvp-quota-val" id="pvp-quota-text">— / 10</span>
+              </div>
+              <div class="pvp-quota-track" aria-hidden="true">
+                <div class="pvp-quota-fill" id="pvp-quota-fill"></div>
+              </div>
+              <p class="muted pvp-quota-hint" id="pvp-quota-hint">Win a duel to unlock another request today.</p>
             </div>
 
             <div class="pvp-challenge-box">
@@ -940,7 +951,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719h"></script>
-  <script src="app.js?v=20260719h"></script>
+  <script src="config.js?v=20260719i"></script>
+  <script src="app.js?v=20260719i"></script>
 </body>
 </html>
