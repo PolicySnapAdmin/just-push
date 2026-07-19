@@ -46,6 +46,7 @@ just-push/
 ├── scripts/
 │   ├── build-www.mjs                 # Web assets → www/ for iOS
 │   ├── deploy_backend.ps1            # Apply all SQL migrations
+│   ├── backup_pushthru.ps1           # Logical data backup → backups/ (gitignored)
 │   └── set_github_hygiene_secrets.ps1  # Wire Actions secrets for daily cleanup
 ├── .github/workflows/
 │   └── hygiene-cleanup.yml           # Daily jp_run_hygiene (needs secrets)
@@ -60,6 +61,7 @@ just-push/
 |-----|----------------|
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map, data flow, file roles |
 | [docs/SUPABASE.md](./docs/SUPABASE.md) | Migrations + dashboard checklist |
+| [docs/BACKUP.md](./docs/BACKUP.md) | Backups, redundancy, breach / total-failure runbook |
 | [docs/SECURITY.md](./docs/SECURITY.md) | RLS notes + residual risks |
 | [docs/APP_STORE.md](./docs/APP_STORE.md) | Ship checklist (no-Mac → Mac) |
 | [docs/STORE_LISTING.md](./docs/STORE_LISTING.md) | App Store description draft |

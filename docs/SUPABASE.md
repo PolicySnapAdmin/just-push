@@ -128,6 +128,7 @@ If secrets are missing the job **warns and skips** (exit 0) so Pages deploys sta
 | Cadence | Check |
 |---------|--------|
 | **Never, if Action green** | Guest / clone cleanup — automated daily |
+| **Weekly** | Logical backup: `.\scripts\backup_pushthru.ps1 -Zip` → copy offsite ([BACKUP.md](./BACKUP.md)) |
 | **Monthly (~5 min)** | [GitHub Actions](https://github.com/PolicySnapAdmin/just-push/actions) last hygiene run green; Supabase free-tier disk/auth usage |
 | **As needed** | Admin Dev tools for password resets / one-off name dupes; rotate `service_role` → re-run `set_github_hygiene_secrets.ps1` |
 

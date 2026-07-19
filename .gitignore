@@ -5,6 +5,10 @@ Thumbs.db
 *.log
 *.bak
 
+# Local disaster-recovery dumps (player data — never commit; repo is public)
+backups/
+*.backup.zip
+
 # Supabase CLI local state (may contain pooler URLs)
 .supabase/
 supabase/.temp/
