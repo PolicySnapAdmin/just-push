@@ -144,6 +144,8 @@ function defaultState() {
     mode: "free",
     boardMetric: "high",
     challengeAuthVersion: CHALLENGE_AUTH_VERSION,
+    /** Auto-open focus lock for 10s challenges */
+    focusLockDefault: false,
   };
 }
 
@@ -336,12 +338,35 @@ const els = {
   pushLabel: $("#push-label"),
   pushHint: $("#push-hint"),
   floaters: $("#floaters"),
-  resetSession: $("#reset-session"),
   challengeAgain: $("#challenge-again"),
   newRecord: $("#new-record"),
   challengeResult: $("#challenge-result"),
   timerRing: $("#timer-ring"),
   timerProgress: $("#timer-progress"),
+  focusLockOpen: $("#focus-lock-open"),
+  focusLockModal: $("#focus-lock-modal"),
+  focusLockClose: $("#focus-lock-close"),
+  focusLockTitle: $("#focus-lock-title"),
+  focusLockSub: $("#focus-lock-sub"),
+  focusLockStatsFree: $("#focus-lock-stats-free"),
+  focusLockStatsChallenge: $("#focus-lock-stats-challenge"),
+  focusSession: $("#focus-session"),
+  focusHigh: $("#focus-high"),
+  focusLife: $("#focus-life"),
+  focusChallengeCount: $("#focus-challenge-count"),
+  focusChallengeTimer: $("#focus-challenge-timer"),
+  focusChallengeBest: $("#focus-challenge-best"),
+  focusTimerRing: $("#focus-timer-ring"),
+  focusTimerProgress: $("#focus-timer-progress"),
+  focusPushBtn: $("#focus-push-btn"),
+  focusPushLabel: $("#focus-push-label"),
+  focusPushHint: $("#focus-push-hint"),
+  focusFloaters: $("#focus-floaters"),
+  focusLockResult: $("#focus-lock-result"),
+  focusChallengeAgain: $("#focus-challenge-again"),
+  focusResetSession: $("#focus-reset-session"),
+  focusLockPref: $("#focus-lock-pref"),
+  resetSessionSettings: $("#reset-session-settings"),
   profileBtn: $("#profile-btn"),
   displayName: $("#display-name"),
   avatar: $("#avatar"),
@@ -1595,15 +1620,24 @@ function renderScores() {
   els.rankChallenge.textContent = formatNum(cBest);
   els.rankLife.textContent = formatNum(state.lifetimeCount);
   els.rankSessions.textContent = formatNum(state.sessionsPlayed);
+  // Focus lock mirrors
+  if (els.focusSession) els.focusSession.textContent = formatNum(state.sessionCount);
+  if (els.focusHigh) els.focusHigh.textContent = formatNum(state.highScore);
+  if (els.focusLife) els.focusLife.textContent = formatNum(state.lifetimeCount);
+  if (els.focusChallengeCount) els.focusChallengeCount.textContent = formatNum(challenge.count);
+  if (els.focusChallengeBest) els.focusChallengeBest.textContent = formatNum(cBest);
   renderLevel();
+  syncFocusLockChrome();
 }
 
 function spawnFloater() {
+  const host = isFocusLockOpen() && els.focusFloaters ? els.focusFloaters : els.floaters;
+  if (!host) return;
   const el = document.createElement("span");
   el.className = "floater";
   el.textContent = "+1";
   el.style.setProperty("--dx", `${(Math.random() - 0.5) * 80}px`);
-  els.floaters.appendChild(el);
+  host.appendChild(el);
   setTimeout(() => el.remove(), 700);
 }
 
@@ -1662,56 +1696,77 @@ function setMode(mode) {
   });
   els.scoreboardFree.hidden = mode !== "free";
   els.scoreboardChallenge.hidden = mode !== "challenge";
-  els.resetSession.hidden = mode !== "free";
   els.challengeAgain.hidden = mode !== "challenge" || challenge.status !== "done";
   els.challengeResult.hidden = true;
+  if (els.focusChallengeAgain) {
+    els.focusChallengeAgain.hidden = mode !== "challenge" || challenge.status !== "done";
+  }
+  if (els.focusResetSession) els.focusResetSession.hidden = mode !== "free";
   updatePushChrome();
   if (mode === "challenge") {
     challenge.status = "idle";
     challenge.count = 0;
     els.timerRing.hidden = false;
+    if (els.focusTimerRing) els.focusTimerRing.hidden = false;
     setTimerVisual(1);
     els.challengeTimer.textContent = "10.0";
+    if (els.focusChallengeTimer) els.focusChallengeTimer.textContent = "10.0";
     renderScores();
   } else {
     els.timerRing.hidden = true;
+    if (els.focusTimerRing) els.focusTimerRing.hidden = true;
     cancelAnimationFrame(challenge.raf);
   }
+  syncFocusLockChrome();
 }
 
 function updatePushChrome() {
-  if (state.mode === "free") {
-    els.pushLabel.textContent = "PUSH";
-    els.pushHint.textContent = "or spacebar";
-    els.pushBtn.classList.remove("waiting", "locked");
-    els.pushBtn.disabled = false;
-    return;
-  }
-  if (challenge.status === "idle") {
-    els.pushLabel.textContent = "START";
-    els.pushHint.textContent = "10 second run";
-    els.pushBtn.classList.add("waiting");
-    els.pushBtn.classList.remove("locked");
-    els.pushBtn.disabled = false;
-  } else if (challenge.status === "running") {
-    els.pushLabel.textContent = "PUSH";
-    els.pushHint.textContent = "go go go";
-    els.pushBtn.classList.remove("waiting", "locked");
-    els.pushBtn.disabled = false;
-  } else {
-    els.pushLabel.textContent = "DONE";
-    els.pushHint.textContent = `${challenge.count} pushes`;
-    els.pushBtn.classList.add("locked");
-    els.pushBtn.classList.remove("waiting");
-    els.pushBtn.disabled = true;
-  }
+  const apply = (labelEl, hintEl, btn) => {
+    if (!btn) return;
+    if (state.mode === "free") {
+      if (labelEl) labelEl.textContent = "PUSH";
+      if (hintEl) hintEl.textContent = "tap zone";
+      btn.classList.remove("waiting", "locked");
+      btn.disabled = false;
+      return;
+    }
+    if (challenge.status === "idle") {
+      if (labelEl) labelEl.textContent = "START";
+      if (hintEl) hintEl.textContent = "10 second run";
+      btn.classList.add("waiting");
+      btn.classList.remove("locked");
+      btn.disabled = false;
+    } else if (challenge.status === "running") {
+      if (labelEl) labelEl.textContent = "PUSH";
+      if (hintEl) hintEl.textContent = "go go go";
+      btn.classList.remove("waiting", "locked");
+      btn.disabled = false;
+    } else {
+      if (labelEl) labelEl.textContent = "DONE";
+      if (hintEl) hintEl.textContent = `${challenge.count} pushes`;
+      btn.classList.add("locked");
+      btn.classList.remove("waiting");
+      btn.disabled = true;
+    }
+  };
+  apply(els.pushLabel, els.pushHint, els.pushBtn);
+  apply(els.focusPushLabel, els.focusPushHint, els.focusPushBtn);
+  if (state.mode === "free" && els.pushHint) els.pushHint.textContent = "or spacebar";
 }
 
 function setTimerVisual(fraction) {
   // fraction 1 = full time, 0 = empty
   const f = Math.max(0, Math.min(1, fraction));
-  els.timerProgress.style.strokeDasharray = String(CIRCUMFERENCE);
-  els.timerProgress.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - f));
+  const offset = String(CIRCUMFERENCE * (1 - f));
+  const dash = String(CIRCUMFERENCE);
+  if (els.timerProgress) {
+    els.timerProgress.style.strokeDasharray = dash;
+    els.timerProgress.style.strokeDashoffset = offset;
+  }
+  if (els.focusTimerProgress) {
+    els.focusTimerProgress.style.strokeDasharray = dash;
+    els.focusTimerProgress.style.strokeDashoffset = offset;
+  }
 }
 
 function startChallenge() {
@@ -1721,9 +1776,18 @@ function startChallenge() {
   challenge.endsAt = challenge.startedAt + CHALLENGE_MS;
   els.challengeResult.hidden = true;
   els.challengeAgain.hidden = true;
+  if (els.focusChallengeAgain) els.focusChallengeAgain.hidden = true;
+  if (els.focusLockResult) {
+    els.focusLockResult.hidden = true;
+    els.focusLockResult.textContent = "";
+  }
   els.newRecord.hidden = true;
   updatePushChrome();
   renderScores();
+  // PvP-style fixed arena for max taps when preference is on
+  if (state.focusLockDefault && !isFocusLockOpen()) {
+    openFocusLock();
+  }
   tickChallenge();
 }
 
@@ -1732,6 +1796,7 @@ function tickChallenge() {
   const left = Math.max(0, challenge.endsAt - now);
   const secs = (left / 1000).toFixed(1);
   els.challengeTimer.textContent = secs;
+  if (els.focusChallengeTimer) els.focusChallengeTimer.textContent = secs;
   setTimerVisual(left / CHALLENGE_MS);
   if (left <= 0) {
     endChallenge();
@@ -1783,10 +1848,17 @@ function endChallenge() {
 
   els.challengeResult.hidden = false;
   const terrName = activeTerritoryId ? territoryName(activeTerritoryId) : "";
-  els.challengeResult.textContent = isRecord
+  const resultText = isRecord
     ? `${challenge.count} pushes — new personal best!${terrName ? ` (${terrName})` : ""}`
     : `${challenge.count} pushes${terrName ? ` · ${terrName}` : ""}`;
+  els.challengeResult.textContent = resultText;
   els.challengeAgain.hidden = false;
+  if (els.focusLockResult) {
+    els.focusLockResult.hidden = false;
+    els.focusLockResult.textContent = resultText;
+  }
+  if (els.focusChallengeAgain) els.focusChallengeAgain.hidden = false;
+  if (els.focusChallengeTimer) els.focusChallengeTimer.textContent = "0.0";
   if (isRecord) showNewRecord(terrName ? `New 10s · ${terrName}!` : "New 10s best!");
   else confettiBurst();
 }
@@ -1796,10 +1868,75 @@ function resetChallengeIdle() {
   challenge.count = 0;
   els.challengeResult.hidden = true;
   els.challengeAgain.hidden = true;
+  if (els.focusChallengeAgain) els.focusChallengeAgain.hidden = true;
+  if (els.focusLockResult) {
+    els.focusLockResult.hidden = true;
+    els.focusLockResult.textContent = "";
+  }
   els.challengeTimer.textContent = "10.0";
+  if (els.focusChallengeTimer) els.focusChallengeTimer.textContent = "10.0";
   setTimerVisual(1);
   updatePushChrome();
   renderScores();
+}
+
+// ——— Focus lock (fixed-screen push, PvP-style) ———
+
+let focusLockScrollY = 0;
+
+function isFocusLockOpen() {
+  return !!(els.focusLockModal?.open);
+}
+
+function openFocusLock() {
+  if (!els.focusLockModal) return;
+  if (els.focusLockModal.open) {
+    syncFocusLockChrome();
+    return;
+  }
+  focusLockScrollY = window.scrollY || 0;
+  document.body.classList.add("focus-lock-open");
+  document.body.style.top = `-${focusLockScrollY}px`;
+  els.focusLockModal.showModal();
+  syncFocusLockChrome();
+  renderScores();
+}
+
+function closeFocusLock() {
+  if (!els.focusLockModal?.open) return;
+  els.focusLockModal.close();
+  document.body.classList.remove("focus-lock-open");
+  document.body.style.top = "";
+  window.scrollTo(0, focusLockScrollY || 0);
+}
+
+function syncFocusLockChrome() {
+  if (!els.focusLockModal) return;
+  const free = state.mode !== "challenge";
+  if (els.focusLockStatsFree) els.focusLockStatsFree.hidden = !free;
+  if (els.focusLockStatsChallenge) els.focusLockStatsChallenge.hidden = free;
+  if (els.focusTimerRing) els.focusTimerRing.hidden = free;
+  if (els.focusResetSession) els.focusResetSession.hidden = !free;
+  if (els.focusChallengeAgain) {
+    els.focusChallengeAgain.hidden = free || challenge.status !== "done";
+  }
+  if (els.focusLockTitle) {
+    els.focusLockTitle.textContent = free ? "Focus lock · Unlimited" : "Focus lock · 10s";
+  }
+  if (els.focusLockSub) {
+    els.focusLockSub.textContent = free
+      ? "Screen locked — mash freely"
+      : challenge.status === "running"
+        ? "Go! Page scroll is locked"
+        : challenge.status === "done"
+          ? "Run finished"
+          : "Tap START — page won’t scroll";
+  }
+  updatePushChrome();
+}
+
+function syncFocusLockPrefUi() {
+  if (els.focusLockPref) els.focusLockPref.checked = !!state.focusLockDefault;
 }
 
 // ——— Push ———
@@ -4324,7 +4461,10 @@ function setTab(tab) {
     updateChatOnlineHint();
     setChatMode(chatMode);
   }
-  if (tab === "style") renderSwatches();
+  if (tab === "style") {
+    renderSwatches();
+    syncFocusLockPrefUi();
+  }
 }
 
 // ——— Events ———
@@ -4491,36 +4631,85 @@ function bindEvents() {
     pvpPush();
   });
 
-  const press = () => els.pushBtn.classList.add("pressed");
-  const release = () => els.pushBtn.classList.remove("pressed");
+  const pressMain = () => els.pushBtn?.classList.add("pressed");
+  const releaseMain = () => els.pushBtn?.classList.remove("pressed");
+  const pressFocus = () => els.focusPushBtn?.classList.add("pressed");
+  const releaseFocus = () => els.focusPushBtn?.classList.remove("pressed");
 
+  // Main button — pointerdown only (same as PvP) for max taps/sec
   els.pushBtn.addEventListener("pointerdown", (e) => {
     if (els.pushBtn.disabled) return;
     e.preventDefault();
-    press();
+    pressMain();
     push();
   });
-  els.pushBtn.addEventListener("pointerup", release);
-  els.pushBtn.addEventListener("pointerleave", release);
-  els.pushBtn.addEventListener("pointercancel", release);
+  els.pushBtn.addEventListener("pointerup", releaseMain);
+  els.pushBtn.addEventListener("pointerleave", releaseMain);
+  els.pushBtn.addEventListener("pointercancel", releaseMain);
   els.pushBtn.addEventListener("click", (e) => e.preventDefault());
+
+  // Focus lock button — identical handling, fixed screen
+  els.focusPushBtn?.addEventListener("pointerdown", (e) => {
+    if (els.focusPushBtn.disabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    pressFocus();
+    push();
+  });
+  els.focusPushBtn?.addEventListener("pointerup", releaseFocus);
+  els.focusPushBtn?.addEventListener("pointerleave", releaseFocus);
+  els.focusPushBtn?.addEventListener("pointercancel", releaseFocus);
+  els.focusPushBtn?.addEventListener("click", (e) => e.preventDefault());
+
+  // Block touchmove on focus overlay so the browser never scrolls/zooms
+  els.focusLockModal?.addEventListener(
+    "touchmove",
+    (e) => {
+      e.preventDefault();
+    },
+    { passive: false }
+  );
 
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space" || e.key === " ") {
       const tag = document.activeElement?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || els.nameModal.open) return;
+      if (tag === "INPUT" || tag === "TEXTAREA" || els.nameModal?.open) return;
+      if (els.pvpModal?.open) return;
       e.preventDefault();
-      if (!e.repeat && !els.pushBtn.disabled) {
-        press();
+      const btn = isFocusLockOpen() ? els.focusPushBtn : els.pushBtn;
+      if (!e.repeat && btn && !btn.disabled) {
+        if (isFocusLockOpen()) pressFocus();
+        else pressMain();
         push();
       }
     }
+    if (e.key === "Escape" && isFocusLockOpen()) {
+      e.preventDefault();
+      closeFocusLock();
+    }
   });
   window.addEventListener("keyup", (e) => {
-    if (e.code === "Space" || e.key === " ") release();
+    if (e.code === "Space" || e.key === " ") {
+      releaseMain();
+      releaseFocus();
+    }
   });
 
-  els.resetSession.addEventListener("click", resetSession);
+  els.focusLockOpen?.addEventListener("click", () => openFocusLock());
+  els.focusLockClose?.addEventListener("click", () => closeFocusLock());
+  els.focusLockModal?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeFocusLock();
+  });
+  els.focusChallengeAgain?.addEventListener("click", () => resetChallengeIdle());
+  els.focusResetSession?.addEventListener("click", () => resetSession());
+  els.resetSessionSettings?.addEventListener("click", () => resetSession());
+  els.focusLockPref?.addEventListener("change", () => {
+    state.focusLockDefault = !!els.focusLockPref.checked;
+    saveState();
+    toast(state.focusLockDefault ? "Focus lock on for 10s runs" : "Focus lock default off");
+  });
+
   els.challengeAgain.addEventListener("click", resetChallengeIdle);
 
   els.profileBtn.addEventListener("click", () => {
@@ -4952,6 +5141,7 @@ async function init() {
   renderSwatches();
   renderGlobalBoard();
   setMode(state.mode === "challenge" ? "challenge" : "free");
+  syncFocusLockPrefUi();
   bindEvents();
   if (pendingDeepLink?.type === "tab" && pendingDeepLink.social) {
     socialMode = pendingDeepLink.social;

@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719f" />
+  <link rel="stylesheet" href="styles.css?v=20260719g" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -118,11 +118,14 @@
         </div>
 
         <div class="session-actions">
-          <button type="button" class="ghost-btn" id="reset-session">Reset session</button>
+          <button type="button" class="solid-btn" id="focus-lock-open">Focus lock</button>
           <button type="button" class="ghost-btn" id="challenge-again" hidden>Play again</button>
           <p class="new-record" id="new-record" hidden>New high score!</p>
           <p class="challenge-result" id="challenge-result" hidden></p>
         </div>
+        <p class="muted focus-lock-hint">
+          Focus lock opens a fixed full-screen button (like PvP) so the page doesn’t scroll while you mash.
+        </p>
 
         <!-- Active territory campaign (side game) -->
         <div class="territory-banner" id="territory-banner" hidden>
@@ -546,6 +549,23 @@
           </div>
         </div>
 
+        <div class="card" id="play-options-card">
+          <h3>Play options</h3>
+          <label class="toggle-row" for="focus-lock-pref">
+            <span class="toggle-text">
+              <strong>Focus lock by default</strong>
+              <span class="muted">Auto-open the fixed button screen for 10s challenges (no page scroll).</span>
+            </span>
+            <input type="checkbox" id="focus-lock-pref" />
+          </label>
+          <div class="stack-form" style="margin-top:14px">
+            <button type="button" class="ghost-btn" id="reset-session-settings">Reset session</button>
+            <p class="muted" style="margin:0;font-size:0.78rem">
+              Clears this device’s current unlimited run count (not lifetime or 10s best).
+            </p>
+          </div>
+        </div>
+
         <div class="card" id="account-card">
           <h3>Account</h3>
           <p class="muted" id="account-status">Connecting…</p>
@@ -682,6 +702,68 @@
       </button>
     </nav>
   </div>
+
+  <!-- Focus lock: fixed push arena (no page scroll — matches PvP feel) -->
+  <dialog id="focus-lock-modal" class="modal focus-lock-modal">
+    <div class="focus-lock-card">
+      <div class="focus-lock-head">
+        <div class="focus-lock-titles">
+          <h2 id="focus-lock-title">Focus lock</h2>
+          <p class="muted" id="focus-lock-sub">Screen locked — mash freely</p>
+        </div>
+        <button type="button" class="ghost-btn tiny" id="focus-lock-close" aria-label="Exit focus lock">Exit</button>
+      </div>
+
+      <div class="focus-lock-stats" id="focus-lock-stats-free">
+        <div class="stat">
+          <span class="stat-label">Session</span>
+          <span class="stat-value" id="focus-session">0</span>
+        </div>
+        <div class="stat stat-highlight">
+          <span class="stat-label">Best run</span>
+          <span class="stat-value" id="focus-high">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Lifetime</span>
+          <span class="stat-value" id="focus-life">0</span>
+        </div>
+      </div>
+      <div class="focus-lock-stats" id="focus-lock-stats-challenge" hidden>
+        <div class="stat">
+          <span class="stat-label">This run</span>
+          <span class="stat-value" id="focus-challenge-count">0</span>
+        </div>
+        <div class="stat stat-highlight stat-timer">
+          <span class="stat-label">Time left</span>
+          <span class="stat-value" id="focus-challenge-timer">10.0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Best 10s</span>
+          <span class="stat-value" id="focus-challenge-best">0</span>
+        </div>
+      </div>
+
+      <div class="focus-lock-arena">
+        <div class="timer-ring focus-timer-ring" id="focus-timer-ring" hidden aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle class="timer-track" cx="50" cy="50" r="46" />
+            <circle class="timer-progress" id="focus-timer-progress" cx="50" cy="50" r="46" />
+          </svg>
+        </div>
+        <button type="button" class="push-btn focus-push-btn" id="focus-push-btn" aria-label="Push">
+          <span class="push-label" id="focus-push-label">PUSH</span>
+          <span class="push-hint" id="focus-push-hint">tap zone</span>
+        </button>
+        <div class="floaters" id="focus-floaters" aria-hidden="true"></div>
+      </div>
+
+      <p class="focus-lock-result" id="focus-lock-result" hidden></p>
+      <div class="focus-lock-actions">
+        <button type="button" class="ghost-btn" id="focus-challenge-again" hidden>Play again</button>
+        <button type="button" class="ghost-btn" id="focus-reset-session" hidden>Reset session</button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- PVP duel arena -->
   <dialog id="pvp-modal" class="modal pvp-modal">
@@ -820,7 +902,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719f"></script>
-  <script src="app.js?v=20260719f"></script>
+  <script src="config.js?v=20260719g"></script>
+  <script src="app.js?v=20260719g"></script>
 </body>
 </html>
