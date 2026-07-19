@@ -724,3 +724,52 @@ grant execute on function public.jp_pvp_challenge_by_code(text, integer, integer
 grant execute on function public.jp_pvp_respond(uuid, boolean) to authenticated;
 grant execute on function public.jp_pvp_cancel(uuid) to authenticated;
 grant execute on function public.jp_admin_expire_stale_pvp(integer) to authenticated;
+
+-- Inbox includes wager for UI
+create or replace function public.jp_pvp_inbox()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then return '[]'::jsonb; end if;
+  return coalesce((
+    select jsonb_agg(row_to_json(x)::jsonb order by x.created_at desc)
+    from (
+      select
+        m.id,
+        m.challenger_id,
+        m.opponent_id,
+        m.duration_sec,
+        m.status,
+        m.wager,
+        m.challenger_ready,
+        m.opponent_ready,
+        m.starts_at,
+        m.ends_at,
+        m.challenger_score,
+        m.opponent_score,
+        m.winner_id,
+        m.created_at,
+        cp.display_name as challenger_name,
+        op.display_name as opponent_name
+      from public.jp_pvp_matches m
+      join public.jp_profiles cp on cp.id = m.challenger_id
+      join public.jp_profiles op on op.id = m.opponent_id
+      where (m.challenger_id = uid or m.opponent_id = uid)
+        and (
+          m.status in ('pending', 'accepted', 'running')
+          or (m.status = 'complete' and m.updated_at > now() - interval '2 hours')
+        )
+      order by m.created_at desc
+      limit 30
+    ) x
+  ), '[]'::jsonb);
+end;
+$$;
+
+grant execute on function public.jp_pvp_inbox() to authenticated;
