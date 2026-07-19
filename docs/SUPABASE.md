@@ -73,6 +73,26 @@ Or paste each file under `supabase/migrations/` into the SQL Editor **in filenam
 This Supabase project is shared (PumpQuest / PolicySnap / Push Thru).  
 Push Thru only uses **`jp_*`** names. Do not drop unrelated tables.
 
+## Automated cleanup (hygiene)
+
+You do **not** need to push for each cleanup once this is live.
+
+| Mechanism | What it does |
+|-----------|----------------|
+| **`jp_run_hygiene()`** | DB function: deletes empty guest `Player`s (0 scores, &gt;30 min old) and anonymous **name+score clones** (Billy/Cleetis pattern) |
+| **pg_cron** (if enabled on project) | Runs `jp_run_hygiene` hourly at :15 |
+| **GitHub Action** `.github/workflows/hygiene-cleanup.yml` | Daily backup; needs repo secrets `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` |
+| **Manual** | `select public.jp_run_hygiene();` in SQL Editor, or `.\scripts\cleanup_empty_guests.ps1` |
+
+Safe rules: never deletes email users; never deletes anyone with real progress unless they are a clear anon clone of an older same-name same-score profile.
+
+### Enable GitHub Action secrets (optional)
+
+Repo → **Settings → Secrets and variables → Actions**:
+
+- `SUPABASE_URL` = `https://jpnaotxkcpnwgqkzxdue.supabase.co`
+- `SUPABASE_SERVICE_ROLE_KEY` = service_role key (Dashboard → Settings → API) — **never** put this in client code
+
 ## Optional later
 
 - Auth rate limits / CAPTCHA for anonymous spam  

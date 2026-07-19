@@ -1,0 +1,33 @@
+# Optional backup scheduler if pg_cron is unavailable.
+# Requires repo secrets:
+#   SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY
+#
+# Does NOT run until those secrets are set (job will fail closed otherwise).
+
+name: Push Thru hygiene cleanup
+
+on:
+  schedule:
+    # Every day at 08:15 UTC
+    - cron: "15 8 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run jp_run_hygiene via PostgREST
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Secrets not configured — skip. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in repo secrets."
+            exit 0
+          fi
+          curl -sS -X POST "${SUPABASE_URL}/rest/v1/rpc/jp_run_hygiene" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
