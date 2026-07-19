@@ -3004,3 +3004,92 @@ body.focus-lock-open {
   margin: 8px 0 0;
   font-size: 0.72rem;
 }
+
+/* Arena Tokens economy (Social only) */
+.token-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-color: color-mix(in srgb, #fbbf24 40%, var(--border));
+  background: linear-gradient(145deg, color-mix(in srgb, #fbbf24 12%, transparent), var(--bg-card, transparent));
+}
+
+.token-bar-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.token-icon {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, #fbbf24 22%, transparent);
+  color: #fbbf24;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.token-balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.token-balance-row strong {
+  font-size: 1.25rem;
+  font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif;
+}
+
+.token-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.token-sub {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+}
+
+.token-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tiny-pad {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+
+#token-msg {
+  width: 100%;
+  margin: 0;
+  min-height: 0;
+}
+
+.pvp-code-form-wager {
+  grid-template-columns: 1fr auto auto auto;
+}
+
+@media (max-width: 420px) {
+  .pvp-code-form-wager {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pvp-code-form-wager input {
+    grid-column: 1 / -1;
+  }
+  .pvp-code-form-wager .solid-btn {
+    grid-column: 1 / -1;
+  }
+}

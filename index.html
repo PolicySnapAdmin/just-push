@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719i" />
+  <link rel="stylesheet" href="styles.css?v=20260719j" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -312,6 +312,25 @@
         <h2>Social</h2>
         <p class="panel-sub">Friends, groups, and head-to-head duels — all in one place.</p>
 
+        <!-- Arena Tokens: Social economy only — never boosts main clicks/XP -->
+        <div class="token-bar card" id="token-bar">
+          <div class="token-bar-main">
+            <span class="token-icon" aria-hidden="true">◆</span>
+            <div>
+              <div class="token-balance-row">
+                <strong id="token-balance">0</strong>
+                <span class="token-label">Tokens</span>
+              </div>
+              <p class="muted token-sub" id="token-sub">Social currency · not main XP</p>
+            </div>
+          </div>
+          <div class="token-bar-actions">
+            <button type="button" class="solid-btn tiny-pad" id="token-daily-btn">Daily bonus</button>
+            <button type="button" class="ghost-btn tiny-pad" id="token-level-btn" hidden>Claim levels</button>
+          </div>
+          <p class="form-msg" id="token-msg" role="status"></p>
+        </div>
+
         <div class="mode-toggle social-mode-toggle" role="tablist" aria-label="Social section">
           <button type="button" class="mode-btn active" data-social-mode="friends" role="tab" aria-selected="true">Friends</button>
           <button type="button" class="mode-btn" data-social-mode="groups" role="tab" aria-selected="false">Groups</button>
@@ -443,15 +462,24 @@
 
             <div class="pvp-challenge-box">
               <p class="pvp-challenge-label">Duel by player code</p>
-              <form id="pvp-code-form" class="pvp-code-form">
+              <form id="pvp-code-form" class="pvp-code-form pvp-code-form-wager">
                 <input type="text" id="pvp-code-input" placeholder="Their code (e.g. AD1B7E)" autocomplete="off" spellcheck="false" maxlength="16" />
                 <select id="pvp-duration-select" aria-label="Duel length">
                   <option value="10">10 sec</option>
                   <option value="25">25 sec</option>
                 </select>
+                <select id="pvp-wager-select" aria-label="Token wager">
+                  <option value="0">Wager 0</option>
+                  <option value="10">Wager 10</option>
+                  <option value="25">Wager 25</option>
+                  <option value="50">Wager 50</option>
+                  <option value="100">Wager 100</option>
+                </select>
                 <button type="submit" class="solid-btn" id="pvp-challenge-btn">Duel</button>
               </form>
-              <p class="muted pvp-code-hint">Use the 6-character code from their Social → Friends invite card.</p>
+              <p class="muted pvp-code-hint">
+                Optional Token wager: both lock the same amount; winner takes the pot. Main-game XP never changes.
+              </p>
               <p class="form-msg" id="pvp-msg" role="status"></p>
             </div>
 
@@ -951,7 +979,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719i"></script>
-  <script src="app.js?v=20260719i"></script>
+  <script src="config.js?v=20260719j"></script>
+  <script src="app.js?v=20260719j"></script>
 </body>
 </html>

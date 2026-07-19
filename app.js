@@ -549,8 +549,15 @@ const els = {
   pvpQuotaFill: $("#pvp-quota-fill"),
   pvpQuotaHint: $("#pvp-quota-hint"),
   pvpDurationSelect: $("#pvp-duration-select"),
+  pvpWagerSelect: $("#pvp-wager-select"),
   pvpChallengeBtn: $("#pvp-challenge-btn"),
   pvpMsg: $("#pvp-msg"),
+  tokenBar: $("#token-bar"),
+  tokenBalance: $("#token-balance"),
+  tokenSub: $("#token-sub"),
+  tokenDailyBtn: $("#token-daily-btn"),
+  tokenLevelBtn: $("#token-level-btn"),
+  tokenMsg: $("#token-msg"),
   pvpMatchList: $("#pvp-match-list"),
   pvpMatchEmpty: $("#pvp-match-empty"),
   pvpRankings: $("#pvp-rankings"),
@@ -656,6 +663,21 @@ let pvpQuota = {
 };
 let pvpInbox = [];
 let pvpRankings = [];
+
+/** Arena Tokens — Social economy only (never main XP/clicks) */
+let wallet = {
+  balance: 0,
+  lifetime_earned: 0,
+  lifetime_spent: 0,
+  daily_claimed: false,
+  daily_amount: 25,
+  level: 1,
+  level_rewarded: 1,
+  pending_level_rewards: 0,
+  drops_today: 0,
+  drops_cap: 8,
+};
+let lootDropCounter = 0;
 let pvpActiveMatch = null; // match object currently in modal
 let pvpLocalScore = 0;
 let pvpPhase = "idle"; // idle | countdown | running | done | wait
@@ -1704,6 +1726,8 @@ function renderLevel() {
       // Drop any pending queue so it doesn't pop mid-challenge later
       levelUpQueue = [];
     }
+    // Token level rewards (Social currency only — not more XP per click)
+    if (online) claimLevelRewards().catch(() => {});
   } else if (prog.level < lastRenderedLevel) {
     // e.g. profile merge / reload — no popup
     lastRenderedLevel = prog.level;
@@ -2125,6 +2149,8 @@ function push() {
   spawnFloater();
   pulseRings();
   if (isRecord && state.sessionCount > 1) showNewRecord();
+  // Social currency only — never multiplies XP/clicks
+  maybeLootDrop();
 }
 
 function resetSession() {
@@ -2184,6 +2210,9 @@ async function initBackend() {
     await loadBoardPosts();
     await refreshTerritoriesUi().catch(() => {});
     await refreshPvpUi().catch(() => {});
+    await loadWallet()
+      .then(() => claimLevelRewards())
+      .catch(() => {});
     await processPendingDeepLink();
   } catch (err) {
     console.warn("Push Thru online init failed:", err);
@@ -3186,23 +3215,25 @@ function renderPvpInbox() {
       const vs = pvpOpponentName(m);
       const badge = escapeHtml(m.status || "");
       const dur = m.duration_sec || 10;
-      let resultLine = `${dur}s duel`;
+      const wager = Number(m.wager) || 0;
+      const wagerBit = wager > 0 ? ` · ◆${wager}` : "";
+      let resultLine = `${dur}s duel${wagerBit}`;
       if (m.status === "complete") {
         const mine = pvpMyScore(m);
         const theirs = pvpTheirScore(m);
         let outcome = "Draw";
         if (m.winner_id === uid) outcome = "Win";
         else if (m.winner_id) outcome = "Loss";
-        resultLine = `${outcome} · you ${mine ?? "—"} vs ${theirs ?? "—"}`;
+        resultLine = `${outcome} · you ${mine ?? "—"} vs ${theirs ?? "—"}${wagerBit}`;
       } else if (m.status === "running") {
-        resultLine = `${dur}s · live`;
+        resultLine = `${dur}s · live${wagerBit}`;
       } else if (m.status === "accepted") {
-        resultLine = `${dur}s · ready up`;
+        resultLine = `${dur}s · ready up${wagerBit}`;
       } else if (m.status === "pending") {
         resultLine =
           m.opponent_id === uid
-            ? `${dur}s · incoming challenge`
-            : `${dur}s · waiting for accept`;
+            ? `${dur}s · incoming challenge${wagerBit}`
+            : `${dur}s · waiting for accept${wagerBit}`;
       }
       const openable = ["pending", "accepted", "running", "complete"].includes(m.status);
       return `
@@ -3327,7 +3358,109 @@ async function loadPvpRankings() {
 
 async function refreshPvpUi() {
   renderPvpFriendsQuick();
-  await Promise.all([loadPvpStats(), loadPvpQuota(), loadPvpInbox(), loadPvpRankings()]);
+  await Promise.all([
+    loadPvpStats(),
+    loadPvpQuota(),
+    loadPvpInbox(),
+    loadPvpRankings(),
+    loadWallet(),
+  ]);
+}
+
+// ——— Arena Tokens (Social / PvP only — never main clicks or XP) ———
+
+function setTokenMsg(text, kind = "") {
+  if (!els.tokenMsg) return;
+  els.tokenMsg.textContent = text || "";
+  els.tokenMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function renderWallet() {
+  if (els.tokenBalance) els.tokenBalance.textContent = formatNum(wallet.balance || 0);
+  if (els.tokenSub) {
+    els.tokenSub.textContent = wallet.daily_claimed
+      ? `Daily claimed · ${formatNum(wallet.lifetime_earned || 0)} earned all-time`
+      : `Daily ready (+${wallet.daily_amount || 25}) · social only`;
+  }
+  if (els.tokenDailyBtn) {
+    els.tokenDailyBtn.disabled = !!wallet.daily_claimed || !online;
+    els.tokenDailyBtn.textContent = wallet.daily_claimed
+      ? "Daily claimed"
+      : `Daily +${wallet.daily_amount || 25}`;
+  }
+  if (els.tokenLevelBtn) {
+    const pending = Number(wallet.pending_level_rewards) || 0;
+    els.tokenLevelBtn.hidden = pending <= 0;
+    els.tokenLevelBtn.textContent =
+      pending > 0 ? `Claim ${pending} level reward${pending === 1 ? "" : "s"}` : "Claim levels";
+  }
+}
+
+async function loadWallet() {
+  if (!sb || !online) {
+    renderWallet();
+    return;
+  }
+  const { data, error } = await sb.rpc("jp_wallet_me");
+  if (error) {
+    if (!/could not find|schema cache|does not exist/i.test(error.message || "")) {
+      console.warn("jp_wallet_me", error);
+    }
+    return;
+  }
+  if (data && typeof data === "object") {
+    wallet = { ...wallet, ...data };
+  }
+  renderWallet();
+}
+
+async function claimDailyBonus() {
+  if (!sb || !online) throw new Error("Go online to claim");
+  const { data, error } = await sb.rpc("jp_claim_daily_bonus");
+  if (error) throw new Error(error.message || "Claim failed");
+  await loadWallet();
+  setTokenMsg(`+${data?.amount ?? 0} Tokens daily bonus!`, "ok");
+  toast(`+${data?.amount ?? 0} Tokens`);
+  return data;
+}
+
+async function claimLevelRewards() {
+  if (!sb || !online) return null;
+  const { data, error } = await sb.rpc("jp_claim_level_rewards");
+  if (error) {
+    console.warn("jp_claim_level_rewards", error);
+    return null;
+  }
+  await loadWallet();
+  if (data?.amount > 0) {
+    setTokenMsg(`+${data.amount} Tokens for levels ${data.from_level}→${data.to_level}!`, "ok");
+    toast(`+${data.amount} Tokens (levels)`);
+  }
+  return data;
+}
+
+/** Rare Token loot — does NOT affect main XP. Throttled client + hard server cap. */
+async function maybeLootDrop() {
+  if (!sb || !online || !session?.user) return;
+  lootDropCounter += 1;
+  // ~every 12 free taps attempt a server roll (server still applies ~2.5% + daily cap)
+  if (lootDropCounter % 12 !== 0) return;
+  try {
+    const { data, error } = await sb.rpc("jp_try_loot_drop");
+    if (error) return;
+    if (data?.hit && data.amount > 0) {
+      wallet.balance = data.balance ?? wallet.balance;
+      wallet.drops_today = data.drops_today ?? wallet.drops_today;
+      renderWallet();
+      toast(`Loot box! +${data.amount} Tokens`);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function selectedPvpWager() {
+  return Math.max(0, Math.min(500, Math.floor(Number(els.pvpWagerSelect?.value) || 0)));
 }
 
 function formatPvpQuotaError(msg) {
@@ -3337,7 +3470,7 @@ function formatPvpQuotaError(msg) {
   return msg || "Challenge failed";
 }
 
-async function pvpChallenge(opponentId, duration) {
+async function pvpChallenge(opponentId, duration, wager) {
   if (!sb || !online) throw new Error("Go online to duel");
   if (!opponentId) throw new Error("Pick someone to duel");
   if (online && (pvpQuota.remaining ?? 0) <= 0) {
@@ -3347,19 +3480,33 @@ async function pvpChallenge(opponentId, duration) {
     }
   }
   const dur = Number(duration) === 25 ? 25 : 10;
+  const w = Math.max(0, Math.min(500, Math.floor(Number(wager) || 0)));
+  if (w > 0 && (wallet.balance || 0) < w) {
+    await loadWallet();
+    if ((wallet.balance || 0) < w) throw new Error(`Need ${w} Tokens to wager (you have ${wallet.balance || 0})`);
+  }
   const { data, error } = await sb.rpc("jp_pvp_challenge", {
     p_opponent_id: opponentId,
     p_duration: dur,
+    p_wager: w,
   });
-  if (error) throw new Error(formatPvpQuotaError(error.message));
-  await Promise.all([loadPvpInbox(), loadPvpQuota()]);
+  if (error) {
+    const msg = error.message || "";
+    if (/Not enough Tokens/i.test(msg)) throw new Error(msg);
+    throw new Error(formatPvpQuotaError(msg));
+  }
+  await Promise.all([loadPvpInbox(), loadPvpQuota(), loadWallet()]);
   const matchId = data?.id || data;
   if (matchId) await openPvpMatch(matchId);
-  toast(`${dur}s duel sent · ${pvpQuota.remaining ?? "?"} left today`);
+  toast(
+    w > 0
+      ? `${dur}s duel · wager ${w} Tokens`
+      : `${dur}s duel sent · ${pvpQuota.remaining ?? "?"} left today`
+  );
   return data;
 }
 
-async function pvpChallengeByCode(codeRaw, duration) {
+async function pvpChallengeByCode(codeRaw, duration, wager) {
   if (!sb || !online) throw new Error("Go online to duel");
   const code = extractFriendCode(codeRaw);
   if (!code || code.length < 4) throw new Error("Enter their player code");
@@ -3370,20 +3517,27 @@ async function pvpChallengeByCode(codeRaw, duration) {
     }
   }
   const dur = Number(duration) === 25 ? 25 : 10;
+  const w = Math.max(0, Math.min(500, Math.floor(Number(wager) || 0)));
+  if (w > 0 && (wallet.balance || 0) < w) {
+    await loadWallet();
+    if ((wallet.balance || 0) < w) throw new Error(`Need ${w} Tokens to wager (you have ${wallet.balance || 0})`);
+  }
   const { data, error } = await sb.rpc("jp_pvp_challenge_by_code", {
     p_code: code,
     p_duration: dur,
+    p_wager: w,
   });
   if (error) {
-    const msg = formatPvpQuotaError(error.message);
-    if (/own code/i.test(error.message || "")) throw new Error("That's your own code");
-    if (/No player/i.test(error.message || "")) throw new Error("No player with that code");
-    throw new Error(msg);
+    const msg = error.message || "";
+    if (/own code/i.test(msg)) throw new Error("That's your own code");
+    if (/No player/i.test(msg)) throw new Error("No player with that code");
+    if (/Not enough Tokens/i.test(msg)) throw new Error(msg);
+    throw new Error(formatPvpQuotaError(msg));
   }
-  await Promise.all([loadPvpInbox(), loadPvpQuota()]);
+  await Promise.all([loadPvpInbox(), loadPvpQuota(), loadWallet()]);
   const matchId = data?.id || data;
   if (matchId) await openPvpMatch(matchId);
-  toast(`${dur}s duel sent to ${code} · ${pvpQuota.remaining ?? "?"} left`);
+  toast(w > 0 ? `${dur}s · wager ${w} to ${code}` : `${dur}s duel to ${code}`);
   return data;
 }
 
@@ -3393,7 +3547,7 @@ async function pvpRespond(matchId, accept) {
     p_accept: !!accept,
   });
   if (error) throw new Error(error.message || "Respond failed");
-  await loadPvpInbox();
+  await Promise.all([loadPvpInbox(), loadWallet()]);
   if (data) syncPvpModalFromMatch(data);
   return data;
 }
@@ -3414,14 +3568,20 @@ async function pvpSubmit(matchId, score) {
   if (error) throw new Error(error.message || "Submit failed");
   if (data) syncPvpModalFromMatch(data);
   // Wins unlock +1 daily challenge — refresh quota after results settle
-  await Promise.all([loadPvpInbox(), loadPvpStats(), loadPvpQuota(), loadPvpRankings()]);
+  await Promise.all([
+    loadPvpInbox(),
+    loadPvpStats(),
+    loadPvpQuota(),
+    loadPvpRankings(),
+    loadWallet(),
+  ]);
   return data;
 }
 
 async function pvpCancel(matchId) {
   const { data, error } = await sb.rpc("jp_pvp_cancel", { p_match_id: matchId });
   if (error) throw new Error(error.message || "Cancel failed");
-  await loadPvpInbox();
+  await Promise.all([loadPvpInbox(), loadWallet()]);
   closePvpModal();
   return data;
 }
@@ -3476,7 +3636,7 @@ function syncPvpModalFromMatch(m) {
   maybeStartPvpCountdown();
   // Win bonus unlocks +1 daily request
   if (m.status === "complete" && !wasComplete) {
-    Promise.all([loadPvpQuota(), loadPvpStats()]).catch(() => {});
+    Promise.all([loadPvpQuota(), loadPvpStats(), loadWallet()]).catch(() => {});
   }
 }
 
@@ -3504,8 +3664,14 @@ function renderPvpModal() {
   if (!m || !els.pvpModal) return;
   const vs = pvpOpponentName(m);
   const dur = m.duration_sec || 10;
-  if (els.pvpModalTitle) els.pvpModalTitle.textContent = `${dur}s duel`;
-  if (els.pvpModalVs) els.pvpModalVs.textContent = `You vs ${vs}`;
+  const wager = Number(m.wager) || 0;
+  if (els.pvpModalTitle) {
+    els.pvpModalTitle.textContent = wager > 0 ? `${dur}s duel · ◆${wager}` : `${dur}s duel`;
+  }
+  if (els.pvpModalVs) {
+    els.pvpModalVs.textContent =
+      wager > 0 ? `You vs ${vs} · pot ◆${wager * 2}` : `You vs ${vs}`;
+  }
 
   const isOpp = m.opponent_id === myId();
   const isCh = pvpIsChallenger(m);
@@ -4664,9 +4830,13 @@ function setTab(tab) {
     renderPvpStats();
     renderPvpInbox();
     renderPvpRankings();
+    renderWallet();
     if (online) {
       refreshSocial().catch((e) => console.warn(e));
       refreshPvpUi().catch((e) => console.warn(e));
+      loadWallet()
+        .then(() => claimLevelRewards())
+        .catch((e) => console.warn(e));
     }
   }
   if (tab === "scores") {
@@ -4744,7 +4914,11 @@ function bindEvents() {
     e.preventDefault();
     setPvpMsg("");
     try {
-      await pvpChallengeByCode(els.pvpCodeInput?.value, els.pvpDurationSelect?.value);
+      await pvpChallengeByCode(
+        els.pvpCodeInput?.value,
+        els.pvpDurationSelect?.value,
+        selectedPvpWager()
+      );
       setPvpMsg("Duel request sent.", "ok");
       if (els.pvpCodeInput) els.pvpCodeInput.value = "";
     } catch (err) {
@@ -4757,11 +4931,33 @@ function bindEvents() {
     if (!duelBtn) return;
     setPvpMsg("");
     try {
-      await pvpChallenge(duelBtn.getAttribute("data-pvp-friend"), els.pvpDurationSelect?.value);
+      await pvpChallenge(
+        duelBtn.getAttribute("data-pvp-friend"),
+        els.pvpDurationSelect?.value,
+        selectedPvpWager()
+      );
       setPvpMsg("Duel request sent.", "ok");
     } catch (err) {
       setPvpMsg(err.message || "Challenge failed", "err");
       toast(err.message || "Challenge failed");
+    }
+  });
+  els.tokenDailyBtn?.addEventListener("click", async () => {
+    setTokenMsg("");
+    try {
+      await claimDailyBonus();
+    } catch (err) {
+      setTokenMsg(err.message || "Claim failed", "err");
+      toast(err.message || "Claim failed");
+    }
+  });
+  els.tokenLevelBtn?.addEventListener("click", async () => {
+    setTokenMsg("");
+    try {
+      const data = await claimLevelRewards();
+      if (!data?.amount) setTokenMsg("No pending level rewards.", "");
+    } catch (err) {
+      setTokenMsg(err.message || "Claim failed", "err");
     }
   });
   els.friendRequestsRefresh?.addEventListener("click", () => {
@@ -5041,7 +5237,7 @@ function bindEvents() {
       const fid = duelBtn.getAttribute("data-pvp-friend");
       setPvpMsg("");
       try {
-        await pvpChallenge(fid, els.pvpDurationSelect?.value || 10);
+        await pvpChallenge(fid, els.pvpDurationSelect?.value || 10, selectedPvpWager());
         setSocialMode("pvp");
         setPvpMsg("Duel request sent.", "ok");
         toast("Duel request sent");
