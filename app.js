@@ -126,6 +126,9 @@ const BACKGROUNDS = [
 
 // ——— State ———
 
+/** Bump when local 10s best must re-sync from server (stops glitch scores like 106). */
+const CHALLENGE_AUTH_VERSION = 3;
+
 function defaultState() {
   return {
     localId: crypto.randomUUID(),
@@ -140,6 +143,7 @@ function defaultState() {
     theme: { button: "rose", background: "midnight" },
     mode: "free",
     boardMetric: "high",
+    challengeAuthVersion: CHALLENGE_AUTH_VERSION,
   };
 }
 
@@ -149,19 +153,50 @@ function loadState() {
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
     const base = defaultState();
-    return {
+    const merged = {
       ...base,
       ...parsed,
       theme: { ...base.theme, ...parsed.theme },
       localId: parsed.localId || parsed.id || base.localId,
     };
+    // One-shot: drop untrusted local 10s best so a glitch (e.g. 106) can't stick in UI/cache.
+    // Server value is re-applied in ensureProfile within a second when online.
+    const authV = Number(parsed.challengeAuthVersion) || 0;
+    if (authV < CHALLENGE_AUTH_VERSION) {
+      merged.challengeBest = 0;
+      merged.challengeAuthVersion = CHALLENGE_AUTH_VERSION;
+    }
+    return merged;
   } catch {
     return defaultState();
   }
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    state.challengeAuthVersion = CHALLENGE_AUTH_VERSION;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+/** Authoritative 10s best: server profile when online, else local. */
+function effectiveChallengeBest() {
+  if (online && profile && typeof profile.challenge_best === "number") {
+    return Math.max(0, profile.challenge_best || 0);
+  }
+  return Math.max(0, Number(state.challengeBest) || 0);
+}
+
+function applyChallengeBestFromServer(value, { save = true } = {}) {
+  const v = Math.max(0, Math.floor(Number(value) || 0));
+  const prev = state.challengeBest;
+  state.challengeBest = v;
+  if (profile) profile.challenge_best = v;
+  state.challengeAuthVersion = CHALLENGE_AUTH_VERSION;
+  if (save) saveState();
+  return prev !== v;
 }
 
 let state = loadState();
@@ -1411,13 +1446,19 @@ function scoreEmblemHtml(score, lifetime) {
 }
 
 function renderScores() {
+  const cBest = effectiveChallengeBest();
+  // Keep state aligned with what we show (prevents 106 lingering mid-session)
+  if (online && profile && state.challengeBest !== cBest) {
+    state.challengeBest = cBest;
+    saveState();
+  }
   els.sessionCount.textContent = formatNum(state.sessionCount);
   els.highScore.textContent = formatNum(state.highScore);
   els.lifetimeCount.textContent = formatNum(state.lifetimeCount);
   els.challengeCount.textContent = formatNum(challenge.count);
-  els.challengeBest.textContent = formatNum(state.challengeBest);
+  els.challengeBest.textContent = formatNum(cBest);
   els.rankHigh.textContent = formatNum(state.highScore);
-  els.rankChallenge.textContent = formatNum(state.challengeBest);
+  els.rankChallenge.textContent = formatNum(cBest);
   els.rankLife.textContent = formatNum(state.lifetimeCount);
   els.rankSessions.textContent = formatNum(state.sessionsPlayed);
   renderLevel();
@@ -1572,16 +1613,25 @@ function endChallenge() {
   setTimerVisual(0);
   updatePushChrome();
 
+  // Compare against server-backed best when online (never use stale local 106 as the bar)
+  const priorBest = effectiveChallengeBest();
   let isRecord = false;
-  if (challenge.count > state.challengeBest) {
+  if (challenge.count > priorBest) {
     state.challengeBest = challenge.count;
     isRecord = true;
+  } else {
+    state.challengeBest = priorBest;
   }
   state.sessionsPlayed += 1;
   saveState();
   renderScores();
   // Server: challenge best + session bump (scores cannot be set via plain REST)
-  reportChallengeToServer(challenge.count).catch((e) => console.warn("challenge sync", e));
+  reportChallengeToServer(challenge.count)
+    .then(() => {
+      // Re-clamp from server response (greatest on server; local never re-inflates)
+      renderScores();
+    })
+    .catch((e) => console.warn("challenge sync", e));
 
   els.challengeResult.hidden = false;
   els.challengeResult.textContent = isRecord
@@ -1765,15 +1815,16 @@ async function ensureProfile() {
   profile = data;
 
   // Free-run / lifetime: keep max(local, server) so offline grind isn't lost.
-  // 10s best: server is authoritative (stops stale localStorage re-inflating glitch scores).
+  // 10s best: server is ALWAYS authoritative (never Math.max with local).
   const localAhead =
     state.lifetimeCount > (data.lifetime_count || 0) ||
     state.highScore > (data.high_score || 0);
+  const localChallengeWas = state.challengeBest;
 
   state.highScore = Math.max(state.highScore, data.high_score || 0);
   state.lifetimeCount = Math.max(state.lifetimeCount, data.lifetime_count || 0);
   state.sessionsPlayed = Math.max(state.sessionsPlayed, data.sessions_played || 0);
-  state.challengeBest = data.challenge_best || 0;
+  applyChallengeBestFromServer(data.challenge_best || 0, { save: false });
 
   if (data.display_name && data.display_name !== "Player") {
     if (!state.name || state.name === "Player") state.name = data.display_name;
@@ -1788,6 +1839,12 @@ async function ensureProfile() {
   renderProfile();
   renderScores();
 
+  if (localChallengeWas > state.challengeBest && localChallengeWas > 0) {
+    console.info(
+      `10s best synced from server: local ${localChallengeWas} → server ${state.challengeBest}`
+    );
+  }
+
   // Name/theme only via table update; scores only via RPCs
   await pushProfileMeta();
   if (localAhead) {
@@ -1799,9 +1856,7 @@ async function ensureProfile() {
     state.highScore = Math.max(state.highScore, profile.high_score || 0);
     state.lifetimeCount = Math.max(state.lifetimeCount, profile.lifetime_count || 0);
     state.sessionsPlayed = Math.max(state.sessionsPlayed, profile.sessions_played || 0);
-    // Always re-apply server 10s best after sync
-    state.challengeBest = profile.challenge_best || 0;
-    saveState();
+    applyChallengeBestFromServer(profile.challenge_best || 0);
     renderScores();
   }
 }
@@ -1844,9 +1899,9 @@ function applyServerProfile(row) {
   state.highScore = Math.max(state.highScore, row.high_score || 0);
   state.lifetimeCount = Math.max(state.lifetimeCount, row.lifetime_count || 0);
   state.sessionsPlayed = Math.max(state.sessionsPlayed, row.sessions_played || 0);
-  // 10s best follows server (set only via endChallenge report)
+  // 10s best follows server only (never Math.max with inflated localStorage)
   if (typeof row.challenge_best === "number") {
-    state.challengeBest = row.challenge_best;
+    applyChallengeBestFromServer(row.challenge_best, { save: false });
   }
   saveState();
   renderScores();
@@ -2436,7 +2491,7 @@ function renderFriendsBoard() {
       id: myId(),
       name: state.name || "You",
       highScore: state.highScore,
-      challengeBest: state.challengeBest,
+      challengeBest: effectiveChallengeBest(),
       lifetimeCount: state.lifetimeCount,
       you: true,
     },
@@ -2744,6 +2799,18 @@ async function loadGlobalBoard() {
 
   if (lifetimeRes.error) console.warn(lifetimeRes.error);
   else globalLifetimeBoard = lifetimeRes.data || [];
+
+  // If our row is on the board, treat it as authoritative for local 10s best
+  const uid = session?.user?.id;
+  if (uid) {
+    const mine =
+      (globalBoard || []).find((r) => r.id === uid) ||
+      (globalLifetimeBoard || []).find((r) => r.id === uid);
+    if (mine && typeof mine.challenge_best === "number") {
+      applyChallengeBestFromServer(mine.challenge_best);
+      renderScores();
+    }
+  }
 
   renderGlobalBoard();
 }
