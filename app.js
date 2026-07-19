@@ -639,64 +639,96 @@ function setAdminOut(obj) {
   els.adminOut.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
 }
 
+function formatAdminError(error) {
+  if (!error) return "Unknown error";
+  const parts = [error.message, error.details, error.hint, error.code].filter(Boolean);
+  return parts.join(" — ") || String(error);
+}
+
 async function refreshAdminAccess() {
   isAdminUser = false;
   if (els.adminCard) els.adminCard.hidden = true;
   if (!sb || !session?.user || !online) return;
+
+  // Fast path: known admin email (UI only — RPCs still enforce server-side)
+  const email = String(session.user.email || "").toLowerCase();
+  if (email === "conor.wolanski@gmail.com" || session.user.id === "fea2c8ba-8a2e-4a2b-bed3-c15c40f9d38a") {
+    isAdminUser = true;
+    if (els.adminCard) els.adminCard.hidden = false;
+  }
+
   try {
     const { data, error } = await sb.rpc("jp_is_admin");
     if (error) {
-      // Function missing or not deployed yet
-      console.warn("jp_is_admin", error.message);
+      setAdminMsg(`Admin check: ${formatAdminError(error)}`, isAdminUser ? "" : "err");
+      console.warn("jp_is_admin", error);
       return;
     }
     isAdminUser = !!data;
     if (els.adminCard) els.adminCard.hidden = !isAdminUser;
+    if (isAdminUser) setAdminMsg("Admin tools ready.", "ok");
   } catch (e) {
     console.warn("admin check", e);
+    if (!isAdminUser) setAdminMsg(e.message || "Admin check failed", "err");
   }
 }
 
 async function adminRunDebug() {
-  setAdminMsg("");
+  if (!sb || !online) throw new Error("Go online first");
+  setAdminMsg("Loading stats…");
+  setAdminOut(null);
   const { data, error } = await sb.rpc("jp_admin_debug_stats");
-  if (error) throw error;
+  if (error) throw new Error(formatAdminError(error));
   setAdminOut(data);
   setAdminMsg("Debug stats loaded.", "ok");
+  toast("Debug stats loaded");
 }
 
 async function adminRunHygiene() {
-  setAdminMsg("");
-  const { data, error } = await sb.rpc("jp_admin_run_hygiene");
-  if (error) throw error;
-  setAdminOut(data);
-  setAdminMsg(
-    `Cleanup done — empty: ${data?.empty_guests_deleted ?? "?"} · clones: ${data?.anon_clones_deleted ?? "?"}`,
-    "ok"
+  if (!sb || !online) throw new Error("Go online first");
+  const ok = window.confirm(
+    "Run cleanup?\n\n• Empty guest “Player” accounts (0 scores)\n• Anonymous name clones (Billy/Cleetis/ImBetter duplicates)\n\nEmail accounts are never deleted."
   );
-  toast("Admin cleanup finished");
+  if (!ok) return;
+  setAdminMsg("Running cleanup…");
+  setAdminOut(null);
+  const { data, error } = await sb.rpc("jp_admin_run_hygiene");
+  if (error) throw new Error(formatAdminError(error));
+  setAdminOut(data);
+  const empty = data?.empty_guests_deleted ?? 0;
+  const clones = data?.anon_clones_deleted ?? 0;
+  const shadows = data?.anon_shadows_deleted ?? 0;
+  setAdminMsg(`Cleanup done — empty: ${empty} · clones: ${clones} · shadows: ${shadows}`, "ok");
+  toast(`Cleanup: ${empty + clones + shadows} removed`);
+  // Refresh board data if on scores
+  if (els.app?.dataset?.tab === "scores") {
+    loadGlobalBoard().catch(() => {});
+  }
 }
 
 async function adminListDupes() {
-  setAdminMsg("");
+  if (!sb || !online) throw new Error("Go online first");
+  setAdminMsg("Scanning…");
+  setAdminOut(null);
   const { data, error } = await sb.rpc("jp_admin_list_name_dupes");
-  if (error) throw error;
+  if (error) throw new Error(formatAdminError(error));
   setAdminOut(data);
   const n = Array.isArray(data) ? data.length : 0;
   setAdminMsg(n ? `Found ${n} rows in duplicate-name groups.` : "No duplicate display names.", "ok");
+  toast(n ? `${n} dupe rows` : "No dupes");
 }
 
 async function adminSendPasswordReset(email) {
+  if (!sb || !online) throw new Error("Go online first");
   setAdminMsg("");
   const addr = String(email || "").trim().toLowerCase();
   if (!addr || !addr.includes("@")) throw new Error("Enter a valid email");
   if (!isAdminUser) throw new Error("Admin only");
-  // Public recovery API — only shown in admin UI (no service role in client)
   const base = String(getConfig().publicBaseUrl || appBaseUrl()).replace(/\/?$/, "/");
   const { error } = await sb.auth.resetPasswordForEmail(addr, {
     redirectTo: `${base}?tab=style`,
   });
-  if (error) throw error;
+  if (error) throw new Error(formatAdminError(error));
   setAdminMsg(`Password reset email requested for ${addr}.`, "ok");
   toast("Reset email requested");
 }
