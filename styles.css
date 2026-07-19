@@ -2064,3 +2064,33 @@ textarea#dm-input:focus {
     animation: none;
   }
 }
+
+/* Admin / dev tools */
+#admin-card {
+  border-color: color-mix(in srgb, #f5a524 35%, var(--border));
+}
+
+.admin-out {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  color: #c8e6c9;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#admin-reset-email {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--text);
+  font: inherit;
+}

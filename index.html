@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260718s" />
+  <link rel="stylesheet" href="styles.css?v=20260718w" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -390,6 +390,24 @@
           </p>
         </div>
 
+        <!-- Admin / dev tools (server-gated; only jp_admins) -->
+        <div class="card" id="admin-card" hidden>
+          <h3>Dev tools</h3>
+          <p class="muted" style="margin-top:0">Admin only — hygiene &amp; debug. Does not edit scores or game integrity.</p>
+          <div class="stack-form">
+            <button type="button" class="ghost-btn" id="admin-debug-btn">Debug stats</button>
+            <button type="button" class="ghost-btn" id="admin-hygiene-btn">Run cleanup (empty guests + clones)</button>
+            <button type="button" class="ghost-btn" id="admin-dupes-btn">List duplicate names</button>
+          </div>
+          <form id="admin-reset-form" class="stack-form" style="margin-top:12px">
+            <label class="muted" style="font-size:0.8rem" for="admin-reset-email">Send password reset email</label>
+            <input type="email" id="admin-reset-email" placeholder="player@email.com" autocomplete="off" maxlength="120" />
+            <button type="submit" class="solid-btn">Send reset link</button>
+          </form>
+          <pre class="admin-out" id="admin-out" hidden></pre>
+          <p class="form-msg" id="admin-msg" role="status"></p>
+        </div>
+
         <div class="card" id="legal-card">
           <h3>Legal</h3>
           <p class="muted" style="margin-top:0">Policies for the web app and future App Store build.</p>
@@ -538,6 +556,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=20260718r"></script>
-  <script src="app.js?v=20260718v"></script>
+  <script src="app.js?v=20260718w"></script>
 </body>
 </html>

@@ -403,6 +403,14 @@ const els = {
   deleteCancelBtn: $("#delete-cancel-btn"),
   deleteFinalBtn: $("#delete-final-btn"),
   deleteCountdown: $("#delete-countdown"),
+  adminCard: $("#admin-card"),
+  adminDebugBtn: $("#admin-debug-btn"),
+  adminHygieneBtn: $("#admin-hygiene-btn"),
+  adminDupesBtn: $("#admin-dupes-btn"),
+  adminResetForm: $("#admin-reset-form"),
+  adminResetEmail: $("#admin-reset-email"),
+  adminOut: $("#admin-out"),
+  adminMsg: $("#admin-msg"),
   privacyLink: $("#privacy-link"),
   termsLink: $("#terms-link"),
   ageModal: $("#age-modal"),
@@ -612,6 +620,87 @@ function featureEmailEnabled() {
   return getConfig().enableEmailAuth !== false;
 }
 
+let isAdminUser = false;
+
+function setAdminMsg(text, kind = "") {
+  if (!els.adminMsg) return;
+  els.adminMsg.textContent = text || "";
+  els.adminMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
+function setAdminOut(obj) {
+  if (!els.adminOut) return;
+  if (obj == null) {
+    els.adminOut.hidden = true;
+    els.adminOut.textContent = "";
+    return;
+  }
+  els.adminOut.hidden = false;
+  els.adminOut.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+}
+
+async function refreshAdminAccess() {
+  isAdminUser = false;
+  if (els.adminCard) els.adminCard.hidden = true;
+  if (!sb || !session?.user || !online) return;
+  try {
+    const { data, error } = await sb.rpc("jp_is_admin");
+    if (error) {
+      // Function missing or not deployed yet
+      console.warn("jp_is_admin", error.message);
+      return;
+    }
+    isAdminUser = !!data;
+    if (els.adminCard) els.adminCard.hidden = !isAdminUser;
+  } catch (e) {
+    console.warn("admin check", e);
+  }
+}
+
+async function adminRunDebug() {
+  setAdminMsg("");
+  const { data, error } = await sb.rpc("jp_admin_debug_stats");
+  if (error) throw error;
+  setAdminOut(data);
+  setAdminMsg("Debug stats loaded.", "ok");
+}
+
+async function adminRunHygiene() {
+  setAdminMsg("");
+  const { data, error } = await sb.rpc("jp_admin_run_hygiene");
+  if (error) throw error;
+  setAdminOut(data);
+  setAdminMsg(
+    `Cleanup done — empty: ${data?.empty_guests_deleted ?? "?"} · clones: ${data?.anon_clones_deleted ?? "?"}`,
+    "ok"
+  );
+  toast("Admin cleanup finished");
+}
+
+async function adminListDupes() {
+  setAdminMsg("");
+  const { data, error } = await sb.rpc("jp_admin_list_name_dupes");
+  if (error) throw error;
+  setAdminOut(data);
+  const n = Array.isArray(data) ? data.length : 0;
+  setAdminMsg(n ? `Found ${n} rows in duplicate-name groups.` : "No duplicate display names.", "ok");
+}
+
+async function adminSendPasswordReset(email) {
+  setAdminMsg("");
+  const addr = String(email || "").trim().toLowerCase();
+  if (!addr || !addr.includes("@")) throw new Error("Enter a valid email");
+  if (!isAdminUser) throw new Error("Admin only");
+  // Public recovery API — only shown in admin UI (no service role in client)
+  const base = String(getConfig().publicBaseUrl || appBaseUrl()).replace(/\/?$/, "/");
+  const { error } = await sb.auth.resetPasswordForEmail(addr, {
+    redirectTo: `${base}?tab=style`,
+  });
+  if (error) throw error;
+  setAdminMsg(`Password reset email requested for ${addr}.`, "ok");
+  toast("Reset email requested");
+}
+
 function isAnonymousUser(user = session?.user) {
   if (!user) return false;
   if (user.is_anonymous === true) return true;
@@ -778,6 +867,7 @@ function setOnlineUi() {
     els.friendCodeHint.textContent = "Offline: long share blob. Go online for short codes + live boards.";
   }
   updateChatOnlineHint();
+  refreshAdminAccess();
 }
 
 const AGE_KEY = "push-thru-age-ok";
@@ -3190,6 +3280,36 @@ function bindEvents() {
   // Clicking the dim backdrop area is non-interactive (pointer-events: none on popup).
   // Card itself doesn't close on accidental mis-tap of content — only × or timeout.
   els.deleteAccountBtn?.addEventListener("click", () => openDeleteModal());
+
+  els.adminDebugBtn?.addEventListener("click", async () => {
+    try {
+      await adminRunDebug();
+    } catch (err) {
+      setAdminMsg(err.message || "Debug failed", "err");
+    }
+  });
+  els.adminHygieneBtn?.addEventListener("click", async () => {
+    try {
+      await adminRunHygiene();
+    } catch (err) {
+      setAdminMsg(err.message || "Cleanup failed", "err");
+    }
+  });
+  els.adminDupesBtn?.addEventListener("click", async () => {
+    try {
+      await adminListDupes();
+    } catch (err) {
+      setAdminMsg(err.message || "Dupe list failed", "err");
+    }
+  });
+  els.adminResetForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await adminSendPasswordReset(els.adminResetEmail?.value);
+    } catch (err) {
+      setAdminMsg(err.message || "Reset failed", "err");
+    }
+  });
   els.deleteCancelBtn?.addEventListener("click", () => closeDeleteModal());
   els.deleteFinalBtn?.addEventListener("click", () => executeDeleteAccount());
   els.deleteConfirmInput?.addEventListener("input", () => updateDeleteFinalEnabled());
