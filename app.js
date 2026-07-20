@@ -2394,6 +2394,8 @@ async function initBackend() {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Explicit localStorage helps some mobile / home-screen browsers
+      storage: typeof localStorage !== "undefined" ? localStorage : undefined,
     },
   });
 
@@ -2524,25 +2526,66 @@ async function loginWithCodeOrEmail(identifier, password) {
 }
 
 async function ensureProfile() {
-  if (!sb || !session?.user) return;
+  if (!sb) return;
+  // Mobile Safari can fire UI before session is attached — re-read JWT first.
+  if (!session?.user) {
+    const { data: sess } = await sb.auth.getSession();
+    session = sess.session;
+  }
+  if (!session?.user) return;
   const uid = session.user.id;
 
-  let { data, error } = await sb.from("jp_profiles").select("*").eq("id", uid).maybeSingle();
-  if (error) throw error;
+  let data = null;
 
+  // Preferred path: security-definer RPC (avoids "permission denied for jp_profiles"
+  // when client role is briefly anon or table RLS/upsert races the auth trigger).
+  {
+    const { data: row, error: rpcErr } = await sb.rpc("jp_ensure_my_profile", {
+      p_display_name: state.name && state.name !== "Player" ? state.name : null,
+      p_theme_button: state.theme?.button || null,
+      p_theme_bg: state.theme?.background || null,
+    });
+    if (!rpcErr && row) {
+      data = row;
+    } else if (rpcErr) {
+      console.warn("jp_ensure_my_profile", rpcErr);
+    }
+  }
+
+  // Fallback: direct table access (older deploys / RPC not yet migrated)
   if (!data) {
-    // Scores always start at 0 server-side (insert guard). Name/theme only.
-    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-    const insert = {
-      id: uid,
-      display_name: state.name || "Player",
-      friend_code: code,
-      theme_button: state.theme.button,
-      theme_bg: state.theme.background,
-    };
-    const res = await sb.from("jp_profiles").upsert(insert).select("*").single();
-    if (res.error) throw res.error;
-    data = res.data;
+    let { data: existing, error } = await sb.from("jp_profiles").select("*").eq("id", uid).maybeSingle();
+    if (error) {
+      const msg = error.message || String(error);
+      if (/permission denied|42501/i.test(msg)) {
+        throw new Error(
+          "Could not load profile (sign-in not fully ready). Close the tab, open www.pushthrugames.com, and try again."
+        );
+      }
+      throw error;
+    }
+    if (!existing) {
+      const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const insert = {
+        id: uid,
+        display_name: state.name || "Player",
+        friend_code: code,
+        theme_button: state.theme.button,
+        theme_bg: state.theme.background,
+      };
+      const res = await sb.from("jp_profiles").upsert(insert).select("*").single();
+      if (res.error) {
+        const msg = res.error.message || String(res.error);
+        if (/permission denied|42501/i.test(msg)) {
+          throw new Error(
+            "Could not create profile. Stay signed in and hard-refresh, or try again on wifi."
+          );
+        }
+        throw res.error;
+      }
+      existing = res.data;
+    }
+    data = existing;
   }
 
   profile = data;
