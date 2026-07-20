@@ -3425,21 +3425,273 @@ body.focus-lock-open {
   color: #86efac;
 }
 
+/* ——— Token packs (IAP preview — purchases disabled until live) ——— */
+.store-packs-section {
+  margin-top: 20px;
+  padding-top: 4px;
+}
+
+.store-packs-header {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, #fbbf24 35%, var(--border));
+  background:
+    radial-gradient(420px 120px at 0% 0%, color-mix(in srgb, #fbbf24 18%, transparent), transparent 70%),
+    radial-gradient(320px 100px at 100% 50%, color-mix(in srgb, #c084fc 12%, transparent), transparent 65%),
+    color-mix(in srgb, var(--bg) 40%, transparent);
+}
+
+.store-packs-logo {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+}
+
+.store-packs-logo-gem {
+  font-size: 1.75rem;
+  color: #fbbf24;
+  text-shadow: 0 0 18px color-mix(in srgb, #fbbf24 70%, transparent);
+  z-index: 1;
+  animation: store-gem-pulse 2.4s ease-in-out infinite;
+}
+
+.store-packs-logo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, #fbbf24 45%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, #fbbf24 10%, transparent);
+}
+
+@keyframes store-gem-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.08); filter: brightness(1.15); }
+}
+
+.store-packs-kicker {
+  margin: 0 0 2px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.store-packs-titles .board-subhead {
+  margin: 0 0 4px;
+}
+
+.store-packs-titles .store-skin-intro {
+  margin: 0;
+}
+
+.store-platform-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.store-platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  user-select: none;
+}
+
+.store-platform-ico {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
 .store-pack-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .store-pack {
-  display: flex;
+  --pack-accent: #fbbf24;
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 12px;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--pack-accent) 35%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pack-accent) 14%, transparent), transparent 55%),
+    color-mix(in srgb, var(--bg) 55%, transparent);
+  overflow: hidden;
+}
+
+.store-pack.is-soon::after {
+  content: "COMING SOON";
+  position: absolute;
+  top: 10px;
+  right: -28px;
+  transform: rotate(32deg);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 3px 32px;
+  background: color-mix(in srgb, var(--pack-accent) 85%, #000);
+  color: #0a0a10;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+.store-pack-art {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--pack-accent) 18%, #0a0a12);
+  border: 1px solid color-mix(in srgb, var(--pack-accent) 40%, var(--border));
+  box-shadow: inset 0 0 20px color-mix(in srgb, var(--pack-accent) 15%, transparent);
+}
+
+.store-pack-gems {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.store-pack-gem {
+  position: absolute;
+  font-size: 0.65rem;
+  color: var(--pack-accent);
+  opacity: 0.45;
+  left: calc(18% + var(--i) * 18%);
+  top: calc(22% + var(--i) * 12%);
+  transform: rotate(calc(var(--i) * 18deg));
+}
+
+.store-pack-icon {
+  position: relative;
+  z-index: 1;
+  font-size: 1.35rem;
+  color: var(--pack-accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--pack-accent) 60%, transparent);
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.store-pack-body {
+  min-width: 0;
+}
+
+.store-pack-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 2px;
+}
+
+.store-pack-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.store-pack-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--pack-accent);
+  color: #0a0a10;
+}
+
+.store-pack-tokens {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--pack-accent);
+}
+
+.store-pack-token-ico {
+  opacity: 0.95;
+}
+
+.store-pack-blurb {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.store-pack-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 4.75rem;
+}
+
+.store-pack-price {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.store-pack-buy {
+  min-width: 4.5rem;
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.store-pack.is-live .store-pack-buy {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.store-pack-tier-popular {
+  box-shadow: 0 0 0 1px color-mix(in srgb, #fbbf24 25%, transparent);
+}
+
+.store-pack-tier-best {
+  box-shadow: 0 0 24px color-mix(in srgb, #c084fc 12%, transparent);
+}
+
+@media (max-width: 420px) {
+  .store-pack {
+    grid-template-columns: 56px 1fr;
+  }
+  .store-pack-cta {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .store-pack.is-soon::after {
+    top: 8px;
+    right: -34px;
+    font-size: 0.55rem;
+  }
 }
 
 .store-iap-note {

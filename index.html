@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260720a" />
+  <link rel="stylesheet" href="styles.css?v=20260720g" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -1013,10 +1013,37 @@
       <div class="store-cat-tabs" id="store-cat-tabs" role="tablist"></div>
       <div class="store-skin-grid" id="store-skin-grid"></div>
 
-      <h3 class="board-subhead" style="margin-top:18px">Token packs</h3>
-      <p class="muted store-skin-intro">Real-money packs later (App Store / web checkout). Earn Tokens free via daily, levels &amp; rare loot.</p>
-      <div class="store-pack-list" id="store-pack-list"></div>
-      <p class="muted store-iap-note" id="store-iap-note">Packs show as “Soon” until IAP is wired.</p>
+      <section class="store-packs-section" aria-labelledby="store-packs-title">
+        <div class="store-packs-header">
+          <div class="store-packs-logo" aria-hidden="true">
+            <span class="store-packs-logo-gem">◆</span>
+            <span class="store-packs-logo-ring"></span>
+          </div>
+          <div class="store-packs-titles">
+            <p class="store-packs-kicker">Token vault</p>
+            <h3 class="board-subhead" id="store-packs-title">Get more Tokens</h3>
+            <p class="muted store-skin-intro">
+              Stock up for skins &amp; style. Free Tokens from daily, levels &amp; rare loot —
+              packs unlock with App Store / Play / web checkout later.
+            </p>
+          </div>
+        </div>
+        <div class="store-platform-row" aria-label="Coming soon on">
+          <span class="store-platform-chip" title="Coming soon">
+            <span class="store-platform-ico" aria-hidden="true"></span> App Store
+          </span>
+          <span class="store-platform-chip" title="Coming soon">
+            <span class="store-platform-ico" aria-hidden="true">▶</span> Google Play
+          </span>
+          <span class="store-platform-chip" title="Coming soon">
+            <span class="store-platform-ico" aria-hidden="true">◈</span> Web
+          </span>
+        </div>
+        <div class="store-pack-list" id="store-pack-list"></div>
+        <p class="muted store-iap-note" id="store-iap-note">
+          Purchase buttons stay disabled until IAP is live — preview only.
+        </p>
+      </section>
       <p class="form-msg" id="store-msg" role="status"></p>
     </div>
   </dialog>
@@ -1074,8 +1101,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720f"></script>
-  <script src="app.js?v=20260720f"></script>
+  <script src="config.js?v=20260720g"></script>
+  <script src="app.js?v=20260720g"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>

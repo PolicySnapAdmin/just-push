@@ -4040,29 +4040,94 @@ function renderStore() {
       })
       .join("");
   }
-  const packs = storeCatalog?.token_packs || [];
-  if (els.storePackList) {
-    if (!packs.length) {
-      els.storePackList.innerHTML = `<p class="muted">Token packs coming soon (web + App Store IAP).</p>`;
-    } else {
-      els.storePackList.innerHTML = packs
-        .map((p) => {
-          const on = p.enabled === true;
-          const tag = p.tag ? `<span class="muted"> · ${escapeHtml(p.tag)}</span>` : "";
-          return `
-          <div class="store-pack">
-            <div>
-              <strong>${escapeHtml(p.label || p.id)}</strong>${tag}
-              <div class="muted">◆ ${formatNum(p.tokens || 0)} Tokens</div>
+  renderTokenPacks();
+}
+
+/** Visual meta for IAP packs (logos / tags) — purchases stay disabled until enabled server-side. */
+const TOKEN_PACK_VISUAL = {
+  pack_s: {
+    icon: "✦",
+    blurb: "Quick top-up for a new skin",
+    accent: "#38bdf8",
+    stack: 1,
+  },
+  pack_m: {
+    icon: "◆◆",
+    blurb: "Best value for most players",
+    accent: "#fbbf24",
+    stack: 2,
+    badge: "Popular",
+  },
+  pack_l: {
+    icon: "◈",
+    blurb: "Vault fill for collectors",
+    accent: "#c084fc",
+    stack: 3,
+    badge: "Best value",
+  },
+};
+
+const DEFAULT_TOKEN_PACKS = [
+  { id: "pack_s", label: "Spark Pack", tokens: 120, price_label: "$0.99", tag: "starter", enabled: false },
+  { id: "pack_m", label: "Charge Pack", tokens: 650, price_label: "$4.99", tag: "popular", enabled: false },
+  { id: "pack_l", label: "Nova Pack", tokens: 1500, price_label: "$9.99", tag: "best", enabled: false },
+];
+
+function mergeTokenPacks() {
+  const server = Array.isArray(storeCatalog?.token_packs) ? storeCatalog.token_packs : [];
+  const byId = Object.fromEntries(server.map((p) => [p.id, p]));
+  const ids = new Set([...DEFAULT_TOKEN_PACKS.map((p) => p.id), ...server.map((p) => p.id)]);
+  return [...ids].map((id) => {
+    const base = DEFAULT_TOKEN_PACKS.find((p) => p.id === id) || { id, label: id, tokens: 0, price_label: "—", enabled: false };
+    const srv = byId[id] || {};
+    const vis = TOKEN_PACK_VISUAL[id] || { icon: "◆", blurb: "Token pack", accent: "#fbbf24", stack: 1 };
+    return {
+      ...base,
+      ...srv,
+      enabled: srv.enabled === true,
+      ...vis,
+      badge: vis.badge || (srv.tag === "popular" ? "Popular" : srv.tag === "best" ? "Best value" : null),
+    };
+  });
+}
+
+function renderTokenPacks() {
+  if (!els.storePackList) return;
+  const packs = mergeTokenPacks();
+  els.storePackList.innerHTML = packs
+    .map((p) => {
+      const on = p.enabled === true;
+      const tokens = Number(p.tokens) || 0;
+      const stackN = Math.min(4, Math.max(1, p.stack || 1));
+      const gems = Array.from({ length: stackN }, (_, i) =>
+        `<span class="store-pack-gem" style="--i:${i}">◆</span>`
+      ).join("");
+      const badge = p.badge
+        ? `<span class="store-pack-badge">${escapeHtml(p.badge)}</span>`
+        : "";
+      return `
+        <article class="store-pack store-pack-tier-${escapeHtml(p.tag || "starter")}${on ? " is-live" : " is-soon"}" style="--pack-accent:${escapeHtml(p.accent || "#fbbf24")}">
+          <div class="store-pack-art" aria-hidden="true">
+            <div class="store-pack-gems">${gems}</div>
+            <span class="store-pack-icon">${escapeHtml(p.icon || "◆")}</span>
+          </div>
+          <div class="store-pack-body">
+            <div class="store-pack-topline">
+              <h4 class="store-pack-name">${escapeHtml(p.label || p.id)}</h4>
+              ${badge}
             </div>
-            <button type="button" class="solid-btn tiny-pad" data-store-pack="${p.id}" ${on ? "" : "disabled"}>
-              ${on ? escapeHtml(p.price_label || "Buy") : "Soon"}
+            <p class="store-pack-tokens"><span class="store-pack-token-ico">◆</span> ${formatNum(tokens)} Tokens</p>
+            <p class="store-pack-blurb">${escapeHtml(p.blurb || "Cosmetic Tokens only — never more clicks or XP.")}</p>
+          </div>
+          <div class="store-pack-cta">
+            <span class="store-pack-price">${escapeHtml(p.price_label || "—")}</span>
+            <button type="button" class="solid-btn store-pack-buy" data-store-pack="${escapeHtml(p.id)}" disabled aria-disabled="true">
+              ${on ? "Buy" : "Soon"}
             </button>
-          </div>`;
-        })
-        .join("");
-    }
-  }
+          </div>
+        </article>`;
+    })
+    .join("");
 }
 
 async function openStore() {
