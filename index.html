@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260719n" />
+  <link rel="stylesheet" href="styles.css?v=20260720a" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -945,29 +945,68 @@
     </div>
   </dialog>
 
-  <!-- Pokémon GO–style store sheet -->
+  <!-- In-game Token store (cosmetic skins) -->
   <dialog id="store-modal" class="modal store-modal">
     <div class="store-sheet">
       <div class="store-grab" aria-hidden="true"></div>
+
       <div class="store-head">
         <div>
-          <h2>Store</h2>
-          <p class="muted store-balance-line">Your Tokens: <strong id="store-balance">0</strong></p>
+          <h2>Style Store</h2>
+          <p class="muted store-balance-line">
+            <span class="store-coin" aria-hidden="true">◆</span>
+            <strong id="store-balance">0</strong>
+            <span class="store-collection" id="store-collection">0/0 owned</span>
+          </p>
         </div>
         <button type="button" class="ghost-btn tiny" id="store-close" aria-label="Close store">✕</button>
       </div>
+
       <p class="muted store-blurb">
-        Skins are <strong>cosmetic only</strong> — never more clicks or XP. Token packs for real money come later.
+        Unlock looks that stay on <strong>your account</strong>. Style only — never more clicks or XP.
       </p>
 
-      <h3 class="board-subhead">Button skins</h3>
-      <p class="muted store-skin-intro">Metals · armor · space · worlds. Cosmetic only — same clicks, more style.</p>
+      <!-- Live preview + claim strip -->
+      <div class="store-stage card">
+        <div class="store-stage-btn-wrap">
+          <div class="store-preview-btn push-btn" id="store-preview-btn" data-skin="rose">
+            <span class="push-fx push-fx-a"></span>
+            <span class="push-fx push-fx-b"></span>
+            <span class="push-core"><span class="push-label">PUSH</span></span>
+          </div>
+        </div>
+        <div class="store-stage-meta">
+          <p class="store-preview-name" id="store-preview-name">Rose</p>
+          <p class="store-preview-rarity" id="store-preview-rarity">common · free</p>
+          <div class="store-stage-actions" id="store-stage-actions">
+            <button type="button" class="solid-btn" id="store-primary-btn" disabled>Select a skin</button>
+          </div>
+          <div class="store-earn-row">
+            <button type="button" class="ghost-btn tiny-pad" id="store-daily-btn">Daily</button>
+            <button type="button" class="ghost-btn tiny-pad" id="store-level-btn" hidden>Levels</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily featured deal -->
+      <div class="store-featured" id="store-featured" hidden></div>
+
+      <div class="store-section-head">
+        <h3 class="board-subhead">Browse skins</h3>
+        <div class="store-filter-row" id="store-filter-row">
+          <button type="button" class="store-filter active" data-store-filter="all">All</button>
+          <button type="button" class="store-filter" data-store-filter="afford">Can buy</button>
+          <button type="button" class="store-filter" data-store-filter="locked">Locked</button>
+          <button type="button" class="store-filter" data-store-filter="owned">Owned</button>
+        </div>
+      </div>
       <div class="store-cat-tabs" id="store-cat-tabs" role="tablist"></div>
       <div class="store-skin-grid" id="store-skin-grid"></div>
 
       <h3 class="board-subhead" style="margin-top:18px">Token packs</h3>
+      <p class="muted store-skin-intro">Real-money packs later (App Store / web checkout). Earn Tokens free via daily, levels &amp; rare loot.</p>
       <div class="store-pack-list" id="store-pack-list"></div>
-      <p class="muted store-iap-note" id="store-iap-note">Real-money packs will use App Store / Google Play IAP when live.</p>
+      <p class="muted store-iap-note" id="store-iap-note">Packs show as “Soon” until IAP is wired.</p>
       <p class="form-msg" id="store-msg" role="status"></p>
     </div>
   </dialog>
@@ -1025,7 +1064,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260719o"></script>
-  <script src="app.js?v=20260719o"></script>
+  <script src="config.js?v=20260720a"></script>
+  <script src="app.js?v=20260720a"></script>
 </body>
 </html>

@@ -104,42 +104,42 @@ const BUTTON_SKINS = [
   { id: "rose", label: "Rose", value: "#ff4d6d", free: true, cost: 0, cat: "classic", rarity: "common", darkText: false },
   { id: "coral", label: "Coral", value: "#ff7a59", free: true, cost: 0, cat: "classic", rarity: "common", darkText: false },
   { id: "amber", label: "Amber", value: "#f5a524", free: true, cost: 0, cat: "classic", rarity: "common", darkText: true },
-  // Classic paid
-  { id: "lime", label: "Lime", value: "#84cc16", free: false, cost: 80, cat: "classic", rarity: "common", darkText: true },
-  { id: "mint", label: "Mint", value: "#2dd4a8", free: false, cost: 80, cat: "classic", rarity: "common", darkText: true },
-  { id: "sky", label: "Sky", value: "#38bdf8", free: false, cost: 120, cat: "classic", rarity: "common", darkText: false },
-  { id: "blue", label: "Azure", value: "#4f7cff", free: false, cost: 120, cat: "classic", rarity: "common", darkText: false },
-  { id: "violet", label: "Violet", value: "#a78bfa", free: false, cost: 200, cat: "classic", rarity: "uncommon", darkText: false },
-  { id: "pink", label: "Blush", value: "#f472b6", free: false, cost: 200, cat: "classic", rarity: "uncommon", darkText: false },
-  { id: "white", label: "Pearl", value: "#e8e8f0", free: false, cost: 250, cat: "classic", rarity: "uncommon", darkText: true },
+  // Classic paid — leaner free Tokens mean entry prices stay reachable
+  { id: "lime", label: "Lime", value: "#84cc16", free: false, cost: 60, cat: "classic", rarity: "common", darkText: true },
+  { id: "mint", label: "Mint", value: "#2dd4a8", free: false, cost: 60, cat: "classic", rarity: "common", darkText: true },
+  { id: "sky", label: "Sky", value: "#38bdf8", free: false, cost: 90, cat: "classic", rarity: "common", darkText: false },
+  { id: "blue", label: "Azure", value: "#4f7cff", free: false, cost: 90, cat: "classic", rarity: "common", darkText: false },
+  { id: "violet", label: "Violet", value: "#a78bfa", free: false, cost: 160, cat: "classic", rarity: "uncommon", darkText: false },
+  { id: "pink", label: "Blush", value: "#f472b6", free: false, cost: 160, cat: "classic", rarity: "uncommon", darkText: false },
+  { id: "white", label: "Pearl", value: "#e8e8f0", free: false, cost: 200, cat: "classic", rarity: "uncommon", darkText: true },
   // Metals
-  { id: "iron", label: "Iron", value: "#94a3b8", free: false, cost: 150, cat: "metal", rarity: "common", darkText: true },
-  { id: "copper", label: "Copper", value: "#d97706", free: false, cost: 200, cat: "metal", rarity: "common", darkText: true },
-  { id: "gold", label: "Gold Rush", value: "#fbbf24", free: false, cost: 450, cat: "metal", rarity: "rare", darkText: true },
-  { id: "platinum", label: "Platinum", value: "#e2e8f0", free: false, cost: 750, cat: "metal", rarity: "epic", darkText: true },
-  { id: "obsidian", label: "Obsidian", value: "#1e1b2e", free: false, cost: 550, cat: "metal", rarity: "rare", darkText: false },
+  { id: "iron", label: "Iron", value: "#94a3b8", free: false, cost: 120, cat: "metal", rarity: "common", darkText: true },
+  { id: "copper", label: "Copper", value: "#d97706", free: false, cost: 160, cat: "metal", rarity: "common", darkText: true },
+  { id: "gold", label: "Gold Rush", value: "#fbbf24", free: false, cost: 400, cat: "metal", rarity: "rare", darkText: true },
+  { id: "platinum", label: "Platinum", value: "#e2e8f0", free: false, cost: 700, cat: "metal", rarity: "epic", darkText: true },
+  { id: "obsidian", label: "Obsidian", value: "#1e1b2e", free: false, cost: 480, cat: "metal", rarity: "rare", darkText: false },
   // Armor
-  { id: "knight", label: "Knight Plate", value: "#64748b", free: false, cost: 500, cat: "armor", rarity: "rare", darkText: false },
-  { id: "dragonscale", label: "Dragonscale", value: "#15803d", free: false, cost: 850, cat: "armor", rarity: "epic", darkText: false },
-  { id: "runic", label: "Runic Guard", value: "#7c3aed", free: false, cost: 1200, cat: "armor", rarity: "legendary", darkText: false },
-  { id: "crimson", label: "Crimson Mail", value: "#991b1b", free: false, cost: 800, cat: "armor", rarity: "epic", darkText: false },
+  { id: "knight", label: "Knight Plate", value: "#64748b", free: false, cost: 450, cat: "armor", rarity: "rare", darkText: false },
+  { id: "dragonscale", label: "Dragonscale", value: "#15803d", free: false, cost: 800, cat: "armor", rarity: "epic", darkText: false },
+  { id: "runic", label: "Runic Guard", value: "#7c3aed", free: false, cost: 1100, cat: "armor", rarity: "legendary", darkText: false },
+  { id: "crimson", label: "Crimson Mail", value: "#991b1b", free: false, cost: 750, cat: "armor", rarity: "epic", darkText: false },
   // Space
-  { id: "nebula", label: "Nebula", value: "#7c3aed", free: false, cost: 700, cat: "space", rarity: "epic", darkText: false },
-  { id: "void", label: "Void", value: "#0f172a", free: false, cost: 900, cat: "space", rarity: "epic", darkText: false },
-  { id: "comet", label: "Comet Trail", value: "#22d3ee", free: false, cost: 550, cat: "space", rarity: "rare", darkText: true },
-  { id: "solar", label: "Solar Flare", value: "#f97316", free: false, cost: 600, cat: "space", rarity: "rare", darkText: true },
-  { id: "neon", label: "Neon Pulse", value: "#22d3ee", free: false, cost: 500, cat: "space", rarity: "rare", darkText: true },
+  { id: "nebula", label: "Nebula", value: "#7c3aed", free: false, cost: 650, cat: "space", rarity: "epic", darkText: false },
+  { id: "void", label: "Void", value: "#0f172a", free: false, cost: 850, cat: "space", rarity: "epic", darkText: false },
+  { id: "comet", label: "Comet Trail", value: "#22d3ee", free: false, cost: 500, cat: "space", rarity: "rare", darkText: true },
+  { id: "solar", label: "Solar Flare", value: "#f97316", free: false, cost: 550, cat: "space", rarity: "rare", darkText: true },
+  { id: "neon", label: "Neon Pulse", value: "#22d3ee", free: false, cost: 450, cat: "space", rarity: "rare", darkText: true },
   // Worlds / planets
-  { id: "earth", label: "Terra", value: "#2563eb", free: false, cost: 350, cat: "world", rarity: "uncommon", darkText: false },
-  { id: "mars", label: "Mars", value: "#dc2626", free: false, cost: 400, cat: "world", rarity: "uncommon", darkText: false },
-  { id: "jupiter", label: "Jupiter", value: "#d97706", free: false, cost: 550, cat: "world", rarity: "rare", darkText: true },
-  { id: "moon", label: "Lunar", value: "#cbd5e1", free: false, cost: 350, cat: "world", rarity: "uncommon", darkText: true },
+  { id: "earth", label: "Terra", value: "#2563eb", free: false, cost: 280, cat: "world", rarity: "uncommon", darkText: false },
+  { id: "mars", label: "Mars", value: "#dc2626", free: false, cost: 320, cat: "world", rarity: "uncommon", darkText: false },
+  { id: "jupiter", label: "Jupiter", value: "#d97706", free: false, cost: 500, cat: "world", rarity: "rare", darkText: true },
+  { id: "moon", label: "Lunar", value: "#cbd5e1", free: false, cost: 280, cat: "world", rarity: "uncommon", darkText: true },
   // Elemental
-  { id: "magma", label: "Magma", value: "#ef4444", free: false, cost: 500, cat: "element", rarity: "rare", darkText: false },
-  { id: "frost", label: "Frostbite", value: "#7dd3fc", free: false, cost: 500, cat: "element", rarity: "rare", darkText: true },
-  { id: "storm", label: "Storm", value: "#6366f1", free: false, cost: 550, cat: "element", rarity: "rare", darkText: false },
-  { id: "toxic", label: "Toxic", value: "#a3e635", free: false, cost: 400, cat: "element", rarity: "uncommon", darkText: true },
-  { id: "shadow", label: "Shadow", value: "#475569", free: false, cost: 250, cat: "element", rarity: "common", darkText: false },
+  { id: "magma", label: "Magma", value: "#ef4444", free: false, cost: 450, cat: "element", rarity: "rare", darkText: false },
+  { id: "frost", label: "Frostbite", value: "#7dd3fc", free: false, cost: 450, cat: "element", rarity: "rare", darkText: true },
+  { id: "storm", label: "Storm", value: "#6366f1", free: false, cost: 500, cat: "element", rarity: "rare", darkText: false },
+  { id: "toxic", label: "Toxic", value: "#a3e635", free: false, cost: 320, cat: "element", rarity: "uncommon", darkText: true },
+  { id: "shadow", label: "Shadow", value: "#475569", free: false, cost: 200, cat: "element", rarity: "common", darkText: false },
 ];
 
 /** @deprecated alias — skins are the source of truth */
@@ -156,6 +156,8 @@ const SKIN_CATS = [
 ];
 
 let storeSkinCat = "all";
+let storeSkinFilter = "all"; // all | afford | locked | owned
+let storeSelectedId = null;
 
 const SESSION_EPOCH_KEY = "push-thru-session-epoch";
 const ACCOUNT_OK_KEY = "push-thru-account-ready";
@@ -439,8 +441,17 @@ const els = {
   storeModal: $("#store-modal"),
   storeClose: $("#store-close"),
   storeBalance: $("#store-balance"),
+  storeCollection: $("#store-collection"),
   storeSkinGrid: $("#store-skin-grid"),
   storeCatTabs: $("#store-cat-tabs"),
+  storeFilterRow: $("#store-filter-row"),
+  storeFeatured: $("#store-featured"),
+  storePreviewBtn: $("#store-preview-btn"),
+  storePreviewName: $("#store-preview-name"),
+  storePreviewRarity: $("#store-preview-rarity"),
+  storePrimaryBtn: $("#store-primary-btn"),
+  storeDailyBtn: $("#store-daily-btn"),
+  storeLevelBtn: $("#store-level-btn"),
   storePackList: $("#store-pack-list"),
   storeMsg: $("#store-msg"),
   buttonStage: $("#button-stage"),
@@ -3649,22 +3660,30 @@ function renderWallet() {
   if (els.tokenBalance) els.tokenBalance.textContent = formatNum(wallet.balance || 0);
   if (els.storeChipBalance) els.storeChipBalance.textContent = formatNum(wallet.balance || 0);
   if (els.storeBalance) els.storeBalance.textContent = formatNum(wallet.balance || 0);
+  const dailyAmt = wallet.daily_amount || 12;
   if (els.tokenSub) {
     els.tokenSub.textContent = wallet.daily_claimed
       ? `Daily claimed · ${formatNum(wallet.lifetime_earned || 0)} earned all-time`
-      : `Daily ready (+${wallet.daily_amount || 25}) · social only`;
+      : `Daily ready (+${dailyAmt}) · style currency only`;
   }
   if (els.tokenDailyBtn) {
     els.tokenDailyBtn.disabled = !!wallet.daily_claimed || !online;
-    els.tokenDailyBtn.textContent = wallet.daily_claimed
-      ? "Daily claimed"
-      : `Daily +${wallet.daily_amount || 25}`;
+    els.tokenDailyBtn.textContent = wallet.daily_claimed ? "Daily claimed" : `Daily +${dailyAmt}`;
   }
   if (els.tokenLevelBtn) {
     const pending = Number(wallet.pending_level_rewards) || 0;
     els.tokenLevelBtn.hidden = pending <= 0;
     els.tokenLevelBtn.textContent =
       pending > 0 ? `Claim ${pending} level reward${pending === 1 ? "" : "s"}` : "Claim levels";
+  }
+  if (els.storeDailyBtn) {
+    els.storeDailyBtn.disabled = !!wallet.daily_claimed || !online;
+    els.storeDailyBtn.textContent = wallet.daily_claimed ? "Daily ✓" : `Daily +${dailyAmt}`;
+  }
+  if (els.storeLevelBtn) {
+    const pending = Number(wallet.pending_level_rewards) || 0;
+    els.storeLevelBtn.hidden = pending <= 0;
+    els.storeLevelBtn.textContent = pending > 0 ? `Levels +${pending}` : "Levels";
   }
 }
 
@@ -3722,15 +3741,24 @@ function mergeStoreSkins() {
   // Prefer server catalog prices; fall back to full client skin list (richer FX)
   const server = Array.isArray(storeCatalog?.skins) ? storeCatalog.skins : [];
   const byId = Object.fromEntries(server.map((s) => [s.id, s]));
+  const feat = storeCatalog?.featured;
   return BUTTON_SKINS.map((s) => {
     const srv = byId[s.id] || {};
-    return {
+    const base = {
       ...s,
       cost: srv.cost != null ? Number(srv.cost) : s.cost,
       free: srv.free != null ? !!srv.free : s.free,
       label: srv.label || s.label,
       value: srv.value || s.value,
+      rarity: srv.rarity || s.rarity,
+      cat: srv.cat || s.cat,
     };
+    if (feat && feat.id === base.id && Number(feat.deal_cost) > 0) {
+      base.dealCost = Number(feat.deal_cost);
+      base.listCost = Number(feat.cost) || base.cost;
+      base.isFeatured = true;
+    }
+    return base;
   }).concat(
     server
       .filter((s) => !BUTTON_SKINS.some((b) => b.id === s.id))
@@ -3747,28 +3775,156 @@ function mergeStoreSkins() {
   );
 }
 
+function effectiveSkinCost(s) {
+  if (!s) return 0;
+  if (s.free) return 0;
+  if (s.isFeatured && s.dealCost != null) return Number(s.dealCost);
+  return Number(s.cost) || 0;
+}
+
+function skinOwned(s) {
+  if (!s) return false;
+  return ownedSkins.includes(s.id) || !!s.free;
+}
+
+function findStoreSkin(id) {
+  return mergeStoreSkins().find((s) => s.id === id) || null;
+}
+
+function setStorePreview(skinId, { pulse = true } = {}) {
+  const s = findStoreSkin(skinId) || BUTTON_SKINS[0];
+  storeSelectedId = s.id;
+  if (els.storePreviewBtn) {
+    els.storePreviewBtn.dataset.skin = s.id;
+    els.storePreviewBtn.style.setProperty("--skin", s.value || "#ff4d6d");
+    if (pulse) {
+      els.storePreviewBtn.classList.remove("is-pulse");
+      // reflow for animation restart
+      void els.storePreviewBtn.offsetWidth;
+      els.storePreviewBtn.classList.add("is-pulse");
+    }
+  }
+  if (els.storePreviewName) els.storePreviewName.textContent = s.label || s.id;
+  const owned = skinOwned(s);
+  const cost = effectiveSkinCost(s);
+  const bal = Number(wallet.balance) || 0;
+  const rarity = s.rarity || "common";
+  if (els.storePreviewRarity) {
+    if (owned) {
+      els.storePreviewRarity.textContent =
+        state.theme.button === s.id ? `${rarity} · equipped` : `${rarity} · owned`;
+    } else if (s.isFeatured) {
+      els.storePreviewRarity.textContent = `${rarity} · daily deal ◆${cost}`;
+    } else {
+      els.storePreviewRarity.textContent = cost ? `${rarity} · ◆${cost}` : `${rarity} · free`;
+    }
+  }
+  if (els.storePrimaryBtn) {
+    els.storePrimaryBtn.disabled = false;
+    if (owned) {
+      const eq = state.theme.button === s.id;
+      els.storePrimaryBtn.textContent = eq ? "Equipped" : "Equip";
+      els.storePrimaryBtn.disabled = eq;
+      els.storePrimaryBtn.dataset.mode = "equip";
+    } else {
+      const can = bal >= cost;
+      els.storePrimaryBtn.textContent = cost ? (can ? `Unlock ◆${cost}` : `Need ◆${cost}`) : "Unlock free";
+      els.storePrimaryBtn.disabled = cost > 0 && !can;
+      els.storePrimaryBtn.dataset.mode = "buy";
+    }
+    els.storePrimaryBtn.dataset.skin = s.id;
+  }
+}
+
+function renderStoreFeatured(allSkins) {
+  if (!els.storeFeatured) return;
+  const feat = storeCatalog?.featured;
+  if (!feat?.id) {
+    els.storeFeatured.hidden = true;
+    els.storeFeatured.innerHTML = "";
+    return;
+  }
+  const s = allSkins.find((x) => x.id === feat.id) || feat;
+  const owned = skinOwned(s) || ownedSkins.includes(feat.id);
+  const deal = Number(feat.deal_cost) || effectiveSkinCost(s);
+  const list = Number(feat.cost) || Number(s.cost) || deal;
+  els.storeFeatured.hidden = false;
+  els.storeFeatured.innerHTML = `
+    <span class="store-skin-swatch push-btn mini" data-skin="${escapeHtml(feat.id)}" style="--skin:${escapeHtml(s.value || feat.value || "#ff4d6d")};width:64px;height:64px;border-radius:50%">
+      <span class="push-fx push-fx-a"></span>
+      <span class="push-core"><span class="push-label">P</span></span>
+    </span>
+    <div>
+      <span class="store-featured-tag">${owned ? "Owned" : "Daily deal −20%"}</span>
+      <p class="store-featured-name">${escapeHtml(feat.label || s.label || feat.id)}</p>
+      <p class="store-featured-price">${
+        owned
+          ? "Tap to equip"
+          : `<s>◆${formatNum(list)}</s>◆${formatNum(deal)} · resets UTC midnight`
+      }</p>
+    </div>
+    <span class="store-featured-cta">${owned ? "Open →" : "Preview →"}</span>
+  `;
+  els.storeFeatured.dataset.storeSkin = feat.id;
+}
+
 function renderStore() {
   renderWallet();
   const allSkins = mergeStoreSkins();
+  const bal = Number(wallet.balance) || 0;
+  const ownedCount = allSkins.filter((s) => skinOwned(s)).length;
+  if (els.storeCollection) {
+    els.storeCollection.textContent = `${ownedCount}/${allSkins.length} owned`;
+  }
+
+  if (els.storeFilterRow) {
+    els.storeFilterRow.querySelectorAll("[data-store-filter]").forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute("data-store-filter") === storeSkinFilter);
+    });
+  }
+
   if (els.storeCatTabs) {
     els.storeCatTabs.innerHTML = SKIN_CATS.map(
       (c) =>
         `<button type="button" class="store-cat${storeSkinCat === c.id ? " active" : ""}" data-store-cat="${c.id}">${escapeHtml(c.label)}</button>`
     ).join("");
   }
-  const skins =
-    storeSkinCat === "all" ? allSkins : allSkins.filter((s) => s.cat === storeSkinCat);
+
+  renderStoreFeatured(allSkins);
+
+  let skins = storeSkinCat === "all" ? allSkins : allSkins.filter((s) => s.cat === storeSkinCat);
+  if (storeSkinFilter === "owned") skins = skins.filter((s) => skinOwned(s));
+  else if (storeSkinFilter === "locked") skins = skins.filter((s) => !skinOwned(s));
+  else if (storeSkinFilter === "afford") {
+    skins = skins.filter((s) => !skinOwned(s) && effectiveSkinCost(s) <= bal);
+  }
+
+  if (!storeSelectedId || !allSkins.some((s) => s.id === storeSelectedId)) {
+    storeSelectedId = state.theme.button || allSkins[0]?.id || "rose";
+  }
+  setStorePreview(storeSelectedId, { pulse: false });
+
   if (els.storeSkinGrid) {
     els.storeSkinGrid.innerHTML = skins
       .map((s) => {
         const id = s.id;
-        const owned = ownedSkins.includes(id) || s.free;
+        const owned = skinOwned(s);
         const eq = state.theme.button === id;
-        const cost = Number(s.cost) || 0;
-        const label = owned ? (eq ? "Equipped" : "Equip") : cost ? `◆ ${cost}` : "Free";
+        const cost = effectiveSkinCost(s);
+        const can = bal >= cost;
+        const label = owned
+          ? eq
+            ? "Equipped"
+            : "Equip"
+          : s.isFeatured
+            ? `◆ ${cost} deal`
+            : cost
+              ? `◆ ${cost}`
+              : "Free";
         const rarity = s.rarity || "common";
+        const sel = storeSelectedId === id;
         return `
-        <button type="button" class="store-skin rarity-${escapeHtml(rarity)}${eq ? " is-equipped" : ""}${owned ? " is-owned" : ""}" data-store-skin="${id}" data-skin="${id}" style="--skin:${s.value || "#ff4d6d"}">
+        <button type="button" class="store-skin rarity-${escapeHtml(rarity)}${eq ? " is-equipped" : ""}${owned ? " is-owned" : ""}${sel ? " is-selected" : ""}${!owned && !can ? " is-cant-afford" : ""}" data-store-skin="${id}" data-skin="${id}" style="--skin:${s.value || "#ff4d6d"}">
           <span class="store-skin-preview">
             <span class="store-skin-swatch push-btn mini" data-skin="${id}">
               <span class="push-fx push-fx-a"></span>
@@ -3777,7 +3933,7 @@ function renderStore() {
             </span>
           </span>
           <span class="store-skin-meta">
-            <span class="store-rarity">${escapeHtml(rarity)}</span>
+            <span class="store-rarity">${escapeHtml(rarity)}${s.isFeatured && !owned ? " · deal" : ""}</span>
             <span class="store-skin-name">${escapeHtml(s.label || id)}</span>
             <span class="store-skin-action">${label}</span>
           </span>
@@ -3793,10 +3949,11 @@ function renderStore() {
       els.storePackList.innerHTML = packs
         .map((p) => {
           const on = p.enabled === true;
+          const tag = p.tag ? `<span class="muted"> · ${escapeHtml(p.tag)}</span>` : "";
           return `
           <div class="store-pack">
             <div>
-              <strong>${escapeHtml(p.label || p.id)}</strong>
+              <strong>${escapeHtml(p.label || p.id)}</strong>${tag}
               <div class="muted">◆ ${formatNum(p.tokens || 0)} Tokens</div>
             </div>
             <button type="button" class="solid-btn tiny-pad" data-store-pack="${p.id}" ${on ? "" : "disabled"}>
@@ -3816,6 +3973,7 @@ async function openStore() {
     return;
   }
   setStoreMsg("");
+  storeSelectedId = state.theme.button || "rose";
   try {
     await loadWallet();
     await loadCosmetics();
@@ -3829,6 +3987,8 @@ async function openStore() {
 
 function closeStore() {
   els.storeModal?.close();
+  // Re-apply real equipped theme (preview may have selected another skin)
+  applyTheme();
 }
 
 async function buyOrEquipSkin(skinId) {
@@ -3847,13 +4007,22 @@ async function buyOrEquipSkin(skinId) {
   } else {
     await loadWallet();
   }
+  storeSelectedId = skinId;
   renderStore();
   renderSwatches();
-  setStoreMsg(
-    data?.spent > 0 ? `Unlocked ${skinId} for ◆${data.spent}` : `Equipped ${skinId}`,
-    "ok"
-  );
-  toast(data?.spent > 0 ? `Skin unlocked (−◆${data.spent})` : "Skin equipped");
+  const label = findStoreSkin(skinId)?.label || skinId;
+  if (data?.spent > 0) {
+    setStoreMsg(
+      data?.deal
+        ? `Unlocked ${label} on daily deal (−◆${data.spent})`
+        : `Unlocked ${label} for ◆${data.spent}`,
+      "ok"
+    );
+    toast(data?.deal ? `Deal unlock −◆${data.spent}` : `Unlocked −◆${data.spent}`);
+  } else {
+    setStoreMsg(`Equipped ${label}`, "ok");
+    toast("Skin equipped");
+  }
 }
 
 async function loadWallet() {
@@ -3903,8 +4072,8 @@ async function claimLevelRewards() {
 async function maybeLootDrop() {
   if (!sb || !online || !session?.user) return;
   lootDropCounter += 1;
-  // ~every 12 free taps attempt a server roll (server still applies ~2.5% + daily cap)
-  if (lootDropCounter % 12 !== 0) return;
+  // ~every 20 free taps attempt a server roll (server ~1.5% + daily cap 5)
+  if (lootDropCounter % 20 !== 0) return;
   try {
     const { data, error } = await sb.rpc("jp_try_loot_drop");
     if (error) return;
@@ -5654,20 +5823,64 @@ function bindEvents() {
     e.preventDefault();
     closeStore();
   });
-  els.storeSkinGrid?.addEventListener("click", async (e) => {
+  // Tap grid / featured = preview only (streamlined, less mis-buys)
+  els.storeSkinGrid?.addEventListener("click", (e) => {
     const btn = e.target?.closest?.("[data-store-skin]");
     if (!btn) return;
+    setStorePreview(btn.getAttribute("data-store-skin"));
+    // highlight selection without full re-render of filters
+    els.storeSkinGrid.querySelectorAll(".store-skin").forEach((el) => {
+      el.classList.toggle("is-selected", el.getAttribute("data-store-skin") === storeSelectedId);
+    });
+  });
+  els.storeFeatured?.addEventListener("click", () => {
+    const id = els.storeFeatured?.dataset?.storeSkin;
+    if (id) {
+      setStorePreview(id);
+      renderStore();
+    }
+  });
+  els.storePrimaryBtn?.addEventListener("click", async () => {
+    const id = els.storePrimaryBtn?.dataset?.skin || storeSelectedId;
+    if (!id) return;
+    setStoreMsg("");
     try {
-      await buyOrEquipSkin(btn.getAttribute("data-store-skin"));
+      await buyOrEquipSkin(id);
     } catch (err) {
       setStoreMsg(err.message || "Could not buy skin", "err");
       toast(err.message || "Store error");
+    }
+  });
+  els.storeDailyBtn?.addEventListener("click", async () => {
+    setStoreMsg("");
+    try {
+      await claimDailyBonus();
+      renderStore();
+    } catch (err) {
+      setStoreMsg(err.message || "Claim failed", "err");
+      toast(err.message || "Claim failed");
+    }
+  });
+  els.storeLevelBtn?.addEventListener("click", async () => {
+    setStoreMsg("");
+    try {
+      const data = await claimLevelRewards();
+      renderStore();
+      if (!data?.amount) setStoreMsg("No pending level rewards.", "");
+    } catch (err) {
+      setStoreMsg(err.message || "Claim failed", "err");
     }
   });
   els.storeCatTabs?.addEventListener("click", (e) => {
     const tab = e.target?.closest?.("[data-store-cat]");
     if (!tab) return;
     storeSkinCat = tab.getAttribute("data-store-cat") || "all";
+    renderStore();
+  });
+  els.storeFilterRow?.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.("[data-store-filter]");
+    if (!btn) return;
+    storeSkinFilter = btn.getAttribute("data-store-filter") || "all";
     renderStore();
   });
 
