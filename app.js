@@ -453,6 +453,7 @@ const els = {
   storeDailyBtn: $("#store-daily-btn"),
   storeLevelBtn: $("#store-level-btn"),
   storePackList: $("#store-pack-list"),
+  storePacksSection: $("#store-packs-section"),
   storeMsg: $("#store-msg"),
   buttonStage: $("#button-stage"),
   toast: $("#toast"),
@@ -4091,8 +4092,16 @@ function mergeTokenPacks() {
   });
 }
 
+function featureTokenPacksEnabled() {
+  return getConfig().enableTokenPacks === true;
+}
+
 function renderTokenPacks() {
-  if (!els.storePackList) return;
+  const show = featureTokenPacksEnabled();
+  if (els.storePacksSection) {
+    els.storePacksSection.hidden = !show;
+  }
+  if (!show || !els.storePackList) return;
   const packs = mergeTokenPacks();
   els.storePackList.innerHTML = packs
     .map((p) => {

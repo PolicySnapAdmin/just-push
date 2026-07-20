@@ -33,6 +33,13 @@ window.JUST_PUSH_CONFIG = {
   enableChat: false,
 
   /**
+   * Token pack / IAP vault in Style Store (Spark / Charge / Nova cards).
+   * false = hide until App Store / Play / web checkout is live.
+   * UI is built; set true when purchases are wired.
+   */
+  enableTokenPacks: false,
+
+  /**
    * Show “Sign in with GitHub”.
    * false = no GitHub (no SIWA required for email/password alone).
    */
