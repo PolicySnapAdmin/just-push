@@ -62,6 +62,7 @@ just-push/
 | [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System map, data flow, file roles |
 | [docs/SUPABASE.md](./docs/SUPABASE.md) | Migrations + dashboard checklist |
 | [docs/BACKUP.md](./docs/BACKUP.md) | Backups, redundancy, breach / total-failure runbook |
+| [docs/LEGAL.md](./docs/LEGAL.md) | Privacy/Terms/cookies operator checklist (CA-style) |
 | [docs/SECURITY.md](./docs/SECURITY.md) | RLS notes + residual risks |
 | [docs/APP_STORE.md](./docs/APP_STORE.md) | Ship checklist (no-Mac → Mac) |
 | [docs/STORE_LISTING.md](./docs/STORE_LISTING.md) | App Store description draft |
