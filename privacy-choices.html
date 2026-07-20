@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="index,follow" />
   <title>Your Privacy Choices · Push Thru</title>
-  <link rel="stylesheet" href="legal.css?v=1" />
+  <link rel="stylesheet" href="legal.css?v=2" />
 </head>
 <body>
   <main class="legal">
@@ -13,24 +13,37 @@
     <h1>Your Privacy Choices</h1>
     <p class="meta">Push Thru · California “Do Not Sell or Share” &amp; related opt-outs · Updated July 20, 2026</p>
 
+    <div class="card" style="border-color: color-mix(in srgb, #3dd68c 40%, var(--border));">
+      <p style="margin:0;color:var(--text)">
+        <strong>Our stance:</strong> we never sell your data. In our view, opt-out is
+        <strong>always on</strong>.
+        <a href="privacy-stance.html">Read the full promise →</a>
+      </p>
+    </div>
+
     <p class="lead">
-      Use this page to manage privacy preferences. We <strong>do not sell</strong> personal information and
+      This page is the formal “Do Not Sell or Share” control some laws expect.
+      We <strong>do not sell</strong> personal information and
       <strong>do not share</strong> it for cross-context behavioral advertising in the current web build.
-      You can still record an opt-out preference; we also honor <strong>Global Privacy Control (GPC)</strong> when your browser sends it.
+      You can still record an opt-out preference (default: protected). We honor
+      <strong>Global Privacy Control (GPC)</strong> when your browser sends it.
     </p>
 
     <div class="card choices-card">
       <h2>Do Not Sell or Share My Personal Information</h2>
       <p class="muted" id="gpc-status">Checking browser GPC signal…</p>
       <label class="choice-row">
-        <input type="checkbox" id="opt-out-sale-share" />
+        <input type="checkbox" id="opt-out-sale-share" checked />
         <span>
           <strong>Opt out</strong> of any sale or sharing of my personal information
           (including for cross-context behavioral advertising).
+          <em style="display:block;margin-top:4px;font-style:normal;color:var(--muted)">
+            Default: on — matches how Push Thru operates.
+          </em>
         </span>
       </label>
       <p class="note">
-        This preference is stored on this device (local storage). If you clear site data, set it again.
+        This preference is stored on this device (local storage). If you clear site data, it returns to protected by default.
         For account deletion, use in-app Settings or the contact form.
       </p>
       <div class="choice-actions">
@@ -57,7 +70,7 @@
       <a href="./">Play</a>
     </p>
   </main>
-  <script src="legal-consent.js?v=1" defer></script>
+  <script src="legal-consent.js?v=2" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       if (window.PushThruPrivacy) window.PushThruPrivacy.mountChoicesPage();

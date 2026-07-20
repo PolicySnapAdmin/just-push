@@ -15,11 +15,18 @@
     }
   }
 
+  /**
+   * Default is opted-OUT of sale/share (protected).
+   * Only "0" means the user explicitly turned protection off.
+   * Missing key / GPC / never visited = treat as opted out ("always on").
+   */
   function getOptOut() {
     try {
-      return localStorage.getItem(OPT_OUT_KEY) === "1";
+      const v = localStorage.getItem(OPT_OUT_KEY);
+      if (v === "0") return false;
+      return true; // "1", null, or anything else → protected
     } catch (_) {
-      return false;
+      return true;
     }
   }
 
@@ -66,10 +73,10 @@
     el.setAttribute("role", "dialog");
     el.setAttribute("aria-label", "Privacy notice");
     el.innerHTML =
-      "<p><strong>Privacy &amp; storage</strong> — Push Thru uses essential browser storage for sign-in, " +
-      "scores, and preferences. We don’t use third-party ad tracking cookies in this build. " +
-      "See <a href=\"privacy.html\">Privacy</a>, <a href=\"cookies.html\">Cookies</a>, and " +
-      "<a href=\"privacy-choices.html\">Your Privacy Choices</a> (Do Not Sell/Share).</p>" +
+      "<p><strong>Privacy &amp; storage</strong> — We never sell your data (opt-out is always on in our view). " +
+      "Push Thru uses essential browser storage for sign-in, scores, and preferences — not ad tracking. " +
+      "See <a href=\"privacy-stance.html\">Our stance</a>, <a href=\"privacy.html\">Privacy</a>, " +
+      "<a href=\"cookies.html\">Cookies</a>.</p>" +
       '<div class="pt-consent-actions">' +
       '<button type="button" class="solid-btn" id="pt-consent-ok">Got it</button>' +
       '<a class="ghost-btn" href="privacy-choices.html">Privacy choices</a>' +
@@ -116,7 +123,10 @@
           "No GPC signal detected. You can still opt out manually below.";
       }
     }
-    if (box) box.checked = getOptOut() || gpcEnabled();
+    if (box) {
+      // Always show protected by default; GPC reinforces opt-out
+      box.checked = getOptOut() || gpcEnabled();
+    }
 
     btn?.addEventListener("click", () => {
       setOptOut(!!box?.checked);
@@ -130,6 +140,16 @@
     });
   }
 
+  // First visit: persist default "opt-out always on" so the preference is explicit
+  function ensureDefaultOptOut() {
+    try {
+      if (localStorage.getItem(OPT_OUT_KEY) === null) {
+        setOptOut(true);
+      }
+    } catch (_) {}
+  }
+
+
   // Public API
   window.PushThruPrivacy = {
     getOptOut,
@@ -140,6 +160,7 @@
   };
 
   function boot() {
+    ensureDefaultOptOut();
     applyGpcIfNeeded();
     // Delay slightly so age modal / main UI paint first
     setTimeout(showBanner, 400);

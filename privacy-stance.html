@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index,follow" />
+  <meta name="description" content="Push Thru privacy stance: we never sell your data. Opt-out is always on." />
+  <title>Our Privacy Stance · Push Thru</title>
+  <link rel="stylesheet" href="legal.css?v=2" />
+  <style>
+    .stance-hero {
+      margin: 20px 0 28px;
+      padding: 22px 20px;
+      border-radius: 16px;
+      border: 1px solid color-mix(in srgb, #3dd68c 35%, var(--border));
+      background:
+        radial-gradient(500px 160px at 10% 0%, color-mix(in srgb, #3dd68c 14%, transparent), transparent 70%),
+        var(--card);
+    }
+    .stance-hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 4vw, 1.9rem);
+      letter-spacing: -0.02em;
+    }
+    .stance-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0a1a12;
+      background: #3dd68c;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .stance-list {
+      list-style: none;
+      padding: 0;
+      margin: 18px 0 0;
+    }
+    .stance-list li {
+      position: relative;
+      padding: 12px 14px 12px 40px;
+      margin: 0 0 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg) 50%, transparent);
+      color: var(--muted);
+    }
+    .stance-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      color: #3dd68c;
+      font-weight: 800;
+    }
+    .stance-list strong { color: var(--text); }
+    .stance-quote {
+      margin: 22px 0;
+      padding: 16px 18px;
+      border-left: 4px solid #3dd68c;
+      background: color-mix(in srgb, #3dd68c 8%, var(--card));
+      border-radius: 0 12px 12px 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    .stance-quote strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <main class="legal">
+    <a class="back" href="./">← Back to Push Thru</a>
+
+    <article class="stance-hero" id="stance">
+      <span class="stance-pill">Our promise</span>
+      <h1>We never sell your data.</h1>
+      <p class="lead" style="margin:0">
+        Push Thru is a game — not a data business. We believe most personal information is sensitive,
+        and we only want to house what we need to run and grow a fair product — never to profit from
+        trading people’s information.
+      </p>
+    </article>
+
+    <p class="stance-quote">
+      <strong>In our view, “opt-out” is always on.</strong>
+      You should not have to hunt for a switch to stop us from selling your data, because
+      <strong>we will not sell it</strong> — not now, not as a growth hack later.
+    </p>
+
+    <h2>What that means in practice</h2>
+    <ul class="stance-list">
+      <li>
+        <strong>No selling personal information.</strong>
+        We do not sell player data to brokers, advertisers, or anyone else.
+      </li>
+      <li>
+        <strong>No “sharing” for cross-context ads.</strong>
+        The current web build does not use third-party ad tracking SDKs or ad cookies.
+      </li>
+      <li>
+        <strong>Only what helps the game.</strong>
+        We keep account, scores, cosmetics, and social data needed to play, sync progress,
+        prevent abuse, and improve the product — not to monetize your identity.
+      </li>
+      <li>
+        <strong>You stay in control.</strong>
+        Change your name, clear device storage, delete your account in Settings, or contact us
+        for privacy requests. Laws like California’s still give you formal rights; we respect them.
+      </li>
+      <li>
+        <strong>Opt-out preference is available — and defaulted to “protected.”</strong>
+        The Do Not Sell or Share control exists for transparency and legal clarity.
+        Our product stance is that sale/share for advertising is off by design; that control
+        records your preference and we honor browser Global Privacy Control (GPC) when present.
+      </li>
+    </ul>
+
+    <h2>Why we still show an “opt-out” page</h2>
+    <p>
+      Some laws ask services to offer a clear <em>Do Not Sell or Share</em> path even when they do not sell data.
+      We provide that path so you are never guessing. Functionally, for Push Thru, the outcome you want —
+      <strong>no sale of your information</strong> — is already how we operate.
+    </p>
+
+    <div class="card">
+      <h2 style="margin-top:0">Related</h2>
+      <ul>
+        <li><a href="privacy.html">Full Privacy Policy</a></li>
+        <li><a href="privacy-choices.html">Your Privacy Choices</a> (formal Do Not Sell or Share control)</li>
+        <li><a href="cookies.html">Cookie &amp; storage notice</a></li>
+        <li><a href="store.html#contact">Contact / privacy request</a></li>
+      </ul>
+    </div>
+
+    <p class="meta">Push Thru · https://www.pushthrugames.com/ · Last updated: July 20, 2026</p>
+
+    <p class="footer-links">
+      <a href="privacy.html">Privacy</a> ·
+      <a href="terms.html">Terms</a> ·
+      <a href="privacy-choices.html">Choices</a> ·
+      <a href="./">Play</a>
+    </p>
+  </main>
+  <script src="legal-consent.js?v=2" defer></script>
+</body>
+</html>
