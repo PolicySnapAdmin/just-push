@@ -14,8 +14,10 @@ Open: [Authentication](https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxd
 
 ### 1. Enable Email provider
 - **Auth → Providers → Email** → **Enable**
-- For launch smoke tests you can leave **“Confirm email” OFF** so link-email works immediately.  
-- For production, turn **Confirm email ON** so linked addresses are verified.
+- **“Confirm email”** — recommended **OFF** for Push Thru code+password accounts.  
+  Player codes use synthetic addresses (`{CODE}@login.pushthrugames.com`) that **cannot** open a confirm link.  
+  If Confirm email is ON, the DB trigger `jp_auto_confirm_login_email` still auto-confirms those synthetic emails only; **real** linked emails follow the dashboard setting.
+- Turning Confirm email ON is fine later for real recovery emails, as long as that trigger stays applied.
 
 ### 2. URL configuration (Site URL + Redirects)
 

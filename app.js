@@ -2472,6 +2472,11 @@ async function createAccountWithPassword(name, password) {
     if (error) {
       lastErr = error;
       if (/rate|limit/i.test(error.message || "")) throw error;
+      if (/email not confirmed/i.test(error.message || "")) {
+        throw new Error(
+          "Account created but email confirmation is blocking sign-in. Ask support to refresh — code logins should not need a real email."
+        );
+      }
       continue;
     }
     // Ensure session (confirm-email off → session present; else sign in)
@@ -2479,7 +2484,14 @@ async function createAccountWithPassword(name, password) {
       session = data.session;
     } else {
       const signed = await sb.auth.signInWithPassword({ email, password });
-      if (signed.error) throw signed.error;
+      if (signed.error) {
+        if (/email not confirmed/i.test(signed.error.message || "")) {
+          throw new Error(
+            "Sign-in blocked by email confirmation. Code+password accounts should auto-confirm — hard-refresh and try once more."
+          );
+        }
+        throw signed.error;
+      }
       session = signed.data.session;
     }
     await ensureProfile();
@@ -2512,6 +2524,11 @@ async function loginWithCodeOrEmail(identifier, password) {
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
+    if (/email not confirmed/i.test(error.message || "")) {
+      throw new Error(
+        "This account needs a confirmation fix (common for code logins). Hard-refresh and try again, or create a new name if it still fails."
+      );
+    }
     if (/invalid/i.test(error.message || "")) {
       throw new Error("Wrong code/email or password");
     }
