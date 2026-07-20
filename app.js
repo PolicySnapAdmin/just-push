@@ -161,6 +161,8 @@ let storeSelectedId = null;
 
 const SESSION_EPOCH_KEY = "push-thru-session-epoch";
 const ACCOUNT_OK_KEY = "push-thru-account-ready";
+/** Which auth user the local lifetime/high scores belong to (stops guest bleed). */
+const SCORE_UID_KEY = "push-thru-score-uid";
 
 const BACKGROUNDS = [
   { id: "midnight", label: "Midnight", value: "#0f0f14" },
@@ -2809,13 +2811,72 @@ async function bumpSessionOnServer() {
   applyServerProfile(data);
 }
 
-/** If local offline progress is ahead of server, claim it via capped RPCs (not raw UPDATE). */
+function getScoreUid() {
+  try {
+    return localStorage.getItem(SCORE_UID_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function setScoreUid(uid) {
+  try {
+    if (uid) localStorage.setItem(SCORE_UID_KEY, uid);
+    else localStorage.removeItem(SCORE_UID_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Drop local grind so it can't be uploaded onto the wrong account. */
+function adoptServerScoresOnly(data) {
+  if (!data) return;
+  state.highScore = Number(data.high_score) || 0;
+  state.lifetimeCount = Number(data.lifetime_count) || 0;
+  state.sessionsPlayed = Number(data.sessions_played) || 0;
+  applyChallengeBestFromServer(data.challenge_best || 0, { save: false });
+  saveState();
+  renderScores();
+}
+
+/**
+ * If local offline progress is ahead of server, claim it via capped RPCs (not raw UPDATE).
+ * Never bleed ImBetter-sized offline stats onto a fresh guest "Player" (leaderboard clones).
+ */
 async function reconcileLocalScoresToServer() {
   if (!sb || !session?.user || !profile) return;
-  let serverLife = profile.lifetime_count || 0;
+  const uid = session.user.id;
+  const bound = getScoreUid();
+  const serverLife = Number(profile.lifetime_count) || 0;
+  const serverHigh = Number(profile.high_score) || 0;
+
+  // Local scores were earned under a different signed-in user
+  if (bound && bound !== uid) {
+    console.info("Skip reconcile: local scores belong to another account");
+    adoptServerScoresOnly(profile);
+    setScoreUid(uid);
+    return;
+  }
+
+  // Fresh cloud row + huge local stack with no binding = almost always leftover localStorage
+  if (
+    !bound &&
+    serverLife === 0 &&
+    serverHigh === 0 &&
+    (state.lifetimeCount >= 500 || state.highScore >= 500)
+  ) {
+    console.info("Skip reconcile: discarding orphan local grind on fresh profile");
+    adoptServerScoresOnly(profile);
+    setScoreUid(uid);
+    return;
+  }
+
+  setScoreUid(uid);
+
+  let life = serverLife;
   let guard = 0;
-  while (state.lifetimeCount > serverLife && guard < 50) {
-    const delta = Math.min(200, state.lifetimeCount - serverLife);
+  while (state.lifetimeCount > life && guard < 50) {
+    const delta = Math.min(200, state.lifetimeCount - life);
     const { data, error } = await sb.rpc("jp_record_pushes", {
       p_count: delta,
       p_session_count: state.highScore,
@@ -2825,11 +2886,10 @@ async function reconcileLocalScoresToServer() {
       break;
     }
     profile = data;
-    serverLife = data.lifetime_count || serverLife;
+    life = data.lifetime_count || life;
     guard += 1;
   }
   // Do NOT re-upload challenge_best from localStorage — only endChallenge() reports 10s runs.
-  // That prevents glitch/local inflated bests from overwriting admin or legitimate server values.
 }
 
 /** Theme only via table update. Display names go through jp_set_display_name (unique + daily limit). */
@@ -3005,6 +3065,15 @@ async function signOut() {
   online = false;
   setStoredSessionEpoch(0);
   markAccountReadyLocal(false);
+  // Prevent next guest session from uploading this account's offline totals
+  setScoreUid("");
+  state.highScore = 0;
+  state.lifetimeCount = 0;
+  state.sessionsPlayed = 0;
+  state.challengeBest = 0;
+  state.sessionCount = 0;
+  saveState();
+  renderScores();
   setOnlineUi();
   ensureName();
   toast("Signed out");
