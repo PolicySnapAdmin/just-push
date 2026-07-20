@@ -4628,15 +4628,15 @@ async function createGroupOnline(name) {
 async function joinGroupOnline(codeRaw) {
   const code = codeRaw.trim().toUpperCase();
   if (code.startsWith("JPG1.")) throw new Error("Use the short online invite code, not an offline blob");
-  const { data: group, error } = await sb.from("jp_groups").select("*").eq("invite_code", code).maybeSingle();
-  if (error) throw error;
-  if (!group) throw new Error("No group with that code");
-  const { error: e2 } = await sb
-    .from("jp_group_members")
-    .upsert({ group_id: group.id, user_id: session.user.id }, { onConflict: "group_id,user_id" });
-  if (e2) throw e2;
+  // RPC only — groups are no longer listable by invite code (anti-scrape)
+  const { data, error } = await sb.rpc("jp_join_group_by_code", { p_code: code });
+  if (error) {
+    const msg = error.message || "";
+    if (/not found/i.test(msg)) throw new Error("No group with that code");
+    throw new Error(msg || "Could not join group");
+  }
   await loadGroups();
-  return group.name;
+  return data?.name || "group";
 }
 
 function createGroupOffline(name) {

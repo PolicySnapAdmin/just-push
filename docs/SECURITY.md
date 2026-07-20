@@ -1,97 +1,52 @@
-# Push Thru — security notes
+# Push Thru — security notes (reverse-engineering lens)
 
-Last live probe: 2026-07-18 (updated after score-guard + email auth).  
-Not a formal audit; practical review of Supabase RLS + client surface.
+Last live harden: **2026-07-20** (`jp_profiles` lock + grants + group join RPC).  
+Not a formal audit — practical threat model for a **public static web app + Supabase**.
 
-See also: [ARCHITECTURE.md](./ARCHITECTURE.md) · [SUPABASE.md](./SUPABASE.md)
-
-## Short answers
-
-| Question | Answer |
-|----------|--------|
-| Is the **service role** key public? | **No** — not in repo or client. Only the **anon** key is in `config.js` (expected for Supabase web apps). |
-| Can strangers hit the API with **no login** and read data? | **No** — unauthenticated queries return empty / are denied. |
-| Are **private DMs** visible to other players? | **No** — only sender & recipient (verified). Non-friends cannot send. |
-| Are **friendships** public? | **No** — only rows involving you. |
-| Are **scores / names / friend codes** public? | **Yes, to any signed-in player** (including guests) — intentional for leaderboards & add-by-code. |
-| Is **chat UI** public right now? | **Off** in v1 (`enableChat: false`); tables still exist with RLS if re-enabled. |
+See also: [ARCHITECTURE.md](./ARCHITECTURE.md) · [SUPABASE.md](./SUPABASE.md) · [LEGAL.md](./LEGAL.md)
 
 ---
 
-## Threat model (what “public” means)
+## Architecture reality (what attackers always see)
 
-Anyone who opens the app becomes a **guest authenticated user** (anonymous auth). That is different from the internet-at-large with zero token.
+| Layer | Exposed? | Implication |
+|-------|----------|-------------|
+| HTML/JS/CSS | **Fully public** | All client logic, skin prices, RPC names are readable |
+| `config.js` anon key | **Public by design** | Security = **RLS + RPC checks**, not key secrecy |
+| Service role | **Not in client** | Only GitHub Actions secrets / local CLI |
+| PostgREST schema | Discoverable when authenticated | Table/RPC names are not secret |
 
-- **Internet without login:** blocked for `jp_*` data  
-- **Any guest / signed-in player:** can read game-public data (profiles for boards)  
-- **You + friend only:** DMs, friendship edges  
+**You cannot hide game rules in the client.** Authority must live in Postgres (triggers + security-definer RPCs).
 
 ---
 
-## Live probe results (summary)
+## Threat model
 
-### Unauthenticated (anon key only, no user JWT)
-| Action | Result |
-|--------|--------|
-| SELECT profiles / friendships / groups / posts / DMs | Empty `[]` (no rows) |
-| INSERT DM | 401 |
-| RPC delete account / add friend | “Not authenticated” |
+| Actor | Can do |
+|-------|--------|
+| Internet, no JWT | Almost nothing on `jp_*` (no grants / no rows) |
+| Any signed-in player | Read leaderboard-style profile fields; call player RPCs as self |
+| RE script kiddie | Call REST/RPC with stolen/own JWT; try forge scores/skins |
+| Admin JWT | Admin RPCs only if `jp_admins` row |
 
-### Authenticated guest
-| Action | Result |
-|--------|--------|
-| Update **own** profile | OK |
-| Update **someone else’s** profile | Blocked (0 rows / no change) |
-| Insert friendship as another user | **403** |
-| Forge board post as another user | **403** |
-| Read **others’ DMs** | Empty |
-| Send DM without friendship | **403** |
-| Send DM to friend | OK |
-| Friend reads that DM | OK |
-| Recipient rewrite DM `body` | Was **possible** → **fixed** with trigger (see below) |
+---
 
-### Client secrets
-| Item | Status |
+## Hardened (2026-07-20)
+
+| Risk | Status |
 |------|--------|
-| Service role key in repo | Not found |
-| Anon key in `config.js` | Public by design (RLS must protect data) |
+| REST **forge scores** | Blocked — score columns only change with `jp.allow_scores` |
+| REST **forge owned_skins / free legendaries** | **Fixed** — locked unless `jp.allow_skins` (store RPC) |
+| REST **steal friend_code / account_ready / session_epoch** | **Fixed** — locked unless `jp.allow_identity` |
+| REST **rename bypassing rate limits** | Blocked — `jp.allow_name_change` |
+| Wallet balance REST write | Blocked — SELECT-only grants + RLS |
+| Direct hygiene / admin without admin row | Blocked — `Admin only` |
+| Open **group invite-code directory** | **Fixed** — groups visible only to members; join via `jp_join_group_by_code` |
+| Over-broad table GRANTs (DELETE/TRUNCATE on wallets etc.) | **Tightened** to least privilege |
 
----
+### Profile columns clients may still update via REST
 
-## What is intentionally visible to all players
-
-These are **not** hidden — the game needs them:
-
-- Display name  
-- Friend code  
-- High score, 10s best, lifetime pushes / XP, sessions  
-- Theme fields on profile  
-- Global leaderboard rows  
-- Group names + **invite codes** (any logged-in user can list groups if any exist)  
-- Community board posts (when chat is enabled)
-
-**Implication:** friend codes are “shareable secrets,” not strong secrets. Anyone online can scrape codes from `jp_profiles` and add people. Acceptable for a casual game; not for high-security identity.
-
----
-
-## What stays private
-
-| Data | Who can see |
-|------|-------------|
-| Private DMs (`jp_friend_messages`) | Only the two participants |
-| Friendship graph | Only participants of each edge |
-| Auth emails / providers | Supabase Auth (not in `jp_*` tables) |
-| Service role / DB password | Dashboard / server only |
-
----
-
-## Fix applied: DM tamper
-
-**Issue:** Recipient UPDATE policy allowed changing `body` (and other columns), not only `read_at`.
-
-**Fix:** migration `20260718150000_just_push_security_harden.sql`  
-- Trigger `jp_friend_messages_guard_update` allows only `read_at` to change  
-- Explicit `REVOKE` table access from `anon` role  
+Only non-privileged prefs (e.g. `theme_button`, `theme_bg`). Everything economic/identity goes through RPCs.
 
 ---
 
@@ -99,38 +54,75 @@ These are **not** hidden — the game needs them:
 
 | Risk | Severity | Notes |
 |------|----------|--------|
-| Unlimited anonymous signups | Medium | Spam accounts / leaderboard noise. Mitigate with rate limits / captcha later. |
-| Friend-code scraping | Low–Med | All codes readable by guests. OK for casual; could add rate limits. |
-| Group invite codes listable | Low–Med | `jp_groups` SELECT is open to authenticated. Random 6-char codes; brute force still possible. |
-| Supabase project may still hold legacy non-`jp_*` tables | Low | App only uses `jp_*`; see docs/SEPARATION.md for full isolation options. |
-| Security definer RPCs | Low | `jp_delete_my_account`, `jp_add_friend_by_code` use `auth.uid()` — only act as caller. |
-| No server rate limits on posts/DMs | Low | Client cooldowns only; re-enable chat carefully. |
-| Client sets scores via REST | **Mitigated** | Score columns locked by trigger; play uses RPCs only (increment/capped). |
-| Public GitHub repo | Info | Anon key + source visible — expected for this architecture. |
-| Email without confirm | Low | Instant account link; attackers need password. Enable confirm later if needed. |
-| Delete account UX | Mitigated | Multi-step modal + type-to-confirm + delay. |
+| **Friend-code scrape** | Med | Any logged-in user can `SELECT` profiles (leaderboards need names/scores). Codes are shareable secrets, not passwords. Mitigate later: public view without `friend_code` + lookup RPC only. |
+| **Anonymous signup spam** | Med | Still possible if Anonymous provider ON. Captcha / disable anon when code-accounts are enough. |
+| **Automated push RPCs** | Med | Client can spam `jp_record_pushes` within server rules. Add rate limits / velocity checks if abuse appears. |
+| **Loot / daily farming multi-account** | Low–Med | Economy is cosmetic; multi-account always possible. |
+| **Admin RPC enumeration** | Low | Callable by all authenticated but returns Admin only; still reveals RPC exists. |
+| **Chat tables exist** | Low | UI off; RLS still applies if re-enabled. |
+| **Static host (GitHub Pages)** | Info | No server WAF; rely on Supabase + Cloudflare at Supabase edge. |
+| **Synthetic login emails** | Info | Auto-confirmed for `@login.pushthrugames.com` only. |
 
 ---
 
-## Hardening ideas (optional later)
+## Reverse-engineering playbook (defender view)
 
-1. Restrict profile SELECT columns via a `jp_public_profiles` view (hide nothing critical today).  
-2. Friend add only via RPC (already primary path); remove direct friendship insert if unused.  
-3. Group join only via RPC that checks invite code without listing all groups.  
-4. ~~Score updates via RPC~~ — done (`jp_record_pushes` / guards).  
-5. Supabase Auth rate limits / captcha for anonymous spam.  
-6. If chat ships: report/block + moderation.  
-7. Join groups only via invite RPC (avoid listing all invite codes).
+What a motivated user will try:
+
+1. Open DevTools → Network → copy Supabase REST calls  
+2. Replay with modified JSON (`high_score`, `owned_skins`, wallet)  
+3. Enumerate `/rest/v1/rpc/*` from app.js  
+4. Script friend-code scraping and spam friend requests  
+5. Multi-account farm Tokens  
+
+**Your defenses that must keep working:**
+
+- Triggers that **ignore** client values for locked columns  
+- Security-definer RPCs that set `jp.allow_*` only inside trusted functions  
+- **No** service_role in the browser  
+- Least-privilege GRANTs so RLS is not the only line  
 
 ---
 
-## How to re-run a quick check
+## Ops checklist after schema changes
+
+1. Any new profile column that must not be client-forged → add to `jp_profiles_guard_locked_cols`  
+2. Any new write path for that column → `set_config('jp.allow_…', 'on', true)` in the definer RPC  
+3. Prefer **RPC-only writes** for money/identity  
+4. Re-run probes (below) after deploys  
+5. Never put service_role in client or public Actions logs  
+
+---
+
+## Quick probes (PowerShell-ish)
 
 ```powershell
-# Unauthenticated should return []
-$anon = "<anon key from config.js>"
-$h = @{ apikey = $anon; Authorization = "Bearer $anon" }
-Invoke-RestMethod -Uri "https://jpnaotxkcpnwgqkzxdue.supabase.co/rest/v1/jp_profiles?select=id&limit=1" -Headers $h
+# Unauth should fail / empty
+# Auth guest PATCH owned_skins should leave array unchanged (still ["rose"] or prior real ownership)
+# Auth guest PATCH high_score should stay 0 unless via play RPCs
 ```
 
-Expect: `[]` or empty, not other people’s rows without a user session.
+Manual: browser console while signed in — if REST can grant `runic` for free, guards regressed.
+
+---
+
+## Short answers
+
+| Question | Answer |
+|----------|--------|
+| Is service_role public? | **No** |
+| Can no-login users read profiles? | **No** |
+| Can logged-in users forge skins via REST? | **No** (after 2026-07-20 harden) |
+| Are scores / names public to players? | **Yes** (game design) |
+| Friend codes secret? | **No** — treat as public-ish share codes |
+| Chat public? | UI **off** |
+
+---
+
+## Optional next hardenings (not done)
+
+1. `jp_public_profiles` view **without** `friend_code`; leaderboards use the view  
+2. Supabase Auth captcha / disable Anonymous  
+3. Rate-limit RPCs (Edge Function or pg_net + counters)  
+4. CSP headers via Cloudflare or custom host (GitHub Pages is limited)  
+5. Separate Supabase project for Push Thru only (isolation from PolicySnap)  
