@@ -2308,10 +2308,43 @@ function getConfig() {
 }
 
 async function afterAuthReady() {
-  await ensureProfile();
+  // Mark online as soon as we have a JWT — don't stay "offline" if a later step fails.
+  online = !!(session?.user);
+  try {
+    await ensureProfile();
+  } catch (e) {
+    console.warn("ensureProfile", e);
+    toast(e?.message || "Profile sync issue — try Sign out, then log in again");
+  }
+  setOnlineUi();
+
+  // Reclaim / verify single-device session (never leave a valid login stuck offline)
+  try {
+    await validateSessionEpoch();
+  } catch (e) {
+    console.warn("validateSessionEpoch", e);
+  }
+
+  if (!session?.user) {
+    online = false;
+    setOnlineUi();
+    return;
+  }
   online = true;
   setOnlineUi();
-  await validateSessionEpoch();
+
+  // Email / code accounts should show as ready once they can sign in
+  if (!isAnonymousUser(session.user) && !profile?.account_ready) {
+    try {
+      await sb.rpc("jp_mark_account_ready");
+      if (profile) profile.account_ready = true;
+      markAccountReadyLocal(true);
+      setOnlineUi();
+    } catch (_) {
+      /* non-fatal */
+    }
+  }
+
   await refreshSocial().catch(() => {});
   await loadGlobalBoard().catch(() => {});
   await loadBoardPosts().catch(() => {});
@@ -2342,28 +2375,34 @@ async function beginSessionEpoch() {
   return ep;
 }
 
+/**
+ * One active device at a time. If local epoch is stale (phone took over, or
+ * storage glitch), reclaim on THIS device instead of hard sign-out — that was
+ * leaving people looking "offline" even with a valid password session.
+ */
 async function validateSessionEpoch() {
   if (!sb || !session?.user) return true;
   const local = getStoredSessionEpoch();
   if (!local) {
-    // First load after login on this device — claim session
     await beginSessionEpoch();
     return true;
   }
   const { data, error } = await sb.rpc("jp_session_ping", { p_epoch: local });
   if (error) {
     console.warn("jp_session_ping", error);
+    // Network blip — stay online with current session
     return true;
   }
   if (data?.ok) return true;
-  // Another device logged in
-  toast("Signed out — account opened on another device");
-  await sb.auth.signOut();
-  session = null;
-  profile = null;
-  online = false;
-  setOnlineUi();
-  ensureName();
+
+  // Epoch mismatch: take over this device (invalidates other devices on next ping)
+  const ep = await beginSessionEpoch();
+  if (ep) {
+    toast("Online on this device (other devices will sign out)");
+    return true;
+  }
+  // Reclaim failed — keep JWT, show soft offline messaging only if really dead
+  console.warn("session reclaim failed", data);
   return false;
 }
 
