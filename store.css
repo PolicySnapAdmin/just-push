@@ -678,6 +678,35 @@ main {
   margin-right: auto;
 }
 
+.contact-account {
+  margin: 0 0 14px;
+  padding: 12px 14px !important;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--card));
+}
+
+.contact-account-label {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.contact-account-line {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.contact-account-hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+}
+
 .contact-form {
   margin-top: 8px;
   padding: 22px 20px 20px;

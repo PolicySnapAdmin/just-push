@@ -560,6 +560,8 @@ const els = {
   adminOutClear: $("#admin-out-clear"),
   adminMsg: $("#admin-msg"),
   privacyLink: $("#privacy-link"),
+  supportContactLink: $("#support-contact-link"),
+  privacyRequestLink: $("#privacy-request-link"),
   termsLink: $("#terms-link"),
   ageModal: $("#age-modal"),
   ageForm: $("#age-form"),
@@ -1360,6 +1362,37 @@ function applyFeatureFlags() {
   const minAge = Number(cfg.minAge) || 13;
   if (els.ageMinLabel) els.ageMinLabel.textContent = String(minAge);
   if (els.ageMinLabel2) els.ageMinLabel2.textContent = String(minAge);
+  updateSupportContactLinks();
+}
+
+/** Deep-link contact form with player code / platform for support tickets. */
+function updateSupportContactLinks() {
+  const platform = (() => {
+    const ua = navigator.userAgent || "";
+    const touch = navigator.maxTouchPoints > 0;
+    if (/iPhone|iPad|iPod/i.test(ua) || (ua.includes("Mac") && touch)) return "iOS / iPadOS";
+    if (/Android/i.test(ua)) return "Android";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Mac/i.test(ua)) return "macOS";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "Web";
+  })();
+  const q = new URLSearchParams();
+  const code = profile?.friend_code || "";
+  const name = profile?.display_name || state.name || "";
+  if (code) q.set("code", code);
+  if (name && name !== "Player") q.set("name", name);
+  q.set("platform", platform);
+  const base = "store.html";
+  const qs = q.toString();
+  if (els.supportContactLink) {
+    els.supportContactLink.href = `${base}?${qs}#contact`;
+  }
+  if (els.privacyRequestLink) {
+    const pq = new URLSearchParams(q);
+    pq.set("topic", "Privacy / data deletion");
+    els.privacyRequestLink.href = `${base}?${pq.toString()}#contact`;
+  }
 }
 
 function setEmailAuthMsg(text, kind = "") {
@@ -1438,6 +1471,7 @@ function setOnlineUi() {
       els.syncPill.className = "sync-pill online";
       els.accountStatus.textContent = `Create an account (name + password) to keep progress · code ${code}`;
     }
+    updateSupportContactLinks();
 
     els.githubBtn.hidden = !ghOn || isGithub || hasEmail;
     els.githubBtnStyle.hidden = !ghOn || isGithub || hasEmail;

@@ -30,7 +30,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/></svg>" />
-  <link rel="stylesheet" href="store.css?v=3" />
+  <link rel="stylesheet" href="store.css?v=4" />
   <link rel="manifest" href="site.webmanifest" />
 </head>
 <body class="store-body">
@@ -223,6 +223,12 @@
         </p>
       </div>
 
+      <div class="contact-account card" id="contact-account" hidden>
+        <p class="contact-account-label">Attached account (for support)</p>
+        <p class="contact-account-line" id="contact-account-line"></p>
+        <p class="muted contact-account-hint" id="contact-account-hint"></p>
+      </div>
+
       <form id="contact-form" class="contact-form" novalidate>
         <!-- Honeypot (bots fill this; humans never see it) -->
         <input type="text" name="_honey" class="contact-honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
@@ -250,13 +256,19 @@
           </select>
         </label>
 
+        <label class="contact-field" id="contact-code-field">
+          <span>Player code <span class="muted">(if you have one)</span></span>
+          <input type="text" name="player_code" id="contact-code" maxlength="16" autocomplete="off" placeholder="e.g. AD1B7E" style="text-transform:uppercase" />
+        </label>
+
         <label class="contact-field">
           <span>Message</span>
           <textarea name="message" id="contact-message" required maxlength="4000" rows="5" placeholder="How can we help?"></textarea>
         </label>
 
         <p class="contact-privacy muted">
-          We use your email only to reply. See our <a href="privacy.html">Privacy Policy</a>.
+          We use your email only to reply. Account details are attached so we can find your profile faster.
+          See our <a href="privacy.html">Privacy Policy</a>.
         </p>
 
         <div class="contact-actions">
@@ -285,6 +297,8 @@
     <p class="muted footer-domain">https://www.pushthrugames.com</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js?v=20260720j"></script>
   <script>
     (function () {
       // Delivery address for FormSubmit only (not shown in UI)
@@ -293,6 +307,19 @@
       const statusEl = document.getElementById("contact-status");
       const submitBtn = document.getElementById("contact-submit");
       const topicEl = document.getElementById("contact-topic");
+      const nameEl = document.getElementById("contact-name");
+      const emailEl = document.getElementById("contact-email");
+      const codeEl = document.getElementById("contact-code");
+      const accountBox = document.getElementById("contact-account");
+      const accountLine = document.getElementById("contact-account-line");
+      const accountHint = document.getElementById("contact-account-hint");
+
+      /** @type {{ player_code?: string, display_name?: string, account_email?: string, platform?: string, user_agent?: string, signed_in?: boolean }} */
+      let supportCtx = {
+        platform: detectPlatform(),
+        user_agent: navigator.userAgent || "",
+        signed_in: false,
+      };
 
       function setStatus(msg, kind) {
         if (!statusEl) return;
@@ -300,7 +327,50 @@
         statusEl.className = "contact-status" + (kind ? " " + kind : "");
       }
 
-      // Prefill topic from ?topic= or data-contact-subject links
+      function detectPlatform() {
+        const ua = navigator.userAgent || "";
+        const touch = navigator.maxTouchPoints > 0;
+        if (/iPhone|iPad|iPod/i.test(ua) || (ua.includes("Mac") && touch)) return "iOS / iPadOS";
+        if (/Android/i.test(ua)) return "Android";
+        if (/Windows/i.test(ua)) return "Windows";
+        if (/Mac/i.test(ua)) return "macOS";
+        if (/Linux/i.test(ua)) return "Linux";
+        return "Web";
+      }
+
+      function applySupportCtx(ctx) {
+        supportCtx = { ...supportCtx, ...ctx };
+        const code = String(supportCtx.player_code || "").toUpperCase();
+        const dname = String(supportCtx.display_name || "").trim();
+        const accEmail = String(supportCtx.account_email || "").trim();
+        const plat = supportCtx.platform || detectPlatform();
+
+        if (codeEl && code) {
+          codeEl.value = code;
+          codeEl.readOnly = true;
+        }
+        if (nameEl && dname && !nameEl.value) nameEl.value = dname;
+        if (emailEl && accEmail && !accEmail.includes("@login.pushthrugames.com") && !emailEl.value) {
+          emailEl.value = accEmail;
+        }
+
+        if (accountBox && (code || dname || supportCtx.signed_in)) {
+          accountBox.hidden = false;
+          if (accountLine) {
+            const bits = [];
+            if (dname) bits.push(dname);
+            if (code) bits.push("code " + code);
+            if (accEmail && !accEmail.includes("@login.pushthrugames.com")) bits.push(accEmail);
+            accountLine.textContent = bits.length ? bits.join(" · ") : "Signed in (details attached)";
+          }
+          if (accountHint) {
+            accountHint.textContent =
+              "Platform: " + plat + " · This is attached to your message so support can look you up.";
+          }
+        }
+      }
+
+      // Prefill from query string (game Settings deep-link)
       const params = new URLSearchParams(location.search);
       if (params.get("topic") && topicEl) {
         const want = params.get("topic");
@@ -311,6 +381,15 @@
           }
         }
       }
+      if (params.get("code") || params.get("name") || params.get("platform")) {
+        applySupportCtx({
+          player_code: params.get("code") || "",
+          display_name: params.get("name") || "",
+          platform: params.get("platform") || detectPlatform(),
+          signed_in: true,
+        });
+      }
+
       document.querySelectorAll("[data-contact-subject]").forEach((el) => {
         el.addEventListener("click", () => {
           const sub = el.getAttribute("data-contact-subject");
@@ -331,6 +410,52 @@
         if (!el.hidden) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
 
+      // Same-origin session: if they played in this browser, attach account
+      (async function loadSignedInContext() {
+        try {
+          const cfg = window.JUST_PUSH_CONFIG;
+          if (!cfg?.enabled || !cfg.supabaseUrl || !cfg.supabaseAnonKey || !window.supabase?.createClient) {
+            return;
+          }
+          const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              storage: typeof localStorage !== "undefined" ? localStorage : undefined,
+            },
+          });
+          const { data: sessData } = await sb.auth.getSession();
+          const session = sessData?.session;
+          if (!session?.user) return;
+
+          const uid = session.user.id;
+          const accEmail = session.user.email || "";
+          let display_name = "";
+          let player_code = "";
+
+          const { data: prof } = await sb
+            .from("jp_profiles")
+            .select("display_name, friend_code")
+            .eq("id", uid)
+            .maybeSingle();
+          if (prof) {
+            display_name = prof.display_name || "";
+            player_code = prof.friend_code || "";
+          }
+
+          applySupportCtx({
+            signed_in: true,
+            display_name,
+            player_code,
+            account_email: accEmail,
+            platform: detectPlatform(),
+            user_agent: navigator.userAgent || "",
+          });
+        } catch (err) {
+          console.warn("contact session context", err);
+        }
+      })();
+
       form?.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (!form) return;
@@ -345,6 +470,9 @@
         const email = String(document.getElementById("contact-email")?.value || "").trim();
         const topic = String(document.getElementById("contact-topic")?.value || "General support").trim();
         const message = String(document.getElementById("contact-message")?.value || "").trim();
+        const player_code = String(document.getElementById("contact-code")?.value || supportCtx.player_code || "")
+          .trim()
+          .toUpperCase();
 
         if (!name || !email || !message) {
           setStatus("Please fill in name, email, and message.", "err");
@@ -361,9 +489,12 @@
         }
         setStatus("Sending…", "");
 
+        const platform = supportCtx.platform || detectPlatform();
+        const subjectBits = ["[Push Thru]", topic];
+        if (player_code) subjectBits.push(player_code);
+        subjectBits.push(name);
+
         try {
-          // FormSubmit relay → delivers to SUPPORT_EMAIL (no server of ours).
-          // First-ever submission: confirm the activation email FormSubmit sends you.
           const res = await fetch("https://formsubmit.co/ajax/" + encodeURIComponent(SUPPORT_EMAIL), {
             method: "POST",
             headers: {
@@ -375,7 +506,13 @@
               email,
               topic,
               message,
-              _subject: "[Push Thru] " + topic + " — " + name,
+              player_code: player_code || "(not provided)",
+              display_name: supportCtx.display_name || name,
+              account_email: supportCtx.account_email || "(not signed in)",
+              platform,
+              signed_in: supportCtx.signed_in ? "yes" : "no",
+              user_agent: (supportCtx.user_agent || navigator.userAgent || "").slice(0, 400),
+              _subject: subjectBits.join(" · "),
               _template: "table",
               _captcha: "false",
               _replyto: email,
@@ -390,6 +527,19 @@
           }
 
           form.reset();
+          // Restore attached account fields after reset
+          if (supportCtx.player_code && codeEl) {
+            codeEl.value = String(supportCtx.player_code).toUpperCase();
+            codeEl.readOnly = true;
+          }
+          if (supportCtx.display_name && nameEl) nameEl.value = supportCtx.display_name;
+          if (
+            supportCtx.account_email &&
+            emailEl &&
+            !String(supportCtx.account_email).includes("@login.pushthrugames.com")
+          ) {
+            emailEl.value = supportCtx.account_email;
+          }
           setStatus("Sent! We’ll get back to you at " + email + ".", "ok");
         } catch (err) {
           console.error(err);
