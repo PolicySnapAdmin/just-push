@@ -441,6 +441,7 @@ const els = {
   nameLoginPanel: $("#name-login-panel"),
   nameShowLogin: $("#name-show-login"),
   nameShowRegister: $("#name-show-register"),
+  namePlayGuest: $("#name-play-guest"),
   nameLoginForm: $("#name-login-form"),
   nameLoginEmail: $("#name-login-email"),
   nameLoginPassword: $("#name-login-password"),
@@ -1656,10 +1657,43 @@ function ensureName() {
     if (els.nameModal?.open) els.nameModal.close();
     return;
   }
-  // Need create / login
+  // Guest already chose to play locally this browser
+  if (isGuestPlayOk() && (!session?.user || isAnonymousUser())) {
+    if (els.nameModal?.open) els.nameModal.close();
+    return;
+  }
+  // Need create / login / guest
   showNameLoginPanel();
   if (els.nameInput) els.nameInput.value = "";
   if (!els.nameModal?.open) els.nameModal?.showModal();
+}
+
+const GUEST_PLAY_KEY = "push-thru-guest-play";
+
+function isGuestPlayOk() {
+  try {
+    return localStorage.getItem(GUEST_PLAY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Skip account wall — local play only (great for demos / TikTok recording). */
+function playWithoutAccount() {
+  try {
+    localStorage.setItem(GUEST_PLAY_KEY, "1");
+    localStorage.setItem(AGE_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+  if (!state.name) state.name = "Player";
+  saveState();
+  if (els.nameModal?.open) els.nameModal.close();
+  if (els.ageModal?.open) els.ageModal.close();
+  setOnlineUi();
+  renderProfile();
+  renderScores();
+  toast("Playing as guest — create an account later to save online");
 }
 
 function setNameRegisterMsg(text, kind = "") {
@@ -6342,6 +6376,7 @@ function bindEvents() {
   });
 
   els.nameShowRegister?.addEventListener("click", () => showNamePanel());
+  els.namePlayGuest?.addEventListener("click", () => playWithoutAccount());
   els.nameLoginBack?.addEventListener("click", () => showNameLoginPanel());
   els.nameLoginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
