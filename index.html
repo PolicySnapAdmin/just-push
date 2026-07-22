@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260720g" />
+  <link rel="stylesheet" href="styles.css?v=20260720k" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -129,7 +129,10 @@
 
         <div class="session-actions">
           <button type="button" class="solid-btn" id="focus-lock-open">Focus lock</button>
-          <button type="button" class="ghost-btn" id="challenge-again" hidden>Play again</button>
+          <div class="challenge-actions" id="challenge-actions" hidden>
+            <button type="button" class="ghost-btn" id="challenge-again">Play again</button>
+            <button type="button" class="solid-btn" id="challenge-share-btn">Share 10s best</button>
+          </div>
           <p class="new-record" id="new-record" hidden>New high score!</p>
           <p class="challenge-result" id="challenge-result" hidden></p>
         </div>
@@ -860,8 +863,30 @@
       <p class="focus-lock-result" id="focus-lock-result" hidden></p>
       <div class="focus-lock-actions">
         <button type="button" class="ghost-btn" id="focus-challenge-again" hidden>Play again</button>
+        <button type="button" class="solid-btn" id="focus-challenge-share" hidden>Share 10s best</button>
         <button type="button" class="ghost-btn" id="focus-reset-session" hidden>Reset session</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Share 10s challenge card -->
+  <dialog id="share-modal" class="modal share-modal">
+    <div class="modal-card share-modal-card">
+      <div class="share-modal-head">
+        <h2>Share your run</h2>
+        <button type="button" class="ghost-btn tiny" id="share-modal-close" aria-label="Close">✕</button>
+      </div>
+      <p class="muted share-modal-sub">Send this to friends — FOMO in one tap.</p>
+      <div class="share-card-wrap">
+        <canvas id="share-card-canvas" width="1080" height="1350" aria-label="Share card preview"></canvas>
+      </div>
+      <p class="share-card-caption" id="share-card-caption"></p>
+      <div class="share-modal-actions">
+        <button type="button" class="solid-btn" id="share-card-native">Share</button>
+        <button type="button" class="ghost-btn" id="share-card-copy">Copy link + text</button>
+        <button type="button" class="ghost-btn" id="share-card-download">Save image</button>
+      </div>
+      <p class="form-msg" id="share-card-msg" role="status"></p>
     </div>
   </dialog>
 
@@ -1102,8 +1127,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720j"></script>
-  <script src="app.js?v=20260720j"></script>
+  <script src="config.js?v=20260720k"></script>
+  <script src="app.js?v=20260720k"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>
