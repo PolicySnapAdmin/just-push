@@ -948,23 +948,25 @@
   <dialog id="name-modal" class="modal">
     <div class="modal-card name-modal-card">
       <div id="name-login-panel">
-        <h2>Log in</h2>
-        <p>Player code <strong>or</strong> linked email + password. One device at a time.</p>
+        <h2>Welcome</h2>
+        <p class="muted" style="margin-top:0">Jump in free — account optional.</p>
+        <button type="button" class="solid-btn name-play-home" id="name-play-guest">
+          ▶ Play now
+        </button>
+        <p class="muted name-play-home-sub">No account needed · create one later to save online</p>
+        <div class="name-login-divider" aria-hidden="true"><span>or log in</span></div>
+        <p class="muted" style="margin:0 0 8px;font-size:0.9rem">Player code <strong>or</strong> linked email + password.</p>
         <form id="name-login-form" class="stack-form">
           <input type="text" id="name-login-email" placeholder="Player code or email" autocomplete="username" required maxlength="120" />
           <input type="password" id="name-login-password" placeholder="Password" autocomplete="current-password" required minlength="6" maxlength="72" />
           <div class="modal-actions name-login-actions">
-            <button type="submit" class="solid-btn">Log in</button>
+            <button type="submit" class="ghost-btn solid-like">Log in</button>
           </div>
         </form>
         <p class="form-msg" id="name-login-msg" role="status"></p>
         <p class="name-modal-switch muted">
           New here?
           <button type="button" class="text-link-btn" id="name-show-register">Create account</button>
-        </p>
-        <p class="name-modal-switch muted" style="margin-top:10px">
-          Just want to play?
-          <button type="button" class="text-link-btn" id="name-play-guest">Play without account</button>
         </p>
       </div>
 
@@ -1131,8 +1133,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720m"></script>
-  <script src="app.js?v=20260720m"></script>
+  <script src="config.js?v=20260720n"></script>
+  <script src="app.js?v=20260720n"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>

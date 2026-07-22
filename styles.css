@@ -1828,6 +1828,50 @@ textarea#dm-input:focus {
   border-color: color-mix(in srgb, var(--btn) 55%, var(--border));
 }
 
+.name-play-home {
+  width: 100%;
+  margin: 8px 0 6px;
+  padding: 14px 18px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.name-play-home-sub {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.name-login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 14px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.name-login-divider::before,
+.name-login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.name-login-divider span {
+  flex-shrink: 0;
+}
+
+#name-login-panel .solid-like {
+  width: 100%;
+  font-weight: 700;
+}
+
 .name-modal-switch {
   margin: 14px 0 0;
   text-align: center;
