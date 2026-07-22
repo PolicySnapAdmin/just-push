@@ -2130,8 +2130,10 @@ function startChallenge() {
   challenge.startedAt = performance.now();
   challenge.endsAt = challenge.startedAt + CHALLENGE_MS;
   els.challengeResult.hidden = true;
-  els.challengeAgain.hidden = true;
+  if (els.challengeActions) els.challengeActions.hidden = true;
+  if (els.challengeAgain) els.challengeAgain.hidden = true;
   if (els.focusChallengeAgain) els.focusChallengeAgain.hidden = true;
+  if (els.focusChallengeShare) els.focusChallengeShare.hidden = true;
   if (els.focusLockResult) {
     els.focusLockResult.hidden = true;
     els.focusLockResult.textContent = "";
