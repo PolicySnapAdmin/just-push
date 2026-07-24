@@ -3418,7 +3418,7 @@ async function drawShareCard(opts = {}) {
   const ctx = canvas.getContext("2d");
   const name = sharePlayerName();
   const url = publicPlayUrl().replace(/^https?:\/\//, "");
-  const progress = getLevelProgress(state.lifetimeCount);
+  const progress = levelProgress(state.lifetimeCount);
   const level = opts.level != null ? Number(opts.level) : progress.level;
   const tier = opts.tier || tierForLevel(level);
   const tierLabel = tier?.label || "";
@@ -3530,7 +3530,7 @@ async function openShareCard(opts = {}) {
       return;
     }
   } else if (type === "level") {
-    const progress = getLevelProgress(state.lifetimeCount);
+    const progress = levelProgress(state.lifetimeCount);
     const level = opts.level != null ? opts.level : progress.level;
     if (!level || level < 1) {
       toast("Push a bit more to level up");
@@ -6465,7 +6465,7 @@ function bindEvents() {
   els.levelUpShare?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const level = Number(els.levelUpNum?.textContent) || getLevelProgress(state.lifetimeCount).level;
+    const level = Number(els.levelUpNum?.textContent) || levelProgress(state.lifetimeCount).level;
     openShareCard({ type: "level", level, tier: tierForLevel(level) });
   });
   els.shareModalClose?.addEventListener("click", () => closeShareCard());
