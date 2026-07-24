@@ -221,6 +221,28 @@ body {
   margin: 10px 0 6px;
 }
 
+.free-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.free-share-actions .ghost-btn {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.level-up-share {
+  margin: 12px auto 4px;
+  display: block;
+  width: min(100%, 220px);
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+}
+
 .challenge-result {
   margin: 0;
   font-weight: 600;

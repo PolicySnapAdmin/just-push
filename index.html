@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260720n" />
+  <link rel="stylesheet" href="styles.css?v=20260720p" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -71,6 +71,14 @@
               <span class="stat-label">Lifetime</span>
               <span class="stat-value" id="lifetime-count">0</span>
             </div>
+          </div>
+          <div class="free-share-actions" id="free-share-actions">
+            <button type="button" class="ghost-btn tiny-pad" id="share-high-btn" title="Share your best unlimited run">
+              Share best run
+            </button>
+            <button type="button" class="ghost-btn tiny-pad" id="share-level-btn" title="Share your level">
+              Share level
+            </button>
           </div>
         </div>
 
@@ -876,7 +884,7 @@
         <h2>Share your run</h2>
         <button type="button" class="ghost-btn tiny" id="share-modal-close" aria-label="Close">✕</button>
       </div>
-      <p class="muted share-modal-sub">Send this to friends — FOMO in one tap.</p>
+      <p class="muted share-modal-sub" id="share-modal-sub">Send this to friends — FOMO in one tap.</p>
       <div class="share-card-wrap">
         <canvas id="share-card-canvas" width="1080" height="1350" aria-label="Share card preview"></canvas>
       </div>
@@ -1128,13 +1136,14 @@
       </div>
       <p class="level-up-tier" id="level-up-tier">Bronze</p>
       <p class="level-up-sub" id="level-up-sub">Your Push Thru level is now 2.</p>
+      <button type="button" class="solid-btn level-up-share" id="level-up-share">Share level-up</button>
       <p class="level-up-hint">Keep pushing · tap × when ready</p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720n"></script>
-  <script src="app.js?v=20260720n"></script>
+  <script src="config.js?v=20260720p"></script>
+  <script src="app.js?v=20260720p"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>

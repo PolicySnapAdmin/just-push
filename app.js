@@ -394,10 +394,13 @@ const els = {
   challengeAgain: $("#challenge-again"),
   challengeActions: $("#challenge-actions"),
   challengeShareBtn: $("#challenge-share-btn"),
+  shareHighBtn: $("#share-high-btn"),
+  shareLevelBtn: $("#share-level-btn"),
   newRecord: $("#new-record"),
   challengeResult: $("#challenge-result"),
   shareModal: $("#share-modal"),
   shareModalClose: $("#share-modal-close"),
+  shareModalSub: $("#share-modal-sub"),
   shareCardCanvas: $("#share-card-canvas"),
   shareCardCaption: $("#share-card-caption"),
   shareCardNative: $("#share-card-native"),
@@ -405,6 +408,7 @@ const els = {
   shareCardDownload: $("#share-card-download"),
   shareCardMsg: $("#share-card-msg"),
   focusChallengeShare: $("#focus-challenge-share"),
+  levelUpShare: $("#level-up-share"),
   timerRing: $("#timer-ring"),
   timerProgress: $("#timer-progress"),
   focusLockOpen: $("#focus-lock-open"),
@@ -2257,7 +2261,9 @@ function endChallenge() {
   // Soft FOMO: after a solid run, offer share (never auto-spam the OS sheet)
   if (isRecord || challenge.count >= 40) {
     setTimeout(() => {
-      if (challenge.status === "done") openShareCard({ score: challenge.count, isRecord });
+      if (challenge.status === "done") {
+        openShareCard({ type: "challenge", score: challenge.count, isRecord });
+      }
     }, 650);
   }
 }
@@ -3278,9 +3284,19 @@ async function shareOrCopy(url, title, text) {
   return ok ? "copied" : "failed";
 }
 
-// ——— Share card (10s FOMO) — canvas so scores are always exact ———
+// ——— Share cards (10s / high score / level) — canvas so numbers stay exact ———
 
-let shareCardCache = { blob: null, score: 0, name: "", best: 0 };
+let shareCardCache = {
+  blob: null,
+  type: "challenge",
+  score: 0,
+  name: "",
+  best: 0,
+  level: 0,
+  tier: "",
+  text: "",
+  fileBase: "push-thru-share",
+};
 
 function publicPlayUrl() {
   const base = (getConfig().publicBaseUrl || "https://www.pushthrugames.com/").replace(/\/?$/, "/");
@@ -3289,8 +3305,11 @@ function publicPlayUrl() {
   return base;
 }
 
+function sharePlayerName() {
+  return (profile?.display_name || state.name || "Player").trim().slice(0, 16) || "Player";
+}
+
 function shareChallengeText(score, best) {
-  const name = (profile?.display_name || state.name || "Player").trim() || "Player";
   const url = publicPlayUrl();
   const line =
     best && score >= best
@@ -3299,30 +3318,33 @@ function shareChallengeText(score, best) {
   return `${line}\nBeat me → ${url}`;
 }
 
+function shareHighText(score) {
+  const url = publicPlayUrl();
+  return `My best unlimited run on Push Thru is ${score} taps.\nBeat me → ${url}`;
+}
+
+function shareLevelText(level, tierLabel) {
+  const url = publicPlayUrl();
+  const tier = tierLabel ? ` (${tierLabel})` : "";
+  return `I hit level ${level}${tier} on Push Thru.\nCan you catch up? → ${url}`;
+}
+
 function setShareCardMsg(text, kind = "") {
   if (!els.shareCardMsg) return;
   els.shareCardMsg.textContent = text || "";
   els.shareCardMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
-/**
- * Draw share card. Numbers/text drawn in code (not AI) so scores stay accurate.
- * Optional decorative background: assets/share-card-bg.jpg
- */
-async function drawShareCard({ score, isRecord = false } = {}) {
-  const canvas = els.shareCardCanvas;
-  if (!canvas) return null;
-  const w = 1080;
-  const h = 1350;
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  const best = Math.max(effectiveChallengeBest(), Number(score) || 0);
-  const run = Number(score) || best;
-  const name = (profile?.display_name || state.name || "Player").trim().slice(0, 16) || "Player";
-  const url = publicPlayUrl().replace(/^https?:\/\//, "");
+function loadShareImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
 
-  // Background
+async function paintShareBackground(ctx, w, h, accentRgba) {
   const grad = ctx.createLinearGradient(0, 0, w, h);
   grad.addColorStop(0, "#0a0a12");
   grad.addColorStop(0.45, "#16101c");
@@ -3330,12 +3352,10 @@ async function drawShareCard({ score, isRecord = false } = {}) {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  // Optional Imagine decorative plate (no text on asset)
   try {
     const bg = await loadShareImage("assets/share-card-bg.jpg");
     if (bg) {
       ctx.globalAlpha = 0.35;
-      // cover
       const scale = Math.max(w / bg.width, h / bg.height);
       const bw = bg.width * scale;
       const bh = bg.height * scale;
@@ -3345,50 +3365,17 @@ async function drawShareCard({ score, isRecord = false } = {}) {
       ctx.fillRect(0, 0, w, h);
     }
   } catch (_) {
-    /* optional asset */
+    /* optional */
   }
 
-  // Accent orbs
   const orb = ctx.createRadialGradient(w * 0.2, h * 0.15, 20, w * 0.2, h * 0.15, 380);
-  orb.addColorStop(0, "rgba(255, 61, 100, 0.35)");
+  orb.addColorStop(0, accentRgba || "rgba(255, 61, 100, 0.35)");
   orb.addColorStop(1, "rgba(255, 61, 100, 0)");
   ctx.fillStyle = orb;
   ctx.fillRect(0, 0, w, h);
+}
 
-  // Brand
-  ctx.fillStyle = "#f6f6fa";
-  ctx.font = "700 42px Space Grotesk, DM Sans, system-ui, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("PUSH THRU", w / 2, 120);
-
-  ctx.fillStyle = "#fbbf24";
-  ctx.font = "800 28px DM Sans, system-ui, sans-serif";
-  ctx.letterSpacing = "4px";
-  ctx.fillText(isRecord ? "NEW 10s BEST" : "10 SECOND CHALLENGE", w / 2, 180);
-
-  // Player
-  ctx.fillStyle = "#9a9aaf";
-  ctx.font = "600 32px DM Sans, system-ui, sans-serif";
-  ctx.fillText(name, w / 2, 260);
-
-  // Big score
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "800 200px Space Grotesk, DM Sans, system-ui, sans-serif";
-  ctx.fillText(String(run), w / 2, 520);
-
-  ctx.fillStyle = "#ff6b8a";
-  ctx.font = "700 40px DM Sans, system-ui, sans-serif";
-  ctx.fillText("taps in 10 seconds", w / 2, 590);
-
-  // Best line
-  ctx.fillStyle = "#c8c8d8";
-  ctx.font = "600 34px DM Sans, system-ui, sans-serif";
-  ctx.fillText(`Personal best · ${best}`, w / 2, 680);
-
-  // Fake push button
-  const cx = w / 2;
-  const cy = 920;
-  const r = 130;
+function paintShareButton(ctx, cx, cy, r) {
   const btnGrad = ctx.createRadialGradient(cx - 30, cy - 40, 20, cx, cy, r);
   btnGrad.addColorStop(0, "#ff7a90");
   btnGrad.addColorStop(0.55, "#ff3d64");
@@ -3402,44 +3389,164 @@ async function drawShareCard({ score, isRecord = false } = {}) {
   ctx.shadowBlur = 0;
   ctx.fillStyle = "#fff";
   ctx.font = "800 48px Space Grotesk, system-ui, sans-serif";
+  ctx.textAlign = "center";
   ctx.fillText("PUSH", cx, cy + 16);
+}
 
-  // CTA
+function paintShareFooter(ctx, w, url) {
   ctx.fillStyle = "#e8e8f0";
   ctx.font = "700 36px DM Sans, system-ui, sans-serif";
+  ctx.textAlign = "center";
   ctx.fillText("Beat me →", w / 2, 1140);
   ctx.fillStyle = "#7c9cff";
   ctx.font = "600 30px DM Sans, system-ui, sans-serif";
   ctx.fillText(url, w / 2, 1195);
+}
+
+/**
+ * Draw share card. type: "challenge" | "high" | "level"
+ * Numbers/text drawn in code so scores stay accurate.
+ */
+async function drawShareCard(opts = {}) {
+  const type = opts.type || "challenge";
+  const canvas = els.shareCardCanvas;
+  if (!canvas) return null;
+  const w = 1080;
+  const h = 1350;
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  const name = sharePlayerName();
+  const url = publicPlayUrl().replace(/^https?:\/\//, "");
+  const progress = getLevelProgress(state.lifetimeCount);
+  const level = opts.level != null ? Number(opts.level) : progress.level;
+  const tier = opts.tier || tierForLevel(level);
+  const tierLabel = tier?.label || "";
+  const tierColor = tier?.color || "#fbbf24";
+
+  let headline = "10 SECOND CHALLENGE";
+  let big = "0";
+  let sub = "taps in 10 seconds";
+  let mid = "";
+  let accent = "rgba(255, 61, 100, 0.35)";
+  let text = "";
+  let fileBase = "push-thru-10s";
+  let score = 0;
+  let best = 0;
+
+  if (type === "level") {
+    await paintShareBackground(ctx, w, h, "rgba(124, 156, 255, 0.28)");
+    headline = level >= MAX_LEVEL ? "MAX LEVEL" : "LEVEL UP";
+    big = String(level);
+    sub = tierLabel ? tierLabel.toUpperCase() : "PUSH THRU LEVEL";
+    mid = `${formatNum(state.lifetimeCount || 0)} lifetime taps`;
+    accent = "rgba(124, 156, 255, 0.35)";
+    text = shareLevelText(level, tierLabel);
+    fileBase = `push-thru-level-${level}`;
+    score = level;
+  } else if (type === "high") {
+    const high = Math.max(0, Number(opts.score != null ? opts.score : state.highScore) || 0);
+    await paintShareBackground(ctx, w, h, "rgba(251, 191, 36, 0.28)");
+    headline = opts.isRecord ? "NEW BEST RUN" : "BEST UNLIMITED RUN";
+    big = String(high);
+    sub = "taps · unlimited mode";
+    mid = `Level ${progress.level}${tierLabel ? " · " + tierLabel : ""}`;
+    text = shareHighText(high);
+    fileBase = `push-thru-best-${high}`;
+    score = high;
+    best = high;
+  } else {
+    const bestCh = Math.max(effectiveChallengeBest(), Number(opts.score) || 0);
+    const run = Number(opts.score) || bestCh;
+    await paintShareBackground(ctx, w, h, accent);
+    headline = opts.isRecord ? "NEW 10s BEST" : "10 SECOND CHALLENGE";
+    big = String(run);
+    sub = "taps in 10 seconds";
+    mid = `Personal best · ${bestCh}`;
+    text = shareChallengeText(run, bestCh);
+    fileBase = `push-thru-10s-${run}`;
+    score = run;
+    best = bestCh;
+  }
+
+  ctx.fillStyle = "#f6f6fa";
+  ctx.font = "700 42px Space Grotesk, DM Sans, system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("PUSH THRU", w / 2, 120);
+
+  ctx.fillStyle = type === "level" ? tierColor : type === "high" ? "#fbbf24" : "#fbbf24";
+  ctx.font = "800 28px DM Sans, system-ui, sans-serif";
+  ctx.fillText(headline, w / 2, 180);
+
+  ctx.fillStyle = "#9a9aaf";
+  ctx.font = "600 32px DM Sans, system-ui, sans-serif";
+  ctx.fillText(name, w / 2, 260);
+
+  // Big number — scale font if huge
+  const digits = String(big).length;
+  const fontSize = digits >= 6 ? 140 : digits >= 5 ? 160 : digits >= 4 ? 180 : 200;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `800 ${fontSize}px Space Grotesk, DM Sans, system-ui, sans-serif`;
+  ctx.fillText(big, w / 2, 520);
+
+  ctx.fillStyle = type === "level" ? tierColor : "#ff6b8a";
+  ctx.font = "700 40px DM Sans, system-ui, sans-serif";
+  ctx.fillText(sub, w / 2, 590);
+
+  if (mid) {
+    ctx.fillStyle = "#c8c8d8";
+    ctx.font = "600 34px DM Sans, system-ui, sans-serif";
+    ctx.fillText(mid, w / 2, 680);
+  }
+
+  paintShareButton(ctx, w / 2, 920, 130);
+  paintShareFooter(ctx, w, url);
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.92));
-  shareCardCache = { blob, score: run, name, best };
-  if (els.shareCardCaption) {
-    els.shareCardCaption.textContent = shareChallengeText(run, best);
+  shareCardCache = { blob, type, score, name, best, level, tier: tierLabel, text, fileBase };
+  if (els.shareCardCaption) els.shareCardCaption.textContent = text;
+  if (els.shareModalSub) {
+    if (type === "level") els.shareModalSub.textContent = "Flex your level — FOMO in one tap.";
+    else if (type === "high") els.shareModalSub.textContent = "Share your best unlimited run.";
+    else els.shareModalSub.textContent = "Send this to friends — FOMO in one tap.";
   }
   return blob;
 }
 
-function loadShareImage(src) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
 async function openShareCard(opts = {}) {
-  const score = opts.score != null ? opts.score : effectiveChallengeBest();
-  if (!score || score <= 0) {
-    toast("Play a 10s run first");
-    return;
-  }
+  const type = opts.type || "challenge";
   setShareCardMsg("");
+
+  if (type === "challenge") {
+    const score = opts.score != null ? opts.score : effectiveChallengeBest();
+    if (!score || score <= 0) {
+      toast("Play a 10s run first");
+      return;
+    }
+  } else if (type === "high") {
+    const score = opts.score != null ? opts.score : state.highScore;
+    if (!score || score <= 0) {
+      toast("Set a best run in Unlimited first");
+      return;
+    }
+  } else if (type === "level") {
+    const progress = getLevelProgress(state.lifetimeCount);
+    const level = opts.level != null ? opts.level : progress.level;
+    if (!level || level < 1) {
+      toast("Push a bit more to level up");
+      return;
+    }
+    opts.level = level;
+    opts.tier = opts.tier || tierForLevel(level);
+  }
+
   try {
     await drawShareCard({
-      score,
-      isRecord: !!opts.isRecord || score >= effectiveChallengeBest(),
+      type,
+      score: opts.score,
+      isRecord: !!opts.isRecord,
+      level: opts.level,
+      tier: opts.tier,
     });
   } catch (e) {
     console.warn(e);
@@ -3453,14 +3560,28 @@ function closeShareCard() {
   els.shareModal?.close();
 }
 
+function currentShareText() {
+  if (shareCardCache.text) return shareCardCache.text;
+  if (shareCardCache.type === "level") {
+    return shareLevelText(shareCardCache.level || 1, shareCardCache.tier);
+  }
+  if (shareCardCache.type === "high") {
+    return shareHighText(shareCardCache.score || state.highScore);
+  }
+  return shareChallengeText(
+    shareCardCache.score || effectiveChallengeBest(),
+    shareCardCache.best || effectiveChallengeBest()
+  );
+}
+
 async function shareCardNative() {
   setShareCardMsg("");
-  const score = shareCardCache.score || effectiveChallengeBest();
-  const text = shareChallengeText(score, shareCardCache.best || score);
+  const text = currentShareText();
   const url = publicPlayUrl();
+  const fileName = `${shareCardCache.fileBase || "push-thru-share"}.png`;
   try {
     if (navigator.share && shareCardCache.blob && navigator.canShare) {
-      const file = new File([shareCardCache.blob], "push-thru-10s.png", { type: "image/png" });
+      const file = new File([shareCardCache.blob], fileName, { type: "image/png" });
       if (navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -3477,15 +3598,14 @@ async function shareCardNative() {
   }
   const result = await shareOrCopy(url, "Push Thru", text);
   if (result === "shared") setShareCardMsg("Shared!", "ok");
-  else if (result === "copied") setShareCardMsg("Link + challenge text copied", "ok");
+  else if (result === "copied") setShareCardMsg("Link + text copied", "ok");
   else setShareCardMsg("Could not share — try Copy", "err");
 }
 
 async function shareCardCopyText() {
-  const score = shareCardCache.score || effectiveChallengeBest();
-  const text = shareChallengeText(score, shareCardCache.best || score);
+  const text = currentShareText();
   const ok = await copyText(text);
-  setShareCardMsg(ok ? "Copied challenge text" : "Copy failed", ok ? "ok" : "err");
+  setShareCardMsg(ok ? "Copied share text" : "Copy failed", ok ? "ok" : "err");
   toast(ok ? "Copied" : "Copy failed");
 }
 
@@ -3496,7 +3616,7 @@ function shareCardDownload() {
   }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(shareCardCache.blob);
-  a.download = `push-thru-10s-${shareCardCache.score || "best"}.png`;
+  a.download = `${shareCardCache.fileBase || "push-thru-share"}.png`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   setShareCardMsg("Image saved", "ok");
@@ -6325,11 +6445,29 @@ function bindEvents() {
 
   els.challengeAgain?.addEventListener("click", resetChallengeIdle);
   els.challengeShareBtn?.addEventListener("click", () =>
-    openShareCard({ score: challenge.count || effectiveChallengeBest(), isRecord: false })
+    openShareCard({
+      type: "challenge",
+      score: challenge.count || effectiveChallengeBest(),
+      isRecord: false,
+    })
   );
   els.focusChallengeShare?.addEventListener("click", () =>
-    openShareCard({ score: challenge.count || effectiveChallengeBest(), isRecord: false })
+    openShareCard({
+      type: "challenge",
+      score: challenge.count || effectiveChallengeBest(),
+      isRecord: false,
+    })
   );
+  els.shareHighBtn?.addEventListener("click", () =>
+    openShareCard({ type: "high", score: state.highScore, isRecord: false })
+  );
+  els.shareLevelBtn?.addEventListener("click", () => openShareCard({ type: "level" }));
+  els.levelUpShare?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const level = Number(els.levelUpNum?.textContent) || getLevelProgress(state.lifetimeCount).level;
+    openShareCard({ type: "level", level, tier: tierForLevel(level) });
+  });
   els.shareModalClose?.addEventListener("click", () => closeShareCard());
   els.shareModal?.addEventListener("cancel", (e) => {
     e.preventDefault();
