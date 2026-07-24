@@ -521,6 +521,12 @@ body {
   margin-bottom: 28px;
 }
 
+/* Author `display: grid` overrides UA [hidden]; force hide by mode */
+.scoreboard[hidden],
+.focus-lock-stats[hidden] {
+  display: none !important;
+}
+
 /* Unlimited: best run on top, session + lifetime underneath */
 .scoreboard-free {
   grid-template-columns: 1fr;
