@@ -236,7 +236,70 @@ body {
 
 .play-stats-btn {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  padding: 10px 14px;
+  color: var(--btn-text);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #fff 12%, var(--btn)),
+    var(--btn) 55%,
+    color-mix(in srgb, #000 18%, var(--btn))
+  );
+  border: 1px solid color-mix(in srgb, #fff 28%, var(--btn));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn) 35%, transparent),
+    0 0 16px var(--btn-glow),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: filter 0.15s, transform 0.08s, box-shadow 0.15s, color 0.15s;
+}
+
+.play-stats-btn:hover {
+  color: var(--btn-text);
+  border-color: color-mix(in srgb, #fff 45%, var(--btn));
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--btn) 50%, transparent),
+    0 0 22px var(--btn-glow),
+    0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.play-stats-btn:active {
+  transform: scale(0.97);
+  filter: brightness(0.98);
+}
+
+.play-stats-icon {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: end;
+  gap: 2px;
+  height: 12px;
+  line-height: 0;
+}
+
+.play-stats-icon i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.95;
+}
+
+.play-stats-icon i:nth-child(1) {
+  height: 6px;
+}
+
+.play-stats-icon i:nth-child(2) {
+  height: 10px;
+}
+
+.play-stats-icon i:nth-child(3) {
+  height: 8px;
 }
 
 .panel-play .scoreboard-compact {
