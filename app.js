@@ -396,6 +396,20 @@ const els = {
   challengeShareBtn: $("#challenge-share-btn"),
   shareHighBtn: $("#share-high-btn"),
   shareLevelBtn: $("#share-level-btn"),
+  openStatsBtn: $("#open-stats-btn"),
+  statsModal: $("#stats-modal"),
+  statsModalClose: $("#stats-modal-close"),
+  statsPlayerLine: $("#stats-player-line"),
+  statsLevel: $("#stats-level"),
+  statsTier: $("#stats-tier"),
+  statsTotalXp: $("#stats-total-xp"),
+  statsXpLeft: $("#stats-xp-left"),
+  statsHigh: $("#stats-high"),
+  statsChallenge: $("#stats-challenge"),
+  statsLife: $("#stats-life"),
+  statsSessions: $("#stats-sessions"),
+  statsCode: $("#stats-code"),
+  statsAccountMeta: $("#stats-account-meta"),
   newRecord: $("#new-record"),
   challengeResult: $("#challenge-result"),
   shareModal: $("#share-modal"),
@@ -1890,16 +1904,22 @@ function applyLevelUi(badgeEl, numEl, titleEl, xpLabelEl, fillEl, trackEl, prog)
       : `Level ${prog.level} · ${prog.tier.label}`;
   }
   if (xpLabelEl) {
+    // RuneScape-style: total XP + remaining until next level (not "into / span")
     if (prog.maxed) {
-      xpLabelEl.textContent = `${formatNum(prog.totalXp)} XP (maxed)`;
+      xpLabelEl.textContent = `${formatNum(prog.totalXp)} XP · maxed`;
     } else {
-      xpLabelEl.textContent = `${formatNum(prog.xpIntoLevel)} / ${formatNum(prog.xpForNext)} XP`;
+      xpLabelEl.textContent = `${formatNum(prog.totalXp)} XP · ${formatNum(prog.xpToNext)} to next`;
     }
   }
   if (fillEl) fillEl.style.width = `${Math.round(prog.fraction * 1000) / 10}%`;
   if (trackEl) {
     trackEl.setAttribute("aria-valuenow", String(Math.round(prog.fraction * 100)));
-    trackEl.setAttribute("aria-label", prog.maxed ? `Level ${prog.level} maxed` : `Level ${prog.level}, ${Math.round(prog.fraction * 100)}% to next`);
+    trackEl.setAttribute(
+      "aria-label",
+      prog.maxed
+        ? `Level ${prog.level} maxed, ${formatNum(prog.totalXp)} total XP`
+        : `Level ${prog.level}, ${formatNum(prog.totalXp)} XP, ${formatNum(prog.xpToNext)} until next level`
+    );
   }
 }
 
@@ -2001,15 +2021,15 @@ function renderScores() {
     state.challengeBest = cBest;
     saveState();
   }
-  els.sessionCount.textContent = formatNum(state.sessionCount);
-  els.highScore.textContent = formatNum(state.highScore);
-  els.lifetimeCount.textContent = formatNum(state.lifetimeCount);
-  els.challengeCount.textContent = formatNum(challenge.count);
-  els.challengeBest.textContent = formatNum(cBest);
-  els.rankHigh.textContent = formatNum(state.highScore);
-  els.rankChallenge.textContent = formatNum(cBest);
-  els.rankLife.textContent = formatNum(state.lifetimeCount);
-  els.rankSessions.textContent = formatNum(state.sessionsPlayed);
+  if (els.sessionCount) els.sessionCount.textContent = formatNum(state.sessionCount);
+  if (els.highScore) els.highScore.textContent = formatNum(state.highScore);
+  if (els.lifetimeCount) els.lifetimeCount.textContent = formatNum(state.lifetimeCount);
+  if (els.challengeCount) els.challengeCount.textContent = formatNum(challenge.count);
+  if (els.challengeBest) els.challengeBest.textContent = formatNum(cBest);
+  if (els.rankHigh) els.rankHigh.textContent = formatNum(state.highScore);
+  if (els.rankChallenge) els.rankChallenge.textContent = formatNum(cBest);
+  if (els.rankLife) els.rankLife.textContent = formatNum(state.lifetimeCount);
+  if (els.rankSessions) els.rankSessions.textContent = formatNum(state.sessionsPlayed);
   // Focus lock mirrors
   if (els.focusSession) els.focusSession.textContent = formatNum(state.sessionCount);
   if (els.focusHigh) els.focusHigh.textContent = formatNum(state.highScore);
@@ -2017,7 +2037,50 @@ function renderScores() {
   if (els.focusChallengeCount) els.focusChallengeCount.textContent = formatNum(challenge.count);
   if (els.focusChallengeBest) els.focusChallengeBest.textContent = formatNum(cBest);
   renderLevel();
+  renderStatsSheet();
   syncFocusLockChrome();
+}
+
+function renderStatsSheet() {
+  const prog = levelProgress(state.lifetimeCount);
+  const cBest = effectiveChallengeBest();
+  const name = (profile?.display_name || state.name || "Player").trim() || "Player";
+  const code = profile?.friend_code || "—";
+
+  if (els.statsPlayerLine) {
+    els.statsPlayerLine.textContent = code !== "—" ? `${name} · ${code}` : name;
+  }
+  if (els.statsLevel) els.statsLevel.textContent = String(prog.level);
+  if (els.statsTier) els.statsTier.textContent = prog.tier?.label || "—";
+  if (els.statsTotalXp) els.statsTotalXp.textContent = formatNum(prog.totalXp);
+  if (els.statsXpLeft) {
+    els.statsXpLeft.textContent = prog.maxed
+      ? "Max level"
+      : `${formatNum(prog.xpToNext)} XP to level ${prog.level + 1}`;
+  }
+  if (els.statsHigh) els.statsHigh.textContent = formatNum(state.highScore);
+  if (els.statsChallenge) els.statsChallenge.textContent = formatNum(cBest);
+  if (els.statsLife) els.statsLife.textContent = formatNum(state.lifetimeCount);
+  if (els.statsSessions) els.statsSessions.textContent = formatNum(state.sessionsPlayed);
+  if (els.statsCode) els.statsCode.textContent = code;
+  if (els.statsAccountMeta) {
+    if (online && session?.user && !isAnonymousUser(session.user)) {
+      els.statsAccountMeta.textContent = "Account online";
+    } else if (online) {
+      els.statsAccountMeta.textContent = "Online guest";
+    } else {
+      els.statsAccountMeta.textContent = "Local / offline";
+    }
+  }
+}
+
+function openStatsSheet() {
+  renderStatsSheet();
+  els.statsModal?.showModal();
+}
+
+function closeStatsSheet() {
+  els.statsModal?.close();
 }
 
 function spawnFloater() {
@@ -6444,13 +6507,19 @@ function bindEvents() {
   });
 
   els.challengeAgain?.addEventListener("click", resetChallengeIdle);
-  els.challengeShareBtn?.addEventListener("click", () =>
+  els.openStatsBtn?.addEventListener("click", () => openStatsSheet());
+  els.statsModalClose?.addEventListener("click", () => closeStatsSheet());
+  els.statsModal?.addEventListener("cancel", (e) => {
+    e.preventDefault();
+    closeStatsSheet();
+  });
+  els.challengeShareBtn?.addEventListener("click", () => {
     openShareCard({
       type: "challenge",
       score: challenge.count || effectiveChallengeBest(),
       isRecord: false,
-    })
-  );
+    });
+  });
   els.focusChallengeShare?.addEventListener("click", () =>
     openShareCard({
       type: "challenge",

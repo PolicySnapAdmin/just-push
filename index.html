@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260720q" />
+  <link rel="stylesheet" href="styles.css?v=20260720r" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -49,32 +49,33 @@
     </header>
 
     <main>
-      <!-- PLAY -->
-      <section class="panel" data-panel="play" aria-label="Play">
+      <!-- PLAY (lean: mode + live stats + push) -->
+      <section class="panel panel-play" data-panel="play" aria-label="Play">
         <p class="pending-invite" id="pending-invite" hidden role="status"></p>
-        <div class="mode-toggle" role="tablist" aria-label="Play mode">
-          <button type="button" class="mode-btn active" data-mode="free" role="tab" aria-selected="true">Unlimited</button>
-          <button type="button" class="mode-btn" data-mode="challenge" role="tab" aria-selected="false">10 second</button>
+
+        <div class="play-top-row">
+          <div class="mode-toggle" role="tablist" aria-label="Play mode">
+            <button type="button" class="mode-btn active" data-mode="free" role="tab" aria-selected="true">Unlimited</button>
+            <button type="button" class="mode-btn" data-mode="challenge" role="tab" aria-selected="false">10 second</button>
+          </div>
+          <button type="button" class="ghost-btn tiny-pad play-stats-btn" id="open-stats-btn" title="Your stats &amp; share">
+            Stats
+          </button>
         </div>
 
-        <div class="scoreboard scoreboard-free" id="scoreboard-free">
-          <div class="stat stat-highlight stat-best">
+        <!-- Compact live strip only -->
+        <div class="scoreboard scoreboard-free scoreboard-compact" id="scoreboard-free">
+          <div class="stat stat-highlight">
+            <span class="stat-label">This session</span>
+            <span class="stat-value" id="session-count">0</span>
+          </div>
+          <div class="stat">
             <span class="stat-label">Best run</span>
-            <span class="stat-value" id="high-score">0</span>
-          </div>
-          <div class="stat-row">
-            <div class="stat">
-              <span class="stat-label">This session</span>
-              <span class="stat-value" id="session-count">0</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Lifetime</span>
-              <span class="stat-value" id="lifetime-count">0</span>
-            </div>
+            <span class="stat-value stat-value-sm" id="high-score">0</span>
           </div>
         </div>
 
-        <div class="scoreboard" id="scoreboard-challenge" hidden>
+        <div class="scoreboard scoreboard-challenge scoreboard-compact" id="scoreboard-challenge" hidden>
           <div class="stat">
             <span class="stat-label">This run</span>
             <span class="stat-value" id="challenge-count">0</span>
@@ -85,11 +86,11 @@
           </div>
           <div class="stat">
             <span class="stat-label">Best 10s</span>
-            <span class="stat-value" id="challenge-best">0</span>
+            <span class="stat-value stat-value-sm" id="challenge-best">0</span>
           </div>
         </div>
 
-        <div class="level-bar" id="level-bar" title="1 push = 1 XP. Levels get harder as you climb.">
+        <div class="level-bar level-bar-compact" id="level-bar" title="1 push = 1 XP. Levels get harder as you climb.">
           <div class="level-badge" id="level-badge" data-tier="bronze">
             <span class="level-icon" id="level-icon" aria-hidden="true"></span>
             <span class="level-num" id="level-num">1</span>
@@ -97,7 +98,7 @@
           <div class="level-progress-wrap">
             <div class="level-progress-meta">
               <span class="level-title" id="level-title">Level 1</span>
-              <span class="level-xp-label" id="level-xp-label">0 / 83 XP</span>
+              <span class="level-xp-label" id="level-xp-label">0 XP · 0 to next</span>
             </div>
             <div class="level-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="level-progress-track">
               <div class="level-progress-fill" id="level-progress-fill"></div>
@@ -127,29 +128,14 @@
           <div class="floaters" id="floaters" aria-hidden="true"></div>
         </div>
 
-        <div class="play-share-actions" id="play-share-actions">
-          <button type="button" class="ghost-btn tiny-pad" id="share-high-btn" title="Share your best unlimited run">
-            Share best run
-          </button>
-          <button type="button" class="ghost-btn tiny-pad" id="share-level-btn" title="Share your level">
-            Share level
-          </button>
-          <button type="button" class="ghost-btn tiny-pad" id="challenge-share-btn" title="Share your best 10 second score">
-            Share 10s best
-          </button>
-        </div>
-
         <div class="session-actions">
-          <button type="button" class="solid-btn" id="focus-lock-open">Focus lock</button>
+          <button type="button" class="ghost-btn" id="focus-lock-open" title="Full-screen button — page won’t scroll while you mash">Focus lock</button>
           <div class="challenge-actions" id="challenge-actions" hidden>
             <button type="button" class="ghost-btn" id="challenge-again">Play again</button>
           </div>
           <p class="new-record" id="new-record" hidden>New high score!</p>
           <p class="challenge-result" id="challenge-result" hidden></p>
         </div>
-        <p class="muted focus-lock-hint">
-          Focus lock opens a fixed full-screen button (like PvP) so the page doesn’t scroll while you mash.
-        </p>
 
         <!-- Active territory campaign (side game) -->
         <div class="territory-banner" id="territory-banner" hidden>
@@ -880,7 +866,68 @@
     </div>
   </dialog>
 
-  <!-- Share 10s challenge card -->
+  <!-- Personal stats sheet (view + share) -->
+  <dialog id="stats-modal" class="modal stats-modal">
+    <div class="modal-card stats-modal-card">
+      <div class="stats-modal-head">
+        <div>
+          <h2>Your stats</h2>
+          <p class="muted stats-modal-sub" id="stats-player-line">Player</p>
+        </div>
+        <button type="button" class="ghost-btn tiny" id="stats-modal-close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stats-tile stats-tile-wide">
+          <span class="stats-tile-label">Level</span>
+          <span class="stats-tile-value" id="stats-level">1</span>
+          <span class="stats-tile-meta" id="stats-tier">Bronze</span>
+        </div>
+        <div class="stats-tile">
+          <span class="stats-tile-label">Total XP</span>
+          <span class="stats-tile-value" id="stats-total-xp">0</span>
+          <span class="stats-tile-meta" id="stats-xp-left">— to next</span>
+        </div>
+        <div class="stats-tile">
+          <span class="stats-tile-label">Best run</span>
+          <span class="stats-tile-value" id="stats-high">0</span>
+          <span class="stats-tile-meta">Unlimited</span>
+        </div>
+        <div class="stats-tile">
+          <span class="stats-tile-label">Best 10s</span>
+          <span class="stats-tile-value" id="stats-challenge">0</span>
+          <span class="stats-tile-meta">Timed</span>
+        </div>
+        <div class="stats-tile">
+          <span class="stats-tile-label">Lifetime</span>
+          <span class="stats-tile-value" id="stats-life">0</span>
+          <span class="stats-tile-meta">All pushes</span>
+        </div>
+        <div class="stats-tile">
+          <span class="stats-tile-label">Sessions</span>
+          <span class="stats-tile-value" id="stats-sessions">0</span>
+          <span class="stats-tile-meta">Runs started</span>
+        </div>
+        <div class="stats-tile stats-tile-wide">
+          <span class="stats-tile-label">Player code</span>
+          <span class="stats-tile-value stats-tile-code" id="stats-code">—</span>
+          <span class="stats-tile-meta" id="stats-account-meta">Local / online</span>
+        </div>
+      </div>
+
+      <h3 class="board-subhead" style="margin-top:16px">Share</h3>
+      <div class="play-share-actions stats-share-actions">
+        <button type="button" class="ghost-btn tiny-pad" id="share-high-btn">Share best run</button>
+        <button type="button" class="ghost-btn tiny-pad" id="share-level-btn">Share level</button>
+        <button type="button" class="ghost-btn tiny-pad" id="challenge-share-btn">Share 10s best</button>
+      </div>
+      <p class="muted" style="font-size:0.8rem;margin:10px 0 0">
+        Leaderboards live on the <strong>Scores</strong> tab. Focus lock keeps the page from scrolling while you mash.
+      </p>
+    </div>
+  </dialog>
+
+  <!-- Share challenge / level / high card -->
   <dialog id="share-modal" class="modal share-modal">
     <div class="modal-card share-modal-card">
       <div class="share-modal-head">
@@ -1145,8 +1192,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720q"></script>
-  <script src="app.js?v=20260720q"></script>
+  <script src="config.js?v=20260720r"></script>
+  <script src="app.js?v=20260720r"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>

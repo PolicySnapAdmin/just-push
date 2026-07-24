@@ -221,6 +221,140 @@ body {
   margin: 10px 0 6px;
 }
 
+.play-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.play-top-row .mode-toggle {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.play-stats-btn {
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.panel-play .scoreboard-compact {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+}
+
+.panel-play .scoreboard-challenge.scoreboard-compact {
+  grid-template-columns: 1fr 1.1fr 1fr;
+}
+
+.panel-play .scoreboard-compact .stat-highlight {
+  /* keep emphasis without eating the whole row */
+}
+
+.panel-play .stat-value-sm {
+  font-size: 1.15rem;
+}
+
+.level-bar-compact {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+}
+
+.level-bar-compact .level-title {
+  font-size: 0.85rem;
+}
+
+.level-bar-compact .level-xp-label {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-play .session-actions {
+  margin-top: 8px;
+}
+
+.panel-play .focus-lock-hint {
+  display: none;
+}
+
+/* Stats sheet */
+.stats-modal-card {
+  width: min(420px, 100%);
+  max-height: min(90dvh, 720px);
+  overflow: auto;
+}
+
+.stats-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stats-modal-head h2 {
+  margin: 0;
+}
+
+.stats-modal-sub {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stats-tile {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stats-tile-wide {
+  grid-column: 1 / -1;
+}
+
+.stats-tile-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stats-tile-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.stats-tile-code {
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}
+
+.stats-tile-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.stats-share-actions {
+  justify-content: flex-start;
+  margin: 8px 0 0;
+}
+
 .play-share-actions {
   display: flex;
   flex-wrap: wrap;
