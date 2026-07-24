@@ -221,15 +221,15 @@ body {
   margin: 10px 0 6px;
 }
 
-.free-share-actions {
+.play-share-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  margin-top: 10px;
+  margin: 12px 0 4px;
 }
 
-.free-share-actions .ghost-btn {
+.play-share-actions .ghost-btn {
   font-size: 0.8rem;
   font-weight: 700;
 }

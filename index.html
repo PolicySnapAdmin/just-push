@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260720p" />
+  <link rel="stylesheet" href="styles.css?v=20260720q" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -71,14 +71,6 @@
               <span class="stat-label">Lifetime</span>
               <span class="stat-value" id="lifetime-count">0</span>
             </div>
-          </div>
-          <div class="free-share-actions" id="free-share-actions">
-            <button type="button" class="ghost-btn tiny-pad" id="share-high-btn" title="Share your best unlimited run">
-              Share best run
-            </button>
-            <button type="button" class="ghost-btn tiny-pad" id="share-level-btn" title="Share your level">
-              Share level
-            </button>
           </div>
         </div>
 
@@ -135,11 +127,22 @@
           <div class="floaters" id="floaters" aria-hidden="true"></div>
         </div>
 
+        <div class="play-share-actions" id="play-share-actions">
+          <button type="button" class="ghost-btn tiny-pad" id="share-high-btn" title="Share your best unlimited run">
+            Share best run
+          </button>
+          <button type="button" class="ghost-btn tiny-pad" id="share-level-btn" title="Share your level">
+            Share level
+          </button>
+          <button type="button" class="ghost-btn tiny-pad" id="challenge-share-btn" title="Share your best 10 second score">
+            Share 10s best
+          </button>
+        </div>
+
         <div class="session-actions">
           <button type="button" class="solid-btn" id="focus-lock-open">Focus lock</button>
           <div class="challenge-actions" id="challenge-actions" hidden>
             <button type="button" class="ghost-btn" id="challenge-again">Play again</button>
-            <button type="button" class="solid-btn" id="challenge-share-btn">Share 10s best</button>
           </div>
           <p class="new-record" id="new-record" hidden>New high score!</p>
           <p class="challenge-result" id="challenge-result" hidden></p>
@@ -871,7 +874,7 @@
       <p class="focus-lock-result" id="focus-lock-result" hidden></p>
       <div class="focus-lock-actions">
         <button type="button" class="ghost-btn" id="focus-challenge-again" hidden>Play again</button>
-        <button type="button" class="solid-btn" id="focus-challenge-share" hidden>Share 10s best</button>
+        <button type="button" class="ghost-btn" id="focus-challenge-share" hidden>Share 10s best</button>
         <button type="button" class="ghost-btn" id="focus-reset-session" hidden>Reset session</button>
       </div>
     </div>
@@ -1142,8 +1145,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=20260720p"></script>
-  <script src="app.js?v=20260720p"></script>
+  <script src="config.js?v=20260720q"></script>
+  <script src="app.js?v=20260720q"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>
