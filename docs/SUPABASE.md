@@ -1,4 +1,4 @@
-# Push Thru — Supabase checklist
+﻿# Push Thru — Supabase checklist
 
 Project ref: **`jpnaotxkcpnwgqkzxdue`**  
 Dashboard: https://supabase.com/dashboard/project/jpnaotxkcpnwgqkzxdue
@@ -45,8 +45,8 @@ Email tips:
 
 | Field | Value |
 |-------|--------|
-| Site URL | `https://www.pushthrugames.com/` |
-| Redirect URLs | `https://www.pushthrugames.com/**` |
+| Site URL | `https://www.pushthrugame.com/` |
+| Redirect URLs | `https://www.pushthrugame.com/**` |
 | | `http://localhost:3000/**` |
 | | `http://127.0.0.1:3000/**` |
 

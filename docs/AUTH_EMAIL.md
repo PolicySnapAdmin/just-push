@@ -1,4 +1,4 @@
-# Push Thru — Email & account setup (Supabase)
+﻿# Push Thru — Email & account setup (Supabase)
 
 ## What players do
 
@@ -28,7 +28,7 @@ Open: **[Authentication → URL configuration](https://supabase.com/dashboard/pr
 Paste **exactly** (with trailing slash):
 
 ```
-https://www.pushthrugames.com/
+https://www.pushthrugame.com/
 ```
 
 This is where Supabase sends users by default after email confirm / password reset if no other redirect is specified.
@@ -40,18 +40,27 @@ Supabase only allows redirects that match this list. Add **all** of these (one p
 **Production (required)**
 
 ```
-https://www.pushthrugames.com/**
-https://www.pushthrugames.com/
-https://www.pushthrugames.com/?tab=style
-https://www.pushthrugames.com/?tab=friends
-https://www.pushthrugames.com/store.html
-https://www.pushthrugames.com/privacy.html
-https://www.pushthrugames.com/terms.html
+https://www.pushthrugame.com/**
+https://www.pushthrugame.com/
+https://www.pushthrugame.com/?tab=style
+https://www.pushthrugame.com/?tab=friends
+https://www.pushthrugame.com/store.html
+https://www.pushthrugame.com/privacy.html
+https://www.pushthrugame.com/terms.html
 ```
 
 **Apex domain (if you ever open bare domain without www)**
 
 ```
+https://pushthrugame.com/**
+https://pushthrugame.com/
+```
+
+**Legacy studio domain (old game host — keep during cutover)**
+
+```
+https://www.pushthrugames.com/**
+https://www.pushthrugames.com/
 https://pushthrugames.com/**
 https://pushthrugames.com/
 ```
@@ -85,7 +94,7 @@ com.calvinmoney.pushthru://**
 #### What the app actually uses today
 | Flow | Redirect target in code |
 |------|-------------------------|
-| Password reset (admin / user) | `https://www.pushthrugames.com/?tab=style` |
+| Password reset (admin / user) | `https://www.pushthrugame.com/?tab=style` |
 | GitHub OAuth (if re-enabled) | Current page origin + path (`redirectTo` in config) |
 | Email confirm / change email | Usually Site URL, or the link’s `redirect_to` if set |
 
@@ -104,13 +113,13 @@ com.calvinmoney.pushthru://**
 | **Change email address** | User updates email | Automatic when confirm is on |
 | **Reset password** | Settings / admin “Send password reset” | Works once Email provider is on |
 
-Edit subjects/bodies to say **Push Thru** and point users to `https://www.pushthrugames.com/`.
+Edit subjects/bodies to say **Push Thru** and point users to `https://www.pushthrugame.com/`.
 
 ### 4. SMTP (recommended for real delivery)
 Default Supabase email is rate-limited and often lands in spam.
 
 **Project Settings → Authentication → SMTP settings**  
-Connect SendGrid, Resend, AWS SES, etc., and use a from-address you own (e.g. `noreply@pushthrugames.com`).
+Connect SendGrid, Resend, AWS SES, etc., and use a from-address you own (e.g. `noreply@pushthrugame.com`).
 
 ### 5. Anonymous sign-in
 Still used only as a fallback if someone signs out without re-login.  

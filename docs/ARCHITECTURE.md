@@ -1,4 +1,4 @@
-# Push Thru — architecture
+﻿# Push Thru — architecture
 
 High-level map of how the product is put together.
 
@@ -21,7 +21,7 @@ Repo / GitHub Pages path remains `just-push` for stable URLs.
 | `privacy.html` / `terms.html` | Legal pages (HTTPS on Pages) |
 
 **Deploy:** GitHub Pages from `main` branch root  
-https://www.pushthrugames.com/
+https://www.pushthrugame.com/
 
 **Feature flags** (`config.js`):
 

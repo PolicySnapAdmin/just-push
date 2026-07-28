@@ -1,7 +1,7 @@
-# Push Thru — backups, redundancy & disaster recovery
+﻿# Push Thru — backups, redundancy & disaster recovery
 
 Last updated: 2026-07-19  
-Project: Supabase **`jpnaotxkcpnwgqkzxdue`** · App: https://www.pushthrugames.com/
+Project: Supabase **`jpnaotxkcpnwgqkzxdue`** · App: https://www.pushthrugame.com/
 
 This is the runbook for **breach** and **total data failure**. Keep a private copy of this doc if the repo is ever lost (it is also in git).
 
@@ -16,7 +16,7 @@ This is the runbook for **breach** and **total data failure**. Keep a private co
 | **DB data** | Profiles, scores, wallets, friends, PvP, etc. | Supabase Postgres | **Logical dumps** via `scripts/backup_pushthru.ps1` |
 | **Auth users** | Emails, UUIDs, anonymous flags | Supabase Auth | Included in backup (metadata only — **no passwords**) |
 | **Secrets** | `service_role`, DB password, SMTP, GH secrets | Dashboard / GH / password manager | **Password manager inventory** (never in git) |
-| **Domain / DNS** | `pushthrugames.com` | GoDaddy (or current registrar) | Registrar account recovery + docs/DOMAIN.md |
+| **Domain / DNS** | `pushthrugame.com` | GoDaddy (or current registrar) | Registrar account recovery + docs/DOMAIN.md |
 | **Hosting** | GitHub Pages | GitHub | Re-enable Pages from `main` + CNAME |
 
 PolicySnap metering tables (`policysnap_*`) share this Supabase project. Default backup is **Push Thru only** (`jp_*`). Use `-IncludePolicySnap` if you need those too.
@@ -161,7 +161,7 @@ New or empty project → schema → data → point the app at it.
 5. **Point the app**
 
    - Update `config.js` → `supabaseUrl` + `supabaseAnonKey` for the new project  
-   - Auth URL config: Site URL + redirects for `https://www.pushthrugames.com/**`  
+   - Auth URL config: Site URL + redirects for `https://www.pushthrugame.com/**`  
    - Providers: Anonymous + Email as in [SUPABASE.md](./SUPABASE.md)  
    - Re-set GitHub hygiene secrets for the new project  
    - Commit + push Pages
@@ -198,7 +198,7 @@ New or empty project → schema → data → point the app at it.
 
 1. Clone from any machine that has the repo, or restore from a repo zip/mirror.  
 2. Create new GitHub repo → push `main`.  
-3. Settings → Pages: branch `main` / root, custom domain `www.pushthrugames.com`, Enforce HTTPS.  
+3. Settings → Pages: branch `main` / root, custom domain `www.pushthrugame.com`, Enforce HTTPS.  
 4. DNS still points at GitHub — update CNAME target if org/user renamed.  
 5. `config.js` unchanged if Supabase still alive.
 

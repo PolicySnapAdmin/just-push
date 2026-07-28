@@ -1,128 +1,126 @@
-# Custom domain — pushthrugames.com
+# Domains — game vs studio
 
-## Live URLs
+Two products, two domains. Do **not** host both on the same GitHub Pages repo.
+
+| Domain | Role | Hosts |
+|--------|------|--------|
+| **pushthrugame.com** (singular) | **The game** | This repo (`just-push`) — play, store, privacy, terms, cookies |
+| **pushthrugames.com** (plural) | **Studio hub** | Separate repo `pushthrugames-hub` — catalog + links to games |
+
+Canonical play URL: **https://www.pushthrugame.com/**
+
+Synthetic auth emails stay `@login.pushthrugames.com` (identity only — not a public site). Do not change without migrating auth users.
+
+---
+
+## Live game URLs (this repo)
 
 | Page | URL |
 |------|-----|
-| Play | https://www.pushthrugames.com/ |
-| Apex (after DNS fix) | https://pushthrugames.com/ |
-| Store | https://www.pushthrugames.com/store.html |
-| Privacy | https://www.pushthrugames.com/privacy.html |
-| Terms | https://www.pushthrugames.com/terms.html |
+| Play | https://www.pushthrugame.com/ |
+| Apex | https://pushthrugame.com/ (should redirect or serve same as www) |
+| Store | https://www.pushthrugame.com/store.html |
+| Privacy | https://www.pushthrugame.com/privacy.html |
+| Terms | https://www.pushthrugame.com/terms.html |
 
-Repo `CNAME` file → `www.pushthrugames.com`  
-GitHub Pages custom domain should be **www.pushthrugames.com** (with HTTPS enforced).
-
----
-
-## Why `pushthrugames.com` (no www) shows “launching soon”
-
-**www** is correct: it CNAMEs to `policysnapadmin.github.io` (GitHub Pages).
-
-**Bare domain** still has **A records** aimed at parking/hosting (often GoDaddy / “coming soon”), **not** GitHub:
-
-| Host | Currently points at (broken) | Should point at (GitHub) |
-|------|------------------------------|---------------------------|
-| `@` / apex | `13.248.243.5`, `76.223.105.230` (parking) | GitHub Pages A records below |
-
-This is fixed **at your domain registrar / DNS host**, not in the game code.
+Repo `CNAME` → `www.pushthrugame.com`  
+GitHub Pages custom domain → **www.pushthrugame.com** · Enforce HTTPS.
 
 ---
 
-## Fix apex DNS (do this at your registrar)
+## DNS — pushthrugame.com (game)
 
-Wherever DNS for `pushthrugames.com` is managed (GoDaddy, Namecheap, Cloudflare, Google Domains, etc.):
+At the registrar (GoDaddy, etc.):
 
-### 1. Remove parking / “coming soon” for the root
-
-Delete or replace any of these on the **apex** (`@` / `pushthrugames.com`):
-
-- A records to `13.248.x.x` / `76.223.x.x` (or other parking IPs)
-- “Forwarding”, “Parked”, “Coming soon”, “Website builder” for the root
-- ANAME/ALIAS to a parking host
-
-### 2. Point apex `@` at GitHub Pages
-
-Add **four A records** (name/host = `@` or blank, depending on registrar):
-
-| Type | Name / Host | Value | TTL |
-|------|-------------|--------|-----|
-| **A** | `@` | `185.199.108.153` | 300 or Auto |
-| **A** | `@` | `185.199.109.153` | 300 or Auto |
-| **A** | `@` | `185.199.110.153` | 300 or Auto |
-| **A** | `@` | `185.199.111.153` | 300 or Auto |
-
-Optional IPv6 (AAAA), if your registrar supports them:
+### www → GitHub Pages
 
 | Type | Name | Value |
 |------|------|--------|
-| **AAAA** | `@` | `2606:50c0:8000::153` |
-| **AAAA** | `@` | `2606:50c0:8001::153` |
-| **AAAA** | `@` | `2606:50c0:8002::153` |
-| **AAAA** | `@` | `2606:50c0:8003::153` |
-
-### 3. Keep www on GitHub (already working)
-
-| Type | Name / Host | Value |
-|------|-------------|--------|
 | **CNAME** | `www` | `policysnapadmin.github.io` |
 
-Do **not** point `www` at parking or at the apex in a loop.
+### Apex `@` → GitHub Pages (recommended)
 
-### 4. GitHub Pages settings
+| Type | Name | Value |
+|------|------|--------|
+| **A** | `@` | `185.199.108.153` |
+| **A** | `@` | `185.199.109.153` |
+| **A** | `@` | `185.199.110.153` |
+| **A** | `@` | `185.199.111.153` |
 
-1. Repo **PolicySnapAdmin/just-push** → **Settings → Pages**
-2. Custom domain: `www.pushthrugames.com`
-3. Wait for DNS check green
-4. Enable **Enforce HTTPS**
-5. Optional: check **“Redirect apex to www”** / dual domain support if GitHub shows it (some UIs list both once apex A records are correct)
+Remove parking / “coming soon” A records and website-builder forwards on this domain.
 
-### 5. Wait and test
+**Simpler alternative:** permanent forward `pushthrugame.com` → `https://www.pushthrugame.com/`.
 
-DNS can take **5 minutes to a few hours** (sometimes up to 24–48h).
+### GitHub Pages (just-push)
 
-```text
-nslookup pushthrugames.com
+1. Repo **PolicySnapAdmin/just-push** → Settings → Pages  
+2. Custom domain: `www.pushthrugame.com`  
+3. Wait for DNS check green · Enforce HTTPS  
+
+---
+
+## DNS — pushthrugames.com (studio hub)
+
+Hosted by **pushthrugames-hub** (not this repo).
+
+| Type | Name | Value |
+|------|------|--------|
+| **CNAME** | `www` | `policysnapadmin.github.io` |
+| **A** | `@` | same four `185.199.*` GitHub IPs (or 301 → www) |
+
+Pages custom domain on hub repo: `www.pushthrugames.com`.
+
+Until the hub is live, optional temporary forward:
+
+- `pushthrugames.com` / `www` → `https://www.pushthrugame.com/`
+
+Remove that forward when the hub Pages site is ready so plural is no longer the game.
+
+---
+
+## Supabase Auth URL config
+
+**Authentication → URL configuration**
+
+- **Site URL:** `https://www.pushthrugame.com/`
+- **Redirect URLs** (keep old plural during transition, then drop later):
+
+```
+https://www.pushthrugame.com/**
+https://www.pushthrugame.com/
+https://www.pushthrugame.com/?tab=style
+https://www.pushthrugame.com/?tab=friends
+https://www.pushthrugame.com/store.html
+https://www.pushthrugame.com/privacy.html
+https://www.pushthrugame.com/terms.html
+https://pushthrugame.com/**
+https://pushthrugame.com/
+https://www.pushthrugames.com/**
+https://pushthrugames.com/**
 ```
 
-You want addresses in the `185.199.x.x` range (GitHub), **not** `13.248` / `76.223`.
-
-Then open:
-
-- https://pushthrugames.com/
-- https://www.pushthrugames.com/
-
-Both should show the game (apex may redirect to www, which is fine).
+Same Supabase project is fine for the game. Hub does not need Supabase unless you add studio accounts later. New games → new table prefixes or new projects.
 
 ---
 
-## Supabase (after apex works)
+## Cutover checklist
 
-**Authentication → URL configuration** — keep www as Site URL, and keep apex in redirects:
-
-- Site URL: `https://www.pushthrugames.com/`
-- Redirects (already documented in `AUTH_EMAIL.md`), including:
-  - `https://www.pushthrugames.com/**`
-  - `https://pushthrugames.com/**`
-  - `https://pushthrugames.com/`
-
----
-
-## Simpler alternative (if A records are hard)
-
-At the registrar, set **domain forwarding**:
-
-- `pushthrugames.com` → **permanent (301)** redirect → `https://www.pushthrugames.com/`
-
-That won’t host the site on the apex itself, but typing the bare domain still lands on the real game. For “show the website” at the bare URL without a parking page, **A records to GitHub** (above) are better.
+- [ ] DNS for **pushthrugame.com**: www CNAME + apex A (or forward to www)
+- [ ] `just-push` Pages custom domain = `www.pushthrugame.com` · HTTPS
+- [ ] Supabase Site URL + redirects include singular game domain
+- [ ] Smoke: play, store, privacy, invite link, email sign-in
+- [ ] Deploy **pushthrugames-hub** with Pages domain `www.pushthrugames.com`
+- [ ] Remove plural→game permanent forward once hub works
+- [ ] TikTok / bio → `https://www.pushthrugame.com/`
+- [ ] Later: drop old plural redirect URLs from Supabase if unused
 
 ---
 
-## Checklist
+## What stays on which domain
 
-- [ ] Delete parking A records on `@`
-- [ ] Add four GitHub A records on `@`
-- [ ] Confirm `www` CNAME → `policysnapadmin.github.io`
-- [ ] GitHub Pages: custom domain + Enforce HTTPS
-- [ ] `nslookup pushthrugames.com` shows `185.199.*`
-- [ ] https://pushthrugames.com/ loads the game (or redirects to www)
+| Lives on pushthrugame.com | Lives on pushthrugames.com |
+|---------------------------|----------------------------|
+| Game UI (`index.html`, `app.js`) | Hub catalog |
+| store, privacy, terms, cookies | Future game cards / studio about |
+| Invite / deep links | Links **out** to each game |
+| Supabase client for Push Thru | No game logic |

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Push Thru — unlimited + 10s challenge, localStorage + Supabase backend.
  */
 
@@ -2781,7 +2781,7 @@ async function ensureProfile() {
       const msg = error.message || String(error);
       if (/permission denied|42501/i.test(msg)) {
         throw new Error(
-          "Could not load profile (sign-in not fully ready). Close the tab, open www.pushthrugames.com, and try again."
+          "Could not load profile (sign-in not fully ready). Close the tab, open www.pushthrugame.com, and try again."
         );
       }
       throw error;
@@ -3362,7 +3362,7 @@ let shareCardCache = {
 };
 
 function publicPlayUrl() {
-  const base = (getConfig().publicBaseUrl || "https://www.pushthrugames.com/").replace(/\/?$/, "/");
+  const base = (getConfig().publicBaseUrl || "https://www.pushthrugame.com/").replace(/\/?$/, "/");
   const code = profile?.friend_code;
   if (online && code) return `${base}?add=${encodeURIComponent(code)}`;
   return base;

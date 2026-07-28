@@ -4,14 +4,15 @@
 
 | Product | Repo | Role |
 |---------|------|------|
-| **Push Thru** | `PolicySnapAdmin/just-push` | This game only — no extension code |
+| **Push Thru (game)** | `PolicySnapAdmin/just-push` | **pushthrugame.com** — play + legal/store for this game |
+| **Studio hub** | `PolicySnapAdmin/pushthrugames-hub` | **pushthrugames.com** — catalog only; links out to games |
 | **PolicySnap** | `PolicySnapAdmin/PolicySnap` | Separate Chrome extension |
 | **CalmClick** | Own extension listing | **Not** in `just-push`; no CalmClick tables on this Supabase project |
 | **PumpQuest** | Abandoned / elsewhere | DB legacy **removed** from shared Supabase (2026-07-19) |
 
 Org name **PolicySnapAdmin** is historical. Push Thru does not need PolicySnap source in its repo (and does not have it).
 
-To rename hosting later: transfer `just-push` to a new org (e.g. `pushthrugames`) and update GoDaddy `www` CNAME to the new `*.github.io` host.
+Domains: singular = game, plural = studio. See `docs/DOMAIN.md`.
 
 ---
 

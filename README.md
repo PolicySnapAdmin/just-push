@@ -1,14 +1,14 @@
-# Push Thru
+﻿# Push Thru
 
 Push a button. Count the pushes. Beat the clock. Beat your friends.
 
 | | |
 |--|--|
-| **Play (game)** | https://www.pushthrugames.com/ |
-| **Store / landing** | https://www.pushthrugames.com/store.html |
-| **Privacy** | https://www.pushthrugames.com/privacy.html |
-| **Terms** | https://www.pushthrugames.com/terms.html |
-| **Support** | https://www.pushthrugames.com/store.html#contact |
+| **Play (game)** | https://www.pushthrugame.com/ |
+| **Store / landing** | https://www.pushthrugame.com/store.html |
+| **Privacy** | https://www.pushthrugame.com/privacy.html |
+| **Terms** | https://www.pushthrugame.com/terms.html |
+| **Support** | https://www.pushthrugame.com/store.html#contact |
 | **Repo path** | `just-push` (GitHub Pages URL stable) |
 
 ## Features
@@ -74,7 +74,7 @@ just-push/
 enableChat: false,        // hide Chat tab (App Store v1)
 enableGithubAuth: false,  // hide GitHub OAuth
 enableEmailAuth: true,    // Settings email save / sign-in
-publicBaseUrl: "https://www.pushthrugames.com/",
+publicBaseUrl: "https://www.pushthrugame.com/",
 ```
 
 ## Backend
@@ -114,8 +114,8 @@ See [docs/APP_STORE.md](./docs/APP_STORE.md).
 ## Share links
 
 ```text
-https://www.pushthrugames.com/?add=FRIENDCODE
-https://www.pushthrugames.com/?join=GROUPCODE
+https://www.pushthrugame.com/?add=FRIENDCODE
+https://www.pushthrugame.com/?join=GROUPCODE
 ```
 
 ## Security (short)

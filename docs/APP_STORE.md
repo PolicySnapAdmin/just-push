@@ -1,10 +1,10 @@
-# Push Thru — App Store readiness (no Mac yet)
+﻿# Push Thru — App Store readiness (no Mac yet)
 
 Work through this on Windows first. You only need a Mac later for Xcode archive + TestFlight.
 
-**Live web app:** https://www.pushthrugames.com/  
-**Privacy:** https://www.pushthrugames.com/privacy.html  
-**Terms:** https://www.pushthrugames.com/terms.html  
+**Live web app:** https://www.pushthrugame.com/  
+**Privacy:** https://www.pushthrugame.com/privacy.html  
+**Terms:** https://www.pushthrugame.com/terms.html  
 **Related docs:** [ARCHITECTURE](./ARCHITECTURE.md) · [SUPABASE](./SUPABASE.md) · [SECURITY](./SECURITY.md) · [STORE_LISTING](./STORE_LISTING.md)  
 
 
@@ -63,13 +63,13 @@ Answer based on **current online build**. Adjust if you disable chat or add anal
 ### Privacy Policy URL (required)
 
 ```text
-https://www.pushthrugames.com/privacy.html
+https://www.pushthrugame.com/privacy.html
 ```
 
 ### Support / marketing URL (optional but useful)
 
 ```text
-https://www.pushthrugames.com/
+https://www.pushthrugame.com/
 ```
 
 ---
