@@ -52,21 +52,33 @@ body {
   padding: 16px 16px calc(88px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* Top bar */
 .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-width: 0;
 }
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -86,11 +98,11 @@ body {
 }
 
 .hub-link {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--muted);
   text-decoration: none;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   border: 1px solid var(--border);
   white-space: nowrap;
@@ -100,10 +112,16 @@ body {
   border-color: color-mix(in srgb, var(--btn) 45%, var(--border));
 }
 
+.panel-hub {
+  margin: -12px 0 16px;
+}
+
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .sync-pill {
@@ -127,6 +145,33 @@ body {
 .sync-pill.offline {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+@media (max-width: 419px) {
+  .sync-pill {
+    display: none;
+  }
+  .store-chip span#store-chip-balance {
+    max-width: 4.5ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (min-width: 420px) {
+  .topbar,
+  .brand {
+    align-items: center;
+  }
+  .brand-copy {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  .hub-link {
+    font-size: 0.78rem;
+    padding: 4px 10px;
+  }
 }
 
 .sync-pill.local {
@@ -242,6 +287,7 @@ body {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .play-top-row .mode-toggle {
@@ -514,6 +560,15 @@ body {
   font-size: 0.9rem;
   font-weight: 500;
   transition: border-color 0.15s, background 0.15s;
+  max-width: min(46vw, 160px);
+  min-width: 0;
+}
+
+.profile-chip #display-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .profile-chip:hover {
@@ -2147,6 +2202,7 @@ textarea#dm-input:focus {
 }
 
 .modal-card h2 {
+  overflow-wrap: anywhere;
   margin: 0 0 6px;
   font-family: var(--display);
   font-size: 1.25rem;
