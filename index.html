@@ -636,6 +636,9 @@
               </div>
             </form>
             <p class="form-msg" id="email-auth-msg" role="status"></p>
+            <p class="muted" style="margin:8px 0 0">
+              <button type="button" class="text-link-btn" id="settings-forgot-btn">Forgot password?</button>
+            </p>
             <p class="muted email-auth-note">
               Accounts start with <strong>name + password</strong>. Your player code is your login until you link email.
               Only <strong>one device</strong> can stay signed in at a time.
@@ -1024,9 +1027,25 @@
         </form>
         <p class="form-msg" id="name-login-msg" role="status"></p>
         <p class="name-modal-switch muted">
+          <button type="button" class="text-link-btn" id="name-show-forgot">Forgot password?</button>
+        </p>
+        <p class="name-modal-switch muted">
           New here?
           <button type="button" class="text-link-btn" id="name-show-register">Create account</button>
         </p>
+      </div>
+
+      <div id="name-forgot-panel" hidden>
+        <form id="name-forgot-form" class="stack-form">
+          <h2>Forgot password</h2>
+          <p>We’ll email a reset link to the <strong>real email</strong> on the account. Player codes can’t receive mail.</p>
+          <input type="email" id="name-forgot-email" placeholder="Email on the account" autocomplete="email" required maxlength="120" />
+          <div class="modal-actions name-login-actions">
+            <button type="button" class="ghost-btn" id="name-forgot-back">Back to log in</button>
+            <button type="submit" class="solid-btn">Send reset link</button>
+          </div>
+        </form>
+        <p class="form-msg" id="name-forgot-msg" role="status"></p>
       </div>
 
       <div id="name-panel" hidden>

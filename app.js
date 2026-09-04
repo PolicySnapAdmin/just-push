@@ -465,6 +465,13 @@ const els = {
   nameLoginPassword: $("#name-login-password"),
   nameLoginBack: $("#name-login-back"),
   nameLoginMsg: $("#name-login-msg"),
+  nameForgotPanel: $("#name-forgot-panel"),
+  nameForgotForm: $("#name-forgot-form"),
+  nameForgotEmail: $("#name-forgot-email"),
+  nameForgotBack: $("#name-forgot-back"),
+  nameForgotMsg: $("#name-forgot-msg"),
+  nameShowForgot: $("#name-show-forgot"),
+  settingsForgotBtn: $("#settings-forgot-btn"),
   nameRegisterPassword: $("#name-register-password"),
   nameRegisterPassword2: $("#name-register-password2"),
   nameRegisterMsg: $("#name-register-msg"),
@@ -1595,9 +1602,16 @@ function setNameLoginMsg(text, kind = "") {
   els.nameLoginMsg.className = kind ? `form-msg ${kind}` : "form-msg";
 }
 
+function setNameForgotMsg(text, kind = "") {
+  if (!els.nameForgotMsg) return;
+  els.nameForgotMsg.textContent = text || "";
+  els.nameForgotMsg.className = kind ? `form-msg ${kind}` : "form-msg";
+}
+
 /** New player: pick a display name */
 function showNamePanel() {
   if (els.nameLoginPanel) els.nameLoginPanel.hidden = true;
+  if (els.nameForgotPanel) els.nameForgotPanel.hidden = true;
   if (els.namePanel) els.namePanel.hidden = false;
   setNameLoginMsg("");
   setTimeout(() => els.nameInput?.focus(), 50);
@@ -1606,9 +1620,39 @@ function showNamePanel() {
 /** Default first screen: log in */
 function showNameLoginPanel() {
   if (els.namePanel) els.namePanel.hidden = true;
+  if (els.nameForgotPanel) els.nameForgotPanel.hidden = true;
   if (els.nameLoginPanel) els.nameLoginPanel.hidden = false;
   setNameLoginMsg("");
   setTimeout(() => els.nameLoginEmail?.focus(), 50);
+}
+
+function showNameForgotPanel() {
+  if (els.namePanel) els.namePanel.hidden = true;
+  if (els.nameLoginPanel) els.nameLoginPanel.hidden = true;
+  if (els.nameForgotPanel) els.nameForgotPanel.hidden = false;
+  setNameForgotMsg("");
+  setTimeout(() => els.nameForgotEmail?.focus(), 50);
+}
+
+async function requestPlayerPasswordReset(raw) {
+  if (!sb) {
+    await initBackend();
+    if (!sb) throw new Error("Not connected");
+  }
+  const s = String(raw || "").trim();
+  if (!s) throw new Error("Enter the email on your account");
+  if (!s.includes("@")) {
+    throw new Error("Use the email linked to your account. Player codes don’t receive mail.");
+  }
+  const email = s.toLowerCase();
+  const domain = loginEmailDomain();
+  if (email.endsWith("@" + domain) || /@login\./i.test(email)) {
+    throw new Error("That’s a player-code login, not a mailbox. Use the real email you linked.");
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://www.pushthrugames.com/account/reset.html",
+  });
+  if (error) throw error;
 }
 
 function loginEmailDomain() {
@@ -6583,6 +6627,28 @@ function bindEvents() {
   });
 
   els.nameShowRegister?.addEventListener("click", () => showNamePanel());
+  els.nameShowForgot?.addEventListener("click", () => showNameForgotPanel());
+  els.nameForgotBack?.addEventListener("click", () => showNameLoginPanel());
+  els.nameForgotForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setNameForgotMsg("Sending…");
+    try {
+      await requestPlayerPasswordReset(els.nameForgotEmail?.value);
+      setNameForgotMsg("If that email is on an account, a reset link is on the way. Check inbox and spam.", "ok");
+    } catch (err) {
+      setNameForgotMsg(err.message || "Could not send reset", "err");
+    }
+  });
+  els.settingsForgotBtn?.addEventListener("click", async () => {
+    const raw = String(els.emailInput?.value || "").trim();
+    setEmailAuthMsg("");
+    try {
+      await requestPlayerPasswordReset(raw || els.nameLoginEmail?.value);
+      setEmailAuthMsg("If that email is on an account, a reset link is on the way.", "ok");
+    } catch (err) {
+      setEmailAuthMsg(err.message || "Could not send reset", "err");
+    }
+  });
   els.namePlayGuest?.addEventListener("click", () => playWithoutAccount());
   els.nameLoginBack?.addEventListener("click", () => showNameLoginPanel());
   els.nameLoginForm?.addEventListener("submit", async (e) => {

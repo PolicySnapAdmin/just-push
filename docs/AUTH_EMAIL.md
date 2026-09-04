@@ -42,6 +42,7 @@ Supabase only allows redirects that match this list. Add **all** of these (one p
 ```
 https://www.pushthrugame.com/**
 https://www.pushthrugame.com/
+https://www.pushthrugame.com/reset.html
 https://www.pushthrugame.com/?tab=style
 https://www.pushthrugame.com/?tab=friends
 https://www.pushthrugame.com/store.html
@@ -61,6 +62,8 @@ https://pushthrugame.com/
 ```
 https://www.pushthrugames.com/**
 https://www.pushthrugames.com/
+https://www.pushthrugames.com/account/**
+https://www.pushthrugames.com/account/reset.html
 https://pushthrugames.com/**
 https://pushthrugames.com/
 ```
