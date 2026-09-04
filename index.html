@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260724b" />
+  <link rel="stylesheet" href="styles.css?v=20260904hub" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -33,6 +33,7 @@
       <div class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
         <h1>Push Thru</h1>
+        <a class="hub-link" href="https://www.pushthrugames.com/">All games</a>
         <span class="sync-pill" id="sync-pill" title="Connection status">…</span>
       </div>
       <div class="topbar-right">
@@ -41,7 +42,7 @@
           <span id="store-chip-balance">0</span>
         </button>
         <button type="button" class="ghost-btn auth-btn" id="github-btn" hidden>GitHub</button>
-        <button type="button" class="profile-chip" id="profile-btn" title="Edit name">
+        <button type="button" class="profile-chip" id="profile-btn" title="Your stats">
           <span class="avatar" id="avatar">?</span>
           <span id="display-name">Player</span>
         </button>
@@ -254,7 +255,11 @@
       <!-- SCORES -->
       <section class="panel" data-panel="scores" hidden aria-label="High scores">
         <h2>High scores</h2>
-        <p class="panel-sub">You, friends, groups, and the global 10s board.</p>
+        <p class="panel-sub">
+          You, friends, groups, and the global 10s board.
+          ·
+          <a class="hub-link" href="https://www.pushthrugames.com/">All games</a>
+        </p>
 
         <div class="card">
           <h3>You</h3>
@@ -578,7 +583,11 @@
       <!-- SETTINGS (tab id remains style for compatibility) -->
       <section class="panel" data-panel="style" hidden aria-label="Settings">
         <h2>Settings</h2>
-        <p class="panel-sub">Theme, account, and legal.</p>
+        <p class="panel-sub">
+          Theme, account, and legal.
+          ·
+          <a class="hub-link" href="https://www.pushthrugames.com/">All games</a>
+        </p>
 
         <div class="card">
           <h3>Button color</h3>
@@ -1012,6 +1021,9 @@
       <div id="name-login-panel">
         <h2>Welcome</h2>
         <p class="muted" style="margin-top:0">Push Thru Games account — one login for Push Thru, QR, Livewire.</p>
+        <p class="muted" style="margin:0 0 12px;font-size:0.85rem">
+          <a href="https://www.pushthrugames.com/">All games</a>
+        </p>
         <button type="button" class="solid-btn name-play-home" id="name-play-guest">
           ▶ Play now
         </button>

@@ -6591,14 +6591,14 @@ function bindEvents() {
   els.shareCardDownload?.addEventListener("click", () => shareCardDownload());
 
   els.profileBtn.addEventListener("click", () => {
-    // Editing display name — go straight to name panel
-    showNamePanel();
-    els.nameInput.value = state.name || "";
-    els.nameModal.showModal();
-    setTimeout(() => {
-      els.nameInput.focus();
-      els.nameInput.select();
-    }, 50);
+    const named = state.name && state.name !== "Player";
+    const signedIn = !!(session?.user && !isAnonymousUser(session.user));
+    if (signedIn || named || isGuestPlayOk()) {
+      setTab("scores");
+      return;
+    }
+    showNameLoginPanel();
+    if (!els.nameModal?.open) els.nameModal?.showModal();
   });
 
   els.nameForm.addEventListener("submit", async (e) => {
