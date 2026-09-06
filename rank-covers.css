@@ -1,0 +1,301 @@
+/* Rank covers — motif layers on .push-btn[data-cover]. Store skins untouched. */
+
+.push-btn[data-cover] {
+  background:
+    radial-gradient(circle at 32% 28%, color-mix(in srgb, #fff 32%, var(--cover-a, var(--btn))), transparent 46%),
+    radial-gradient(circle at 70% 78%, color-mix(in srgb, var(--cover-ink, #000) 35%, var(--cover-b, var(--btn))), transparent 50%),
+    linear-gradient(155deg, var(--cover-a, var(--btn)), var(--cover-b, var(--btn)) 55%, color-mix(in srgb, #000 28%, var(--cover-b, var(--btn))));
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--cover-a, var(--btn)) 18%, transparent),
+    0 14px 42px color-mix(in srgb, var(--cover-a, var(--btn)) 45%, transparent),
+    inset 0 -10px 22px rgba(0, 0, 0, 0.28),
+    inset 0 8px 16px rgba(255, 255, 255, 0.16);
+}
+
+.push-btn[data-cover] .push-fx-c {
+  background: linear-gradient(
+    125deg,
+    transparent 28%,
+    color-mix(in srgb, var(--cover-c, #fff) 55%, transparent) 48%,
+    transparent 64%
+  );
+  background-size: 220% 220%;
+  animation: cover-shine 5s ease-in-out infinite;
+  mix-blend-mode: soft-light;
+  opacity: 0.65;
+}
+
+@keyframes cover-shine {
+  0%, 100% { background-position: 130% 40%; opacity: 0.2; }
+  50% { background-position: -10% 60%; opacity: 0.75; }
+}
+@keyframes cover-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cover-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.45; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+@keyframes cover-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* —— stamp / wax —— */
+.push-btn[data-cover="stamp"] .push-fx-a {
+  inset: 14%;
+  border: 3px dashed color-mix(in srgb, var(--cover-c) 70%, transparent);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 8px color-mix(in srgb, var(--cover-ink) 25%, transparent);
+}
+.push-btn[data-cover="ripple"] .push-fx-a {
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    transparent 0 10px,
+    color-mix(in srgb, var(--cover-c) 28%, transparent) 10px 13px
+  );
+  opacity: 0.7;
+}
+
+/* —— hatch / weave / rivet —— */
+.push-btn[data-cover="hatch"] .push-fx-a {
+  background: repeating-linear-gradient(
+    -28deg,
+    transparent 0 7px,
+    color-mix(in srgb, var(--cover-ink) 28%, transparent) 7px 9px
+  );
+  opacity: 0.55;
+}
+.push-btn[data-cover="weave"] .push-fx-a {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 8px, color-mix(in srgb, var(--cover-c) 22%, transparent) 8px 9px),
+    repeating-linear-gradient(90deg, transparent 0 8px, color-mix(in srgb, var(--cover-ink) 22%, transparent) 8px 9px);
+  opacity: 0.6;
+}
+.push-btn[data-cover="rivet"] .push-fx-a {
+  inset: 8%;
+  border: 5px dotted var(--cover-c);
+  border-radius: 50%;
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--cover-ink) 35%, transparent);
+}
+
+/* —— facet / lattice / rune —— */
+.push-btn[data-cover="facet"] .push-fx-a {
+  background: conic-gradient(
+    from 20deg,
+    color-mix(in srgb, #fff 35%, var(--cover-a)) 0 12%,
+    var(--cover-b) 12% 24%,
+    color-mix(in srgb, #fff 20%, var(--cover-a)) 24% 38%,
+    var(--cover-ink) 38% 50%,
+    var(--cover-a) 50% 70%,
+    var(--cover-b) 70% 100%
+  );
+  opacity: 0.55;
+  mix-blend-mode: overlay;
+}
+.push-btn[data-cover="lattice"] .push-fx-a {
+  background:
+    repeating-linear-gradient(30deg, transparent 0 11px, color-mix(in srgb, var(--cover-c) 35%, transparent) 11px 12px),
+    repeating-linear-gradient(-30deg, transparent 0 11px, color-mix(in srgb, var(--cover-ink) 30%, transparent) 11px 12px);
+  opacity: 0.7;
+}
+.push-btn[data-cover="rune"] .push-fx-a {
+  background: conic-gradient(
+    from 0deg,
+    var(--cover-c) 0 8%,
+    transparent 8% 16.6%,
+    var(--cover-c) 16.6% 24%,
+    transparent 24% 33%,
+    var(--cover-c) 33% 41%,
+    transparent 41% 50%,
+    var(--cover-c) 50% 58%,
+    transparent 58% 66%,
+    var(--cover-c) 66% 74%,
+    transparent 74% 83%,
+    var(--cover-c) 83% 91%,
+    transparent 91% 100%
+  );
+  opacity: 0.55;
+  animation: cover-spin 18s linear infinite;
+}
+.push-btn[data-cover="rune"] .push-fx-b {
+  inset: 22%;
+  border: 2px solid color-mix(in srgb, var(--cover-c) 80%, transparent);
+  border-radius: 50%;
+}
+
+/* —— orbit / comet / pulse —— */
+.push-btn[data-cover="orbit"] .push-fx-a {
+  inset: 6%;
+  border: 3px solid transparent;
+  border-top-color: var(--cover-c);
+  border-right-color: color-mix(in srgb, var(--cover-c) 40%, transparent);
+  border-radius: 50%;
+  animation: cover-spin 7s linear infinite;
+}
+.push-btn[data-cover="orbit"] .push-fx-b {
+  inset: 18%;
+  border: 2px dashed color-mix(in srgb, var(--cover-a) 70%, transparent);
+  border-radius: 50%;
+  animation: cover-spin 14s linear infinite reverse;
+}
+.push-btn[data-cover="comet"] .push-fx-a {
+  background: conic-gradient(from 200deg, transparent 0 70%, var(--cover-c) 78%, transparent 88%);
+  animation: cover-spin 9s linear infinite;
+  opacity: 0.85;
+}
+.push-btn[data-cover="pulse"] .push-fx-a {
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    transparent 0 12px,
+    color-mix(in srgb, var(--cover-c) 40%, transparent) 12px 15px
+  );
+  animation: cover-pulse 2.8s ease-in-out infinite;
+}
+
+/* —— void / crack / scale —— */
+.push-btn[data-cover="void"] {
+  background:
+    radial-gradient(circle at 50% 50%, #050508 0 28%, transparent 42%),
+    radial-gradient(circle at 50% 50%, var(--cover-a), var(--cover-b));
+}
+.push-btn[data-cover="void"] .push-fx-a {
+  inset: 28%;
+  border-radius: 50%;
+  box-shadow: 0 0 24px var(--cover-c), inset 0 0 18px #000;
+  background: radial-gradient(circle, #000 40%, transparent 70%);
+}
+.push-btn[data-cover="crack"] .push-fx-a {
+  background:
+    repeating-linear-gradient(18deg, transparent 0 14px, color-mix(in srgb, var(--cover-c) 70%, #ff9a3a) 14px 16px),
+    repeating-linear-gradient(-50deg, transparent 0 18px, color-mix(in srgb, var(--cover-ink) 50%, transparent) 18px 19px);
+  mix-blend-mode: screen;
+  opacity: 0.65;
+}
+.push-btn[data-cover="scale"] .push-fx-a {
+  background: radial-gradient(circle at 50% 0, var(--cover-c) 0 8%, transparent 9%) 0 0 / 18px 14px,
+    radial-gradient(circle at 50% 0, var(--cover-ink) 0 8%, transparent 9%) 9px 7px / 18px 14px;
+  opacity: 0.7;
+}
+
+/* —— prism / crown —— */
+.push-btn[data-cover="prism"] .push-fx-a {
+  background: conic-gradient(
+    from 0deg,
+    #ff5a7a, #ffb020, #7cff6a, #3ee0ff, #7a6bff, #ff5ae0, #ff5a7a
+  );
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  animation: cover-spin 22s linear infinite;
+}
+.push-btn[data-cover="prism"] .push-fx-b {
+  inset: 20%;
+  border-radius: 50%;
+  border: 3px solid color-mix(in srgb, #fff 55%, transparent);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--cover-c) 50%, transparent);
+}
+.push-btn[data-cover="crown"] .push-fx-a {
+  background: conic-gradient(
+    from 90deg,
+    #ffe08a 0 8%,
+    transparent 8% 16%,
+    #fff4c8 16% 24%,
+    transparent 24% 33%,
+    #ffd24a 33% 41%,
+    transparent 41% 50%,
+    #fff4c8 50% 58%,
+    transparent 58% 66%,
+    #ffd24a 66% 74%,
+    transparent 74% 83%,
+    #ffe08a 83% 91%,
+    transparent 91% 100%
+  );
+  animation: cover-spin 12s linear infinite;
+  opacity: 0.85;
+}
+.push-btn[data-cover="crown"] .push-fx-b {
+  inset: 16%;
+  border-radius: 50%;
+  border: 4px solid #ffe08a;
+  box-shadow:
+    0 0 28px #ffd24a,
+    inset 0 0 22px rgba(255, 220, 80, 0.45);
+  animation: cover-pulse 2.2s ease-in-out infinite;
+}
+
+/* Extra density on higher tiers */
+.push-btn[data-cover-tier="3"] .push-fx-b,
+.push-btn[data-cover-tier="4"] .push-fx-b,
+.push-btn[data-cover-tier="5"] .push-fx-b {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cover-c) 35%, transparent);
+}
+.push-btn[data-cover-tier="4"] .push-fx-c,
+.push-btn[data-cover-tier="5"] .push-fx-c {
+  opacity: 0.9;
+}
+.push-btn[data-cover-tier="5"] {
+  box-shadow:
+    0 0 0 7px color-mix(in srgb, var(--cover-a) 22%, transparent),
+    0 0 48px color-mix(in srgb, var(--cover-c) 40%, transparent),
+    0 16px 44px color-mix(in srgb, var(--cover-a) 50%, transparent),
+    inset 0 -10px 22px rgba(0, 0, 0, 0.28),
+    inset 0 8px 16px rgba(255, 255, 255, 0.18);
+}
+
+/* Collection swatches */
+.rank-cover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px;
+}
+.rank-cover-swatch {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+}
+.rank-cover-swatch.selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--btn, #ff4d6d);
+}
+.rank-cover-swatch .push-btn.mini {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: none !important;
+}
+.rank-cover-swatch .push-btn.mini .push-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.02em;
+}
+.rank-cover-lvl {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 5;
+  font-size: 0.58rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 4px;
+  pointer-events: none;
+}
+
+.level-up-cover {
+  margin: 10px auto 0;
+  width: 88px;
+  height: 88px;
+}
+.level-up-cover .push-btn.mini {
+  width: 88px;
+  height: 88px;
+}
+.level-up-cover-name {
+  margin: 8px 0 0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

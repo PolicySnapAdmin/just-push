@@ -504,6 +504,9 @@ const els = {
   levelUpTier: $("#level-up-tier"),
   levelUpSub: $("#level-up-sub"),
   levelUpDismiss: $("#level-up-dismiss"),
+  levelUpCover: $("#level-up-cover"),
+  levelUpCoverBtn: $("#level-up-cover-btn"),
+  levelUpCoverName: $("#level-up-cover-name"),
   myFriendCode: $("#my-friend-code"),
   friendCodeHint: $("#friend-code-hint"),
   copyFriendCode: $("#copy-friend-code"),
@@ -546,6 +549,7 @@ const els = {
   globalLifetimeEmpty: $("#global-lifetime-empty"),
   refreshGlobal: $("#refresh-global"),
   buttonSwatches: $("#button-swatches"),
+  rankCoverGrid: $("#rank-cover-grid"),
   bgSwatches: $("#bg-swatches"),
   githubBtn: $("#github-btn"),
   githubBtnStyle: $("#github-btn-style"),
@@ -863,12 +867,24 @@ function showLevelUpPopup(level, tier, opts = {}) {
   }
   if (els.levelUpNum) els.levelUpNum.textContent = String(level);
   if (els.levelUpTier) els.levelUpTier.textContent = t.label;
+  const cover = typeof rankCoverForLevel === "function" ? rankCoverForLevel(level) : null;
   if (els.levelUpSub) {
     els.levelUpSub.textContent =
       level >= MAX_LEVEL
         ? `Your Push Thru level is now ${level}. Absolute unit.`
-        : `Your Push Thru level is now ${level}.`;
+        : cover
+          ? `Unlocked ${cover.label} — equipped.`
+          : `Your Push Thru level is now ${level}.`;
   }
+  if (els.levelUpCoverName) {
+    els.levelUpCoverName.textContent = cover ? cover.label : "";
+    els.levelUpCoverName.hidden = !cover;
+  }
+  if (els.levelUpCoverBtn && cover) {
+    paintCoverVars(els.levelUpCoverBtn, cover);
+    els.levelUpCoverBtn.style.setProperty("--btn-text", cover.darkText ? "#111118" : "#ffffff");
+  }
+  if (els.levelUpCover) els.levelUpCover.hidden = !cover;
   if (els.levelUpBadge) {
     els.levelUpBadge.dataset.tier = t.id;
     els.levelUpBadge.dataset.variant = t.variant || "base";
@@ -930,7 +946,35 @@ function myId() {
 // ——— Theme ———
 
 function getSkin(id) {
-  return BUTTON_SKINS.find((c) => c.id === id) || BUTTON_SKINS[0];
+  const ranks = typeof RANK_COVERS !== "undefined" ? RANK_COVERS : [];
+  return ranks.find((c) => c.id === id) || BUTTON_SKINS.find((c) => c.id === id) || BUTTON_SKINS[0];
+}
+
+function currentLevel() {
+  return levelFromXp(state.lifetimeCount || 0);
+}
+
+function rankCoverOwned(cover) {
+  if (!cover) return false;
+  if (ownedSkins.includes(cover.id)) return true;
+  return currentLevel() >= cover.level;
+}
+
+function paintCoverVars(el, cover) {
+  if (!el || !cover) return;
+  el.dataset.skin = cover.id;
+  if (cover.rank) {
+    el.dataset.cover = cover.motif;
+    el.dataset.coverTier = String(cover.coverTier || 1);
+    el.style.setProperty("--cover-a", cover.accent || cover.value);
+    el.style.setProperty("--cover-b", cover.value);
+    el.style.setProperty("--cover-c", cover.accent || cover.value);
+    el.style.setProperty("--cover-ink", cover.ink || "#111");
+    el.style.setProperty("--btn", cover.value);
+  } else {
+    delete el.dataset.cover;
+    delete el.dataset.coverTier;
+  }
 }
 
 function applyTheme() {
@@ -941,14 +985,49 @@ function applyTheme() {
   root.style.setProperty("--bg", bg.value);
   root.style.setProperty("--btn-glow", `${btn.value}99`);
   root.style.setProperty("--btn-text", btn.darkText ? "#111118" : "#ffffff");
-  // Drive layered CSS skins
+  if (btn.rank) {
+    root.style.setProperty("--cover-a", btn.accent || btn.value);
+    root.style.setProperty("--cover-b", btn.value);
+    root.style.setProperty("--cover-c", btn.accent || btn.value);
+    root.style.setProperty("--cover-ink", btn.ink || "#111");
+  }
   if (els.app) els.app.dataset.skin = btn.id;
-  if (els.buttonStage) els.buttonStage.dataset.skin = btn.id;
+  if (els.buttonStage) {
+    els.buttonStage.dataset.skin = btn.id;
+    if (btn.rank) {
+      els.buttonStage.dataset.cover = btn.motif;
+    } else {
+      delete els.buttonStage.dataset.cover;
+    }
+  }
   document.querySelectorAll(".push-btn").forEach((el) => {
-    el.dataset.skin = btn.id;
+    if (el.closest(".rank-cover-swatch") || el.closest(".store-skin")) return;
+    paintCoverVars(el, btn);
   });
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = bg.value;
+}
+
+function renderRankCovers() {
+  const el = els.rankCoverGrid;
+  if (!el || typeof RANK_COVERS === "undefined") return;
+  const owned = RANK_COVERS.filter((c) => rankCoverOwned(c));
+  if (!owned.length) {
+    el.innerHTML = `<p class="muted">Level up to earn a unique button cover. Not sold in the store.</p>`;
+    return;
+  }
+  el.innerHTML = owned
+    .map((c) => {
+      const sel = c.id === state.theme.button;
+      return `<button type="button" class="rank-cover-swatch${sel ? " selected" : ""}" data-btn="${c.id}" title="${escapeHtml(c.label)} · Lv ${c.level}" role="option" aria-selected="${sel}">
+        <span class="push-btn mini" data-skin="${c.id}" data-cover="${c.motif}" data-cover-tier="${c.coverTier}" style="--btn:${c.value};--cover-a:${c.accent};--cover-b:${c.value};--cover-c:${c.accent};--cover-ink:${c.ink}">
+          <span class="push-fx push-fx-a"></span><span class="push-fx push-fx-b"></span>
+          <span class="push-core"><span class="push-label">PUSH</span></span>
+        </span>
+        <span class="rank-cover-lvl">${c.level}</span>
+      </button>`;
+    })
+    .join("");
 }
 
 function renderSwatches() {
@@ -963,6 +1042,7 @@ function renderSwatches() {
     (c) =>
       `<button type="button" class="swatch${c.id === state.theme.background ? " selected" : ""}" data-bg="${c.id}" style="background:${c.value}" title="${c.label}" role="option" aria-selected="${c.id === state.theme.background}"></button>`
   ).join("");
+  renderRankCovers();
 }
 
 // ——— Profile UI ———
@@ -2011,8 +2091,19 @@ function renderLevel() {
       // Drop any pending queue so it doesn't pop mid-challenge later
       levelUpQueue = [];
     }
-    // Token level rewards (Social currency only — not more XP per click)
-    if (online) claimLevelRewards().catch(() => {});
+    const cover = typeof rankCoverForLevel === "function" ? rankCoverForLevel(to) : null;
+    if (cover) {
+      state.theme.button = cover.id;
+      saveState();
+      applyTheme();
+      renderSwatches();
+    }
+    // Token + rank-cover grants (covers never sold in the store)
+    if (online) {
+      claimLevelRewards()
+        .then(() => loadCosmetics())
+        .catch(() => {});
+    }
   } else if (prog.level < lastRenderedLevel) {
     // e.g. profile merge / reload — no popup
     lastRenderedLevel = prog.level;
@@ -4456,7 +4547,7 @@ function mergeStoreSkins() {
   const server = Array.isArray(storeCatalog?.skins) ? storeCatalog.skins : [];
   const byId = Object.fromEntries(server.map((s) => [s.id, s]));
   const feat = storeCatalog?.featured;
-  return BUTTON_SKINS.map((s) => {
+  return BUTTON_SKINS.filter((s) => !s.rank && s.store !== false).map((s) => {
     const srv = byId[s.id] || {};
     const base = {
       ...s,
@@ -4475,7 +4566,7 @@ function mergeStoreSkins() {
     return base;
   }).concat(
     server
-      .filter((s) => !BUTTON_SKINS.some((b) => b.id === s.id))
+      .filter((s) => !BUTTON_SKINS.some((b) => b.id === s.id) && !String(s.id || "").startsWith("rank-"))
       .map((s) => ({
         id: s.id,
         label: s.label || s.id,
@@ -4498,6 +4589,7 @@ function effectiveSkinCost(s) {
 
 function skinOwned(s) {
   if (!s) return false;
+  if (s.rank) return rankCoverOwned(s);
   return ownedSkins.includes(s.id) || !!s.free;
 }
 
@@ -6975,6 +7067,15 @@ function bindEvents() {
   });
 
   els.buttonSwatches.addEventListener("click", (e) => {
+    const sw = e.target.closest("[data-btn]");
+    if (!sw) return;
+    state.theme.button = sw.dataset.btn;
+    saveState();
+    applyTheme();
+    renderSwatches();
+    scheduleSync();
+  });
+  els.rankCoverGrid?.addEventListener("click", (e) => {
     const sw = e.target.closest("[data-btn]");
     if (!sw) return;
     state.theme.button = sw.dataset.btn;

@@ -14,6 +14,8 @@ const files = [
   "app.js",
   "config.js",
   "styles.css",
+  "rank-covers.css",
+  "rank-covers.js",
   "privacy.html",
   "terms.html",
   "store.html",

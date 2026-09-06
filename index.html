@@ -24,7 +24,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260904mob" />
+  <link rel="stylesheet" href="styles.css?v=20260906rank" />
+  <link rel="stylesheet" href="rank-covers.css?v=1" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23ff4d6d'/><text y='.9em' x='50%' text-anchor='middle' font-size='55'>👆</text></svg>" />
 </head>
 <body>
@@ -588,6 +589,12 @@
         <div class="card">
           <h3>Button color</h3>
           <div class="swatch-grid" id="button-swatches" role="listbox" aria-label="Button colors"></div>
+        </div>
+
+        <div class="card">
+          <h3>Rank covers</h3>
+          <p class="muted">Earned each level. Never sold in the store. Tap to equip.</p>
+          <div class="rank-cover-grid" id="rank-cover-grid" role="listbox" aria-label="Rank covers"></div>
         </div>
 
         <div class="card">
@@ -1213,6 +1220,15 @@
         </div>
       </div>
       <p class="level-up-tier" id="level-up-tier">Bronze</p>
+      <div class="level-up-cover" id="level-up-cover">
+        <button type="button" class="push-btn mini" id="level-up-cover-btn" tabindex="-1" aria-hidden="true">
+          <span class="push-fx push-fx-a"></span>
+          <span class="push-fx push-fx-b"></span>
+          <span class="push-fx push-fx-c"></span>
+          <span class="push-core"><span class="push-label">PUSH</span></span>
+        </button>
+      </div>
+      <p class="level-up-cover-name" id="level-up-cover-name"></p>
       <p class="level-up-sub" id="level-up-sub">Your Push Thru level is now 2.</p>
       <button type="button" class="solid-btn level-up-share" id="level-up-share">Share level-up</button>
       <p class="level-up-hint">Keep pushing · tap × when ready</p>
@@ -1221,7 +1237,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=20260724b"></script>
-  <script src="app.js?v=20260724b"></script>
+  <script src="rank-covers.js?v=1"></script>
+  <script src="app.js?v=20260906rank"></script>
   <script src="legal-consent.js?v=2" defer></script>
 </body>
 </html>
