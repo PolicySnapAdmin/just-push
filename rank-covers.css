@@ -2,59 +2,109 @@
 
 .push-rank-mark {
   position: absolute;
-  left: 20%;
-  right: 20%;
-  top: 8%;
-  height: 40%;
+  left: 18%;
+  right: 18%;
+  top: 7%;
+  height: 42%;
   z-index: 3;
   pointer-events: none;
   background-image: var(--rank-mark);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
+  filter:
+    drop-shadow(0 1px 0 color-mix(in srgb, var(--cover-c, #f3e6c0) 70%, #fff))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75))
+    drop-shadow(0 7px 12px rgba(0, 0, 0, 0.4))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--cover-c, #f3e6c0) 42%, transparent));
+}
+.push-rank-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    transparent 36%,
+    transparent 62%,
+    rgba(255, 255, 255, 0.14) 100%
+  );
+  -webkit-mask-image: var(--rank-mark);
+  mask-image: var(--rank-mark);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  pointer-events: none;
 }
 .push-btn[data-cover] .push-core {
   position: absolute;
   inset: 0;
   justify-content: flex-end;
-  padding-bottom: 16%;
+  padding-bottom: 14%;
   z-index: 4;
 }
 .push-btn[data-cover] .push-label {
-  font-size: 0.95rem;
-  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   line-height: 1;
   white-space: nowrap;
+  max-width: 78%;
+  padding: 0.28em 0.7em 0.32em;
+  border-radius: 999px;
+  color: var(--cover-c, #f3e6c0);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--cover-c, #f3e6c0) 34%, #1c160c) 0%,
+      #120e08 48%,
+      #0a0806 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--cover-c, #f3e6c0) 48%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--cover-c, #f3e6c0) 50%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.45);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.75),
+    0 0 12px color-mix(in srgb, var(--cover-c, #f3e6c0) 55%, transparent);
 }
 .push-btn[data-cover] .push-hint {
   display: none;
 }
 .push-btn.mini .push-rank-mark {
-  top: 7%;
-  height: 38%;
-  left: 16%;
-  right: 16%;
+  top: 6%;
+  height: 40%;
+  left: 14%;
+  right: 14%;
 }
 .push-btn.mini[data-cover] .push-core {
-  padding-bottom: 14%;
+  padding-bottom: 12%;
 }
 .push-btn.mini[data-cover] .push-label {
-  font-size: 0.48rem;
-  letter-spacing: 0.04em;
+  font-size: 0.42rem;
+  letter-spacing: 0.06em;
+  padding: 0.16em 0.42em 0.18em;
 }
 
 
 .push-btn[data-cover] {
   background:
-    radial-gradient(circle at 32% 28%, color-mix(in srgb, #fff 32%, var(--cover-a, var(--btn))), transparent 46%),
-    radial-gradient(circle at 70% 78%, color-mix(in srgb, var(--cover-ink, #000) 35%, var(--cover-b, var(--btn))), transparent 50%),
-    linear-gradient(155deg, var(--cover-a, var(--btn)), var(--cover-b, var(--btn)) 55%, color-mix(in srgb, #000 28%, var(--cover-b, var(--btn))));
+    radial-gradient(circle at 32% 26%, color-mix(in srgb, #fff 38%, var(--cover-a, var(--btn))), transparent 42%),
+    radial-gradient(circle at 70% 78%, color-mix(in srgb, var(--cover-ink, #000) 38%, var(--cover-b, var(--btn))), transparent 52%),
+    linear-gradient(155deg, var(--cover-a, var(--btn)), var(--cover-b, var(--btn)) 55%, color-mix(in srgb, #000 32%, var(--cover-b, var(--btn))));
   box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--cover-a, var(--btn)) 18%, transparent),
-    0 14px 42px color-mix(in srgb, var(--cover-a, var(--btn)) 45%, transparent),
-    inset 0 -10px 22px rgba(0, 0, 0, 0.28),
-    inset 0 8px 16px rgba(255, 255, 255, 0.16);
+    0 0 0 1.5px color-mix(in srgb, var(--cover-c, #f3e6c0) 55%, #1a1408),
+    0 0 0 6px color-mix(in srgb, var(--cover-a, var(--btn)) 20%, transparent),
+    0 16px 42px color-mix(in srgb, var(--cover-a, var(--btn)) 48%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -12px 22px rgba(0, 0, 0, 0.38),
+    inset 0 10px 16px rgba(255, 255, 255, 0.12);
 }
 
 .push-btn[data-cover] .push-fx-c {
@@ -278,11 +328,27 @@
 .push-btn[data-cover-tier="5"] .push-fx-c {
   opacity: 0.9;
 }
+.push-btn[data-cover-tier="3"] .push-rank-mark {
+  filter:
+    drop-shadow(0 1px 0 color-mix(in srgb, var(--cover-c, #f3e6c0) 80%, #fff))
+    drop-shadow(0 2px 2px rgba(0, 0, 0, 0.75))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--cover-c, #f3e6c0) 55%, transparent));
+}
+.push-btn[data-cover-tier="4"] .push-rank-mark,
+.push-btn[data-cover-tier="5"] .push-rank-mark {
+  filter:
+    drop-shadow(0 1px 0 #fff)
+    drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--cover-c, #f3e6c0) 70%, transparent))
+    drop-shadow(0 0 22px color-mix(in srgb, var(--cover-a, var(--btn)) 45%, transparent));
+}
 .push-btn[data-cover-tier="5"] {
   box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--cover-c) 70%, #fff),
     0 0 0 7px color-mix(in srgb, var(--cover-a) 22%, transparent),
     0 0 48px color-mix(in srgb, var(--cover-c) 40%, transparent),
     0 16px 44px color-mix(in srgb, var(--cover-a) 50%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
     inset 0 -10px 22px rgba(0, 0, 0, 0.28),
     inset 0 8px 16px rgba(255, 255, 255, 0.18);
 }
@@ -313,8 +379,9 @@
   transform: none !important;
 }
 .rank-cover-swatch .push-btn.mini .push-label {
-  font-size: 0.42rem;
-  letter-spacing: 0.02em;
+  font-size: 0.38rem;
+  letter-spacing: 0.04em;
+  padding: 0.12em 0.32em 0.14em;
 }
 .rank-cover-lvl {
   position: absolute;
