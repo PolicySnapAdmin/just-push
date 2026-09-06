@@ -2,10 +2,10 @@
 
 .push-rank-mark {
   position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 11%;
-  height: 48%;
+  left: 20%;
+  right: 20%;
+  top: 8%;
+  height: 40%;
   z-index: 3;
   pointer-events: none;
   background-image: var(--rank-mark);
@@ -15,27 +15,32 @@
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55));
 }
 .push-btn[data-cover] .push-core {
+  position: absolute;
+  inset: 0;
   justify-content: flex-end;
   padding-bottom: 16%;
+  z-index: 4;
 }
 .push-btn[data-cover] .push-label {
-  font-size: 1.05rem;
-  letter-spacing: 0.1em;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
 }
 .push-btn[data-cover] .push-hint {
   display: none;
 }
 .push-btn.mini .push-rank-mark {
-  top: 8%;
-  height: 54%;
-  left: 14%;
-  right: 14%;
+  top: 7%;
+  height: 38%;
+  left: 16%;
+  right: 16%;
 }
 .push-btn.mini[data-cover] .push-core {
-  padding-bottom: 10%;
+  padding-bottom: 14%;
 }
 .push-btn.mini[data-cover] .push-label {
-  font-size: 0.52rem;
+  font-size: 0.48rem;
   letter-spacing: 0.04em;
 }
 
@@ -308,7 +313,7 @@
   transform: none !important;
 }
 .rank-cover-swatch .push-btn.mini .push-label {
-  font-size: 0.55rem;
+  font-size: 0.42rem;
   letter-spacing: 0.02em;
 }
 .rank-cover-lvl {

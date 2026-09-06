@@ -1,7 +1,6 @@
 /**
  * Rank covers — one unique button skin per Push Thru level (1–99).
- * U.S. military titles first, then rising power titles. Never sold in the store.
- * Insignia are original geometric marks (not official DoD artwork).
+ * Never sold in the store. Insignia are original geometric marks.
  */
 (function (root) {
   function svgUri(inner) {
