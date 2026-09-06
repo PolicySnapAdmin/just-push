@@ -963,6 +963,8 @@ function rankCoverOwned(cover) {
 function paintCoverVars(el, cover) {
   if (!el || !cover) return;
   el.dataset.skin = cover.id;
+  const lab = el.querySelector(".push-label");
+  let mark = el.querySelector(".push-rank-mark");
   if (cover.rank) {
     el.dataset.cover = cover.motif;
     el.dataset.coverTier = String(cover.coverTier || 1);
@@ -971,9 +973,23 @@ function paintCoverVars(el, cover) {
     el.style.setProperty("--cover-c", cover.accent || cover.value);
     el.style.setProperty("--cover-ink", cover.ink || "#111");
     el.style.setProperty("--btn", cover.value);
+    if (cover.mark) {
+      el.style.setProperty("--rank-mark", "url(\"" + cover.mark + "\")");
+      if (!mark) {
+        mark = document.createElement("span");
+        mark.className = "push-rank-mark";
+        mark.setAttribute("aria-hidden", "true");
+        const core = el.querySelector(".push-core");
+        el.insertBefore(mark, core || el.firstChild);
+      }
+    }
+    if (lab && cover.abbr) lab.textContent = cover.abbr;
   } else {
     delete el.dataset.cover;
     delete el.dataset.coverTier;
+    el.style.removeProperty("--rank-mark");
+    if (mark) mark.remove();
+    if (lab) lab.textContent = "PUSH";
   }
 }
 
@@ -1020,14 +1036,18 @@ function renderRankCovers() {
     .map((c) => {
       const sel = c.id === state.theme.button;
       return `<button type="button" class="rank-cover-swatch${sel ? " selected" : ""}" data-btn="${c.id}" title="${escapeHtml(c.label)} · Lv ${c.level}" role="option" aria-selected="${sel}">
-        <span class="push-btn mini" data-skin="${c.id}" data-cover="${c.motif}" data-cover-tier="${c.coverTier}" style="--btn:${c.value};--cover-a:${c.accent};--cover-b:${c.value};--cover-c:${c.accent};--cover-ink:${c.ink}">
+        <span class="push-btn mini" data-skin="${c.id}">
           <span class="push-fx push-fx-a"></span><span class="push-fx push-fx-b"></span>
-          <span class="push-core"><span class="push-label">PUSH</span></span>
+          <span class="push-core"><span class="push-label">${escapeHtml(c.abbr || "PUSH")}</span></span>
         </span>
         <span class="rank-cover-lvl">${c.level}</span>
       </button>`;
     })
     .join("");
+  owned.forEach((c) => {
+    const mini = el.querySelector('.push-btn[data-skin="' + c.id + '"]');
+    paintCoverVars(mini, c);
+  });
 }
 
 function renderSwatches() {
