@@ -1,0 +1,64 @@
+# Daily ping of the QR Game Supabase project (iqeshszhcumphrnjvsoq).
+# Free projects pause after about 7 days without database activity.
+# This calls qr_keep_alive() with the QR service role. It does not use
+# the Push Thru secrets and it does not change QR rows.
+#
+# Repo secrets (set once via scripts/set_qr_keep_alive_secrets.ps1):
+#   QR_SUPABASE_URL
+#   QR_SUPABASE_SERVICE_ROLE_KEY
+#
+# Never put the service role in client code or commit it.
+
+name: QR keep-alive
+
+on:
+  schedule:
+    # Every day at 09:15 UTC, after the Push Thru hygiene run at 08:15 UTC.
+    - cron: "15 9 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check secrets configured
+        id: check
+        env:
+          QR_SUPABASE_URL: ${{ secrets.QR_SUPABASE_URL }}
+          QR_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QR_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$QR_SUPABASE_URL" ] || [ -z "$QR_SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::QR secrets not configured. Run scripts/set_qr_keep_alive_secrets.ps1"
+            exit 0
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Call qr_keep_alive
+        if: steps.check.outputs.configured == 'true'
+        env:
+          QR_SUPABASE_URL: ${{ secrets.QR_SUPABASE_URL }}
+          QR_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.QR_SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          URL="${QR_SUPABASE_URL%/}/rest/v1/rpc/qr_keep_alive"
+          echo "POST $URL"
+          HTTP_CODE=$(curl -sS -o /tmp/qr-keep-alive.json -w "%{http_code}" \
+            -X POST "$URL" \
+            -H "apikey: ${QR_SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${QR_SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d '{}')
+          echo "HTTP $HTTP_CODE"
+          if [ -f /tmp/qr-keep-alive.json ]; then
+            echo "Result:"
+            cat /tmp/qr-keep-alive.json
+            echo
+          fi
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::qr_keep_alive failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+          echo "QR keep-alive completed successfully."
